@@ -26,11 +26,29 @@ clients must be made or how a client should react.
 #define strncasecmp _strnicmp
 #endif
 
+void remchar(char *, char, char *);
 int authenticate_kbdint(ssh_session, const char *);
 int verify_knownhost(ssh_session);
 int authenticate_console(ssh_session);
 static void error(ssh_session);
 ssh_session connect_ssh(const char *, const char *,int);
+
+
+void remchar(char *msg, char rem, char *buff){
+    int size;
+
+    for(size = 0; msg[size] != '\0'; ++size);
+
+    int loop = 0;
+	int index = 0;
+	while(loop <= size){
+        if (msg[loop] != rem){
+        	buff[index] = msg[loop];
+			index++;
+		}
+        loop++;
+	}
+}
 
 
 int verify_knownhost(ssh_session session){
@@ -281,6 +299,7 @@ ssh_session connect_ssh(const char *host, const char *user,int verbosity){
     return NULL;
 }
 
+
 int show_remote_processes(ssh_session session)
 {
   	ssh_channel channel;
@@ -319,10 +338,23 @@ int show_remote_processes(ssh_session session)
 		memset(buffer, 0, sizeof(buffer));
 
 		printf("Enter text > ");
+		char cleaned[256];
+		memset(cleaned, 0, sizeof(cleaned));
 		fgets(inBuff, sizeof(inBuff), stdin);
+		
+		// remove the newline from inputed text
+		remchar(inBuff, '\n', cleaned);
+
 		rc = ssh_channel_write(channel, inBuff, sizeof(inBuff));
 
 		printf("Wrote to channel\n");
+		
+		if (!strncmp(inBuff, "exit", 4))
+		{
+			printf("Caught exit...\n");
+			break;
+		}
+		
 		if (rc == SSH_ERROR)
 		{
 			printf("caught ssh error: %s\n", ssh_get_error(channel));
