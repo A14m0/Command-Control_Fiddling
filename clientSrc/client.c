@@ -349,14 +349,12 @@ int show_remote_processes(ssh_session session)
 
 		printf("Wrote to channel\n");
 		
-		if (!strncmp(inBuff, "exit", 4))
-		{
+		if (!strncmp(inBuff, "exit", 4)){
 			printf("Caught exit...\n");
 			break;
 		}
 		
-		if (rc == SSH_ERROR)
-		{
+		if (rc == SSH_ERROR){
 			printf("caught ssh error: %s\n", ssh_get_error(channel));
 			ssh_channel_close(channel);
     		ssh_channel_free(channel);
@@ -365,14 +363,7 @@ int show_remote_processes(ssh_session session)
 
 		nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
 		printf("read %d bytes from channel\n", nbytes);
-		if (nbytes < 0 && !strncmp(inBuff, "exit", 4))
-  		{
-			printf("Closing channel and exiting...\n");
-    		ssh_channel_close(channel);
-    		ssh_channel_free(channel);
-    		return SSH_ERROR;
-  		} else if (nbytes < 0)
-		{
+		if (nbytes < 0){
 			printf("Caught read error from server...\n");
     		ssh_channel_close(channel);
     		ssh_channel_free(channel);

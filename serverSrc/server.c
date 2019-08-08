@@ -78,6 +78,11 @@ void cleanup_pcap(){
 }
 #endif
 
+ssh_session session_array[MAX_CONN];
+pthread_t thread_array[MAX_CONN];
+pthread_mutex_t session_lock;
+
+
 
 struct clientDat{
     int id;
@@ -403,7 +408,10 @@ void *ssh_handler(void* sess){
         do{
 		    i=ssh_channel_read(chan,buf, sizeof(buf), 0);
 		    if (!strncmp(buf, "exit", 4)) {
-			    printf("\nCaught exit from client. Doing so...\n");
+			    printf("Caught exit from client. Doing so...\n");
+                pthread_mutex_lock(&session_lock);
+                session_array[id] = NULL;
+                pthread_mutex_unlock(&session_lock);
                 ssh_message_free(message);
 			    return NULL;
 		    }
@@ -431,6 +439,19 @@ void *ssh_handler(void* sess){
     return NULL;
 }
 
+int get_free(){
+    pthread_mutex_lock(&session_lock);
+    for (size_t i = 0; i < MAX_CONN; i++)
+    {
+        if(session_array[i] == NULL){
+            pthread_mutex_unlock(&session_lock);
+            return i;
+        }
+    }
+    pthread_mutex_unlock(&session_lock);
+    return -1;
+}
+
 
 int main(int argc, char **argv){
     
@@ -450,10 +471,12 @@ int main(int argc, char **argv){
     int master_socket;
     int ctr = 0;
     pthread_t thread;
-    ssh_session session_array[MAX_CONN];
-    pthread_t thread_array[MAX_CONN];
-
-       
+    
+    for (size_t i = 0; i < MAX_CONN; i++)
+    {
+        session_array[i] = NULL;
+    }
+    
 
     struct sockaddr_in address;
 
@@ -501,11 +524,14 @@ int main(int argc, char **argv){
     
     // accept connections
     while (!quitting){
-        if (ctr >= MAX_CONN) {
-            printf("Server: Hit max concurrent connections. Not accepting any more until more sessions are free...\n");
+        ctr = get_free();
+        if (ctr == -1) {
+            printf("Server: Hit max concurrent connections. Waiting for free sessions...\n");
             sleep(10);
+            ctr = get_free();
         
         } else {
+            printf("Server: Found free session at index %d\n", ctr);
             session=ssh_new();
 
             r=ssh_bind_accept(sshbind,session);
@@ -554,8 +580,9 @@ int main(int argc, char **argv){
                 ssh_disconnect(session);
                 break;
             }
-
+            pthread_mutex_lock(&session_lock);
             session_array[ctr] = session;
+            pthread_mutex_unlock(&session_lock);
 
             struct clientDat pass;
             pass.id = ctr;
@@ -570,12 +597,8 @@ int main(int argc, char **argv){
             }
 
             printf("Server: Passed session to thread...\n");
-            
-            
 
-            thread_array[ctr] = thread;
-
-            ctr++;	
+            thread_array[ctr] = thread;	
         }
     }
         
