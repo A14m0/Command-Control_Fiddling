@@ -1,0 +1,64 @@
+General notes on how command and control will be handled
+
+There are 3 different programs:
+    1. Client
+        Actual dropped malware. An autonomous program that will be able to retrieve connections and commands from a designated server.
+        It beacons out every x seconds (tbd), which is recorded and saved by the server
+    2. Server
+        Handles the connections and passes commands off to clients
+    3. Manager
+        User client. Allows users to manage their clients and control them
+
+All clients connect to server. There, they are assigned an ID that (maybe through structs) links their SSH session to that ID.
+    Commands from Server to Clients:
+        1. exec <cmd>
+            i. Pretty straight forward. Gets the command output from the client and sends it to the server
+            ii. calling "system()" for the commands would probably set off some flags, so maybe make some custom catchers that would make the calls stealthier?
+        2. download <file>
+            i. Tells the client that the server wants <file>. It will then upload the file to the server
+            ii. The server will save it to a directory called "loot" or something, then the file will be labeled with the following format:
+                "<date>-<client_id>-<file-name>"
+        3. upload <file>
+            i. Tells the client do download <file> from the server
+            ii. Maybe some future options could include loading the file only into memory?
+        4. load_exe <file>
+            i. Tells the client to download <file> from the server, load it into memory, and then execute it
+        5. shell
+            i. Tells the client to open a shell 
+        6. persist <level>
+            i. Tells the client to attempt to gain persistence at varying levels of stealth
+                Levels:
+                    quiet: 
+                    indoors: Moves itself to the local startup directory
+                    loud: Modifies common registry values to get persistence on-boot
+        7. forward <remote_addr>
+            i. Tells the client to forward traffic to reconnect with an SSH tunnel and forward all traffic it receives to <target_addr>
+        
+
+    Client Beacon information:
+        Interfaces: both up and down
+        IP addresses: for all interfaces
+        Current user
+        Hostname
+
+    Manager Commands:
+        1. get_active
+            i. Updates a list of currently active clients
+        2. send_comm <client> <command> 
+            Tells the server to forward <command> to <client>. If the manager got more than one command to send, it will make multiple of these calls in the same session
+        3. start_msf <port>
+            Tells the server to start a exploit/multi/handler session on <port>
+
+
+CLIENT FUNCTIONS:
+    OpenSSHTunnel(local_port, remote_port): Opens SSH connection to server, starts a local ssh server and initiates a reverse tunnel allowing C2 to access target
+    CloseSSHTunnel(): If SSH server and tunnel are running, close them and stop
+    OpenTCPTunnel(local_target_port, remote_access_port): SSHes back to server, then opens a reverse tunnel from local port to remote port
+    CloseTCPTunnel(port): Closes TCP Tunnel from local port
+    OpenDynamic(local_portm remote_port): opens both a dynamic tunnel and rev-TCP tunnel (effectively SOCKS5 proxy)
+    CloseDynamic(port): closes dynamic tunnel
+
+ 
+
+Notable links:
+    http://api.libssh.org/stable/libssh_tutor_forwarding.html
