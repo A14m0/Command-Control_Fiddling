@@ -24,6 +24,9 @@ clients must be made or how a client should react.
 
 #ifdef _WIN32
 #define strncasecmp _strnicmp
+#include <winsock.h>
+#else
+#include <unistd.h>
 #endif
 
 void remchar(char *, char, char *);

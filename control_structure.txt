@@ -39,7 +39,7 @@ All clients connect to server. There, they are assigned an ID that (maybe throug
         Interfaces: both up and down
         IP addresses: for all interfaces
         Current user/process owner
-        Hostname (for linux check out gethostname function from unistd.h)
+        Hostname (for linux check out gethostname function from unistd.h, for windows check out gethostname from winsock.h)
 
     Manager Commands:
         1. get_active
