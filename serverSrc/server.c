@@ -41,9 +41,6 @@ http://api.libssh.org/stable/libssh_tutorial.html
 #ifdef HAVE_ARGP_H
 #include <argp.h>
 #endif
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 
 #ifndef KEYS_FOLDER
 #ifdef _WIN32
