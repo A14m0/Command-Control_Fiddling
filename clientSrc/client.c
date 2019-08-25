@@ -429,7 +429,7 @@ int direct_forwarding(ssh_session session)
   	return SSH_OK;
 }
 
-int main(int argc, char* argv){
+int main(int argc, char* argv[]){
     char user[] = "aris";
     char host[] = "127.0.0.1";
 

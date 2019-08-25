@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 import os
 import sys
 import subprocess
 import time
-import pythoncom, pyHook
+#import pyHook
 from pynput.keyboard import Key, Controller
 from ctypes import *
 keyboard = Controller()
