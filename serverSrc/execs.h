@@ -2,7 +2,7 @@
 
 #define REQ_NONE 0
 #define REQ_EXEC 1
-#define REQ_SHELL 2
+#define REQ_TASKING 2
 #define REQ_TTY 3
 
 #define AGENT_TYPE 100

