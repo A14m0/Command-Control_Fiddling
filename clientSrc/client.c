@@ -415,6 +415,15 @@ ssh_session connect_ssh(const char *host, const char *user,int verbosity){
     return NULL;
 }
 
+int parse_tasking(char *tasking, ssh_channel chan){
+	if(!strcmp(tasking, "NULL :)")){
+		printf("No tasking available. Quitting...\n");
+		ssh_channel_write(chan, "\0", 2);
+		return 1;
+	}
+	return 0;
+}
+
 
 int func_loop(ssh_session session)
 {
@@ -453,20 +462,22 @@ int func_loop(ssh_session session)
 
 	// Begin the meat of the stuff
 
+
+	// Send the global ID
+	rc = ssh_channel_write(channel, GLOB_ID, strlen(GLOB_ID));
+
+	printf("Wrote ID to channel\n");
+		
+	if (rc == SSH_ERROR){
+		printf("caught ssh error: %s\n", ssh_get_error(channel));
+		ssh_channel_close(channel);
+    	ssh_channel_free(channel);
+    	return rc;
+	}
+
 	while (!quitting)
 	{
-		// Send the global ID
-		rc = ssh_channel_write(channel, GLOB_ID, strlen(GLOB_ID));
-
-		printf("Wrote ID to channel\n");
-		
-		if (rc == SSH_ERROR){
-			printf("caught ssh error: %s\n", ssh_get_error(channel));
-			ssh_channel_close(channel);
-    		ssh_channel_free(channel);
-    		return rc;
-		}
-
+		printf("Top of the line again!\n");
 		nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
 		printf("read %d bytes from channel\n", nbytes);
 		if (nbytes < 0){
@@ -477,6 +488,7 @@ int func_loop(ssh_session session)
 		}		
 
 		printf("Read data: %s\n", tasking);
+		quitting = parse_tasking(tasking, channel);
 	}
 	
   	

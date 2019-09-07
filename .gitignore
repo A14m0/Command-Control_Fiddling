@@ -54,3 +54,8 @@ dkms.conf
 # Generated executables
 serverSrc/server
 clientSrc/client
+
+# auto-generated folders
+serverSrc/agents
+serverSrc/loot
+
