@@ -488,6 +488,7 @@ int func_loop(ssh_session session)
 
 int direct_forwarding(ssh_session session)
 {
+	/*EXAMPLE FOR NOW*/ 
   	ssh_channel forwarding_channel;
   	int rc;
  	char *http_get = "GET / HTTP/1.1\nHost: www.google.com\n\n";

