@@ -5,18 +5,19 @@
 void init_agent(char *agent_id){
     FILE *fd = NULL;
     char buff[2048];
+    char buff2[2048];
     memset(buff, 0, sizeof(buff));
+    memset(buff2, 0, sizeof(buff2));
     strcat(buff, "agents/");
+    strcpy(buff2, buff);
     strcat(buff, agent_id);
-    mkdir(buff, 0666);
-    mkdir(strcat(buff, "loot"), 0666);
+    mkdir(buff, 0111);
+    mkdir(strcat(buff, "-loot"), 0111);
 
-    fd = fopen(strcat(buff, "agent.mfst"), "w");
+    fd = fopen("agent.mfst", "w");
     char data[512];
 
-    /*
-    prep data in here
-    */
+    fwrite("default", 1, sizeof("default"), fd);
 
 
     fwrite(data, 1, strlen(data), fd);

@@ -1,6 +1,16 @@
 #include "misc.h"
 
 int auth_password(const char *user, const char *password){
+    /*
+    * How this is gonna work:
+    * File named 'users.dat'
+    * Format is:
+    *   Unique_ID:Hashed_passphrase(Maybe SHA512?)
+    * 
+    * Unique ID is shipped with each executable
+    * Hashed passphrase is pretty straight forward
+    */
+
     if(strcmp(user,"aris"))
         return 0;
     if(strcmp(password,"lala"))
@@ -54,11 +64,13 @@ void clean_input(char *input){
 }
 
 
-void init(){
+void init() {
     struct stat st = {0};
+    int rc = 0;
+    mode_t i = umask(0);
 
     if (stat("loot", &st) == -1) {
-        mkdir("loot", 0666);
+        rc = mkdir("loot", 0666);
         printf("Server: initialized directory 'loot'\n");
     }
 
