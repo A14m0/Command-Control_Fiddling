@@ -18,26 +18,8 @@ http://api.libssh.org/stable/libssh_tutorial.html
 
 */
 
-#include "config.h"
-#include "execs.h"
-
-#include <libssh/libssh.h>
-#include <libssh/server.h>
-
-#include <pthread.h>
-
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-
-#include <sys/stat.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
-
+#include "agents.h"
+#include "misc.h"
 
 #ifdef HAVE_ARGP_H
 #include <argp.h>
@@ -81,24 +63,6 @@ pthread_t thread_array[MAX_CONN];
 pthread_mutex_t session_lock;
 
 
-
-struct clientDat{
-    int id;
-    ssh_session session;
-    int trans_id;
-    ssh_channel chan;
-    int type;
-};
-
-
-
-static int auth_password(const char *user, const char *password){
-    if(strcmp(user,"aris"))
-        return 0;
-    if(strcmp(password,"lala"))
-        return 0;
-    return 1; // authenticated
-}
 #ifdef HAVE_ARGP_H
 const char *argp_program_version = "libssh server example "
   SSH_STRINGIFY(LIBSSH_VERSION);
@@ -202,99 +166,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 #endif /* HAVE_ARGP_H */
 
-int index_of(char* str, char find, int rev){
-    if (rev)
-    {
-        int end = strlen(str);
-        int ctr = 0;
-        while(end - ctr > 0){
-            if(str[end-ctr] == find){
-                return end - ctr;
-            }
-            ctr++;
-        }
-        return -1;
-    } else {
-        int i = 0;
 
-        while (str[i] != '\0')
-        {
-            if (str[i] == find)
-            {
-                return i;
-            }
-
-            i++;
-        }
-
-        return -1;
-    }
-    
-    
-
-}
-
-
-int directory_exists( const char* pzPath ){
-    /*Tests if a directory exists in the file system */
-    struct stat st = {0};
-
-    if (stat(pzPath, &st) == -1) {
-        return 0;
-    }
-    return 1;
-    
-}
-
-void init_agent(char *agent_id){
-    FILE *fd = NULL;
-    char buff[2048];
-    memset(buff, 0, sizeof(buff));
-    strcat(buff, "agents/");
-    strcat(buff, agent_id);
-    mkdir(buff, 0666);
-    mkdir(strcat(buff, "loot"), 0666);
-
-    fd = fopen(strcat(buff, "agent.mfst"), "w");
-    char data[512];
-
-    /*
-    prep data in here
-    */
-
-
-    fwrite(data, 1, strlen(data), fd);
-    fclose(fd);
-}
-
-int get_tasking(char *agent_id, char *tasking){
-    strcat(tasking, "NULL :)");
-    return 0;
-}
-
-int get_file(char *name, char *ptr){
-    int size = 0;
-    FILE *file;
-    file = fopen(name, "r");
-    if (file)
-    {
-        fclose(file);
-        return -1;
-    }
-    fseek(file, 0L, SEEK_END);
-    size = ftell(file);
-    ptr = malloc(size);
-    fread(ptr, 1, size, file);
-    fclose(file);
-
-    return size;
-
-}
-
-void clean_input(char *input){
-    int offset = index_of(input, '/', 1);
-    input = input +offset;
-}
 
 void agent_handler(struct clientDat agent){
     char resp[2048];
@@ -398,23 +270,6 @@ void agent_handler(struct clientDat agent){
             break;
         }
     }
-    
-    
-}
-
-void init(){
-    struct stat st = {0};
-
-    if (stat("loot", &st) == -1) {
-        mkdir("loot", 0666);
-        printf("Server: initialized directory 'loot'\n");
-    }
-
-    if (stat("agents", &st) == -1) {
-        mkdir("agents", 0666);
-        printf("Server: initialized directory 'agents'\n");
-    }
-
 }
 
 
@@ -517,8 +372,7 @@ void *ssh_handler(void* sess){
         memset(buf, 0, sizeof(buf));
         strcat(buf, "agents/");
         int exists = directory_exists(strcat(buf, agent_id));
-        printf("Checked if it exists: %d\n", exists);
-
+        
         if(!exists){
             init_agent(agent_id);
         }
