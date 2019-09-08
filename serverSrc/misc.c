@@ -69,13 +69,8 @@ void init() {
     int rc = 0;
     mode_t i = umask(0);
 
-    if (stat("loot", &st) == -1) {
-        rc = mkdir("loot", 0666);
-        printf("Server: initialized directory 'loot'\n");
-    }
-
     if (stat("agents", &st) == -1) {
-        mkdir("agents", 0666);
+        mkdir("agents", 0755);
         printf("Server: initialized directory 'agents'\n");
     }
 

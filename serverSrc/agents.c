@@ -9,12 +9,12 @@ void init_agent(char *agent_id){
     memset(buff, 0, sizeof(buff));
     memset(buff2, 0, sizeof(buff2));
     strcat(buff, "agents/");
+    strcat(buff, agent_id); //agents/TEST-AGENT
     strcpy(buff2, buff);
-    strcat(buff, agent_id);
-    mkdir(buff, 0111);
-    mkdir(strcat(buff, "-loot"), 0111);
+    mkdir(buff, 0755);
+    mkdir(strcat(buff, "/loot"), 0755);
 
-    fd = fopen("agent.mfst", "w");
+    fd = fopen(strcat(buff2, "/agent.mfst"), "w");
     char data[512];
 
     fwrite("default", 1, sizeof("default"), fd);
@@ -24,8 +24,31 @@ void init_agent(char *agent_id){
     fclose(fd);
 }
 
+void write_format(char *path){
+    FILE *fd;
+    fd = fopen(path, "w");
+    fwrite("NULL :)", 1, sizeof("NULL :)"), fd);
+    fclose(fd);
+}
+
 int get_tasking(char *agent_id, char *tasking){
+    char file[2048];
+
+    memset(file, 0, sizeof(file));
+    sprintf(file, "agents/%s/agent.mfst", agent_id);
+    FILE *fd = NULL;
+    fd = fopen(file, "r");
+    fseek(fd, 0L, SEEK_END);
+    int size = ftell(fd);
+    rewind(fd);
+    char *mem_dump = malloc(size);
+    memset(mem_dump, 0, size);
+    fread(mem_dump, 1, size, fd);
+    fclose(fd);
+
+    //strcat(tasking, mem_dump);
     strcat(tasking, "NULL :)");
+    write_format(file);
     return 0;
 }
 

