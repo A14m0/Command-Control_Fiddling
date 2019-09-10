@@ -65,6 +65,30 @@ void clean_input(char *input){
 
 
 void init() {
+	// gets current file path, so data will be written to correct folder regardless of where execution is called
+	char result[4096];
+	memset(result, 0, sizeof(result));
+	ssize_t count = readlink( "/proc/self/exe", result, 4096);
+
+	char dir[4096];
+	memset(dir, 0, sizeof(dir));
+	char* last;
+	last = strrchr(result, '/');
+
+	unsigned long index = last - result;
+	strncpy(dir, result, index);
+	
+	printf("[i] Determined directory: %s\n", dir);
+	
+	int ret = chdir(dir);
+
+
+	if(ret < 0){
+		perror("[-] Failed to change directory");
+		exit(-1);
+	}
+
+
     struct stat st = {0};
     int rc = 0;
     mode_t i = umask(0);

@@ -1,4 +1,5 @@
 #include "agents.h"
+#include <signal.h>
 
 struct clientDat{
     int id;

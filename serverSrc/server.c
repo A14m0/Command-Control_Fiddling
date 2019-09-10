@@ -414,8 +414,28 @@ int get_free(){
     return -1;
 }
 
+void handleTerm(int term){
+    printf("Terminating...\n");
+}
+
 
 int main(int argc, char **argv){
+    // set up signal handlers
+    struct sigaction sigIntHandler;
+	struct sigaction sigTermHandler;
+
+
+	sigIntHandler.sa_handler = handleTerm;
+   	sigemptyset(&sigIntHandler.sa_mask);
+   	sigIntHandler.sa_flags = 0;
+
+	sigTermHandler.sa_handler = handleTerm;
+	sigemptyset(&sigTermHandler.sa_mask);
+	sigTermHandler.sa_flags = 0;
+
+   	sigaction(SIGINT, &sigIntHandler, NULL);
+	sigaction(SIGTERM, &sigTermHandler, NULL);
+
     
     ssh_session session;
     ssh_bind sshbind;
@@ -501,7 +521,7 @@ int main(int argc, char **argv){
             r=ssh_bind_accept(sshbind,session);
 	        printf("Server: Accepting connection\n");
             if(r==SSH_ERROR){
-      	        printf("error accepting a connection : %s\n",ssh_get_error(sshbind));
+      	        printf("Error accepting a connection : %s\n",ssh_get_error(sshbind));
       	        return 1;
             }
             if (ssh_handle_key_exchange(session)) {
