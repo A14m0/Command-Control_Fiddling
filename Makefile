@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGSSERV=-lssh -lpthread
-CFLAGSCLI=-lssh
+CFLAGSCLI=-lssh -lcurl
 
 hellomake: 
 	$(CC) -o serverSrc/server.out serverSrc/server.c serverSrc/misc.c serverSrc/agents.c $(CFLAGSSERV)
