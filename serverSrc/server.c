@@ -416,6 +416,8 @@ int get_free(){
 
 void handleTerm(int term){
     printf("Terminating...\n");
+    exit(-1);
+    
 }
 
 
@@ -436,7 +438,7 @@ int main(int argc, char **argv){
    	sigaction(SIGINT, &sigIntHandler, NULL);
 	sigaction(SIGTERM, &sigTermHandler, NULL);
 
-    
+    // initialize variables
     ssh_session session;
     ssh_bind sshbind;
     ssh_message message;
