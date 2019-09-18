@@ -56,23 +56,18 @@ int func_loop(ssh_session session)
     	return rc;
 	}
 
+	
+	nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
+	printf("read %d bytes from channel\n", nbytes);
+	if (nbytes < 0){
+		printf("Caught read error from server...\n");
+    	ssh_channel_close(channel);
+    	ssh_channel_free(channel);
+    	return SSH_ERROR;
+	}		
 
-////// REWORK THIS STUFF DOESNT MAKE SENSE
-	//while (!quitting)
-	//{
-		// reads data fromthe server
-		nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
-		printf("read %d bytes from channel\n", nbytes);
-		if (nbytes < 0){
-			printf("Caught read error from server...\n");
-    		ssh_channel_close(channel);
-    		ssh_channel_free(channel);
-    		return SSH_ERROR;
-		}		
-
-		printf("Read data: %s\n", tasking);
-		quitting = parse_tasking(tasking, channel);
-//	}
+	printf("Read data: %s\n", tasking);
+	quitting = parse_tasking(tasking, channel);
 	
   	// close connections
   	ssh_channel_send_eof(channel);

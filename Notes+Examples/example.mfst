@@ -16,4 +16,7 @@
 # To tell the agent to load and execute a file in memory (AKA load/exec a module)
 14|filename.elf
 
+# To tell the agent to stop doing stuff
+00|
+
 
