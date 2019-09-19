@@ -80,7 +80,7 @@ int parse_tasking(char *tasking, ssh_channel chan){
 	/* Parses and handles the tasking input from the server*/
 
 	// checks if there is no tasking
-	if(!strcmp(tasking, "NULL :)")){
+	if(!strcmp(tasking, "NULL :)\n")){
 		printf("No tasking available. Quitting...\n");
 		ssh_channel_write(chan, "\0", 2);
 		return 1;
