@@ -116,8 +116,48 @@ static struct argp_option options[] = {
     .doc   = "Get verbose output.",
     .group = 0
   },
+  {
+      .name = "agent",
+      .key = 'a',
+      .arg = "IP:PORT",
+      .flags = 0,
+      .doc = "Compile an agent which will connect to IP over PORT",
+      .group = 0
+  },
   {NULL, 0, 0, 0, NULL, 0}
 };
+
+void compile_agent(char *ip, char *port){
+    // In here the agent file header is editeed and recompiled against these values
+    // Also in here is where the username and password are added to the server database
+    printf("Not working yet. Working on it ;)\n");
+    printf("IP: %s\n", ip);
+    printf("Port: %s\n", port);
+}
+
+char *substring(char *string, int position, int length)
+{
+    char *pointer;
+    int c;
+ 
+    pointer = malloc(length+1);
+   
+    if (pointer == NULL)
+    {
+        printf("Unable to allocate memory.\n");
+        exit(1);
+    }
+ 
+    for (c = 0 ; c < position ; c++)
+    {
+        *(pointer+c) = *(string);      
+        string++;  
+    }
+ 
+    *(pointer+c) = '\0';
+ 
+    return pointer;
+}
 
 /* Parse a single option. */
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
@@ -125,38 +165,52 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
    * know is a pointer to our arguments structure.
    */
   ssh_bind sshbind = state->input;
+  char *ip;
+  int dbg = 0;
+  char *port;
 
   switch (key) {
     case 'p':
-      ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT_STR, arg);
-      break;
+        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT_STR, arg);
+        break;
     case 'd':
-      ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, arg);
-      break;
+        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, arg);
+        break;
     case 'k':
-      ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_HOSTKEY, arg);
-      break;
+        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_HOSTKEY, arg);
+        break;
     case 'r':
-      ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, arg);
-      break;
+        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, arg);
+        break;
     case 'v':
-      ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_LOG_VERBOSITY_STR, "3");
-      break;
+        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_LOG_VERBOSITY_STR, "3");
+        break;
+    case 'a':
+        port = strchr(arg, ':') + 1;
+        if(port == NULL){
+            printf("Improper format: needs to be IP:PORT\n");
+            argp_usage(state);
+        }
+        dbg = index_of(arg, ':', 0);
+        ip = substring(arg, dbg, strlen(arg));
+        
+        compile_agent(ip, port);
+        break;
     case ARGP_KEY_ARG:
-      if (state->arg_num >= 1) {
+        if (state->arg_num >= 1) {
         /* Too many arguments. */
-        argp_usage (state);
-      }
-      ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDADDR, arg);
-      break;
+            argp_usage (state);
+        }
+        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDADDR, arg);
+        break;
     case ARGP_KEY_END:
-      if (state->arg_num < 1) {
-        /* Not enough arguments. */
-        argp_usage (state);
-      }
-      break;
+        if (state->arg_num < 1) {
+            /* Not enough arguments. */
+            argp_usage (state);
+        }
+        break;
     default:
-      return ARGP_ERR_UNKNOWN;
+        return ARGP_ERR_UNKNOWN;
   }
 
   return 0;
