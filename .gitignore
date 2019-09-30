@@ -57,3 +57,4 @@ clientSrc/client
 
 # auto-generated folders
 serverSrc/agents
+serverSrc/out

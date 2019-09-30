@@ -65,7 +65,7 @@ pthread_mutex_t session_lock;
 
 #ifdef HAVE_ARGP_H
 const char *argp_program_version = "libssh server example "
-  SSH_STRINGIFY(LIBSSH_VERSION);
+    SSH_STRINGIFY(LIBSSH_VERSION);
 const char *argp_program_bug_address = "<libssh@libssh.org>";
 
 /* Program documentation. */
@@ -76,61 +76,120 @@ static char args_doc[] = "BINDADDR";
 
 /* The options we understand. */
 static struct argp_option options[] = {
-  {
-    .name  = "port",
-    .key   = 'p',
-    .arg   = "PORT",
-    .flags = 0,
-    .doc   = "Set the port to bind.",
-    .group = 0
-  },
-  {
-    .name  = "hostkey",
-    .key   = 'k',
-    .arg   = "FILE",
-    .flags = 0,
-    .doc   = "Set the host key.",
-    .group = 0
-  },
-  {
-    .name  = "dsakey",
-    .key   = 'd',
-    .arg   = "FILE",
-    .flags = 0,
-    .doc   = "Set the dsa key.",
-    .group = 0
-  },
-  {
-    .name  = "rsakey",
-    .key   = 'r',
-    .arg   = "FILE",
-    .flags = 0,
-    .doc   = "Set the rsa key.",
-    .group = 0
-  },
-  {
-    .name  = "verbose",
-    .key   = 'v',
-    .arg   = NULL,
-    .flags = 0,
-    .doc   = "Get verbose output.",
-    .group = 0
-  },
-  {
-      .name = "agent",
-      .key = 'a',
-      .arg = "IP:PORT",
-      .flags = 0,
-      .doc = "Compile an agent which will connect to IP over PORT",
-      .group = 0
-  },
-  {NULL, 0, 0, 0, NULL, 0}
+    {
+        .name  = "port",
+        .key   = 'p',
+        .arg   = "PORT",
+        .flags = 0,
+        .doc   = "Set the port to bind.",
+        .group = 0
+    },
+    {
+        .name  = "hostkey",
+        .key   = 'k',
+        .arg   = "FILE",
+        .flags = 0,
+        .doc   = "Set the host key.",
+        .group = 0
+    },
+    {
+        .name  = "dsakey",
+        .key   = 'd',
+        .arg   = "FILE",
+        .flags = 0,
+        .doc   = "Set the dsa key.",
+        .group = 0
+    },
+    {
+        .name  = "rsakey",
+        .key   = 'r',
+        .arg   = "FILE",
+        .flags = 0,
+        .doc   = "Set the rsa key.",
+        .group = 0
+    },
+    {
+        .name  = "verbose",
+        .key   = 'v',
+        .arg   = NULL,
+        .flags = 0,
+        .doc   = "Get verbose output.",
+        .group = 0
+    },
+    {
+        .name = "agent",
+        .key = 'a',
+        .arg = "IP:PORT",
+        .flags = 0,
+        .doc = "Compile an agent which will connect to IP over PORT",
+        .group = 0
+    },
+    {NULL, 0, 0, 0, NULL, 0}
 };
+
+int copy_file(char *filename, char *dest){
+    size_t len = 0 ;
+    char buffer[BUFSIZ] = { '\0' } ;
+
+    printf("%s -> %s\n", filename, dest);
+
+    FILE* in = fopen( filename, "rb" ) ;
+    FILE* out = fopen( dest, "wb" ) ;
+    if( in == NULL || out == NULL )
+    {
+        perror( "An error occured while opening files" ) ;
+        in = out = 0 ;
+    }
+    while( (len = fread( buffer, BUFSIZ, 1, in)) > 0 )
+    {
+        printf("Gone through %d\n", len);
+        fwrite( buffer, BUFSIZ, 1, out ) ;
+    }
+    fclose(in);
+    fclose(out);
+    
+    return 0 ;
+}
 
 void compile_agent(char *ip, char *port){
     // In here the agent file header is editeed and recompiled against these values
     // Also in here is where the username and password are added to the server database
     printf("Not working yet. Working on it ;)\n");
+
+    // move over the required source files
+    char *buff[BUFSIZ];
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "client.c");
+    copy_file(buff, "out/client.c");
+
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "agent.h");
+    copy_file(buff, "out/agent.h");
+
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "agent.c");
+    copy_file(buff, "out/agent.c");
+
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "examples_common.h");
+    copy_file(buff, "out/examples_common.h");
+
+    // create config file
+    FILE *fd = NULL;
+    fd = fopen("out/config.h", "w");
+
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, "#define IP ");
+    strcat(buff, ip);
+    strcat(buff, "\n#define PORT ");
+    strcat(buff, port);
+    strcat(buff, "\n");
+    fwrite(buff, 1, strlen(buff) -1, fd);
+
     printf("IP: %s\n", ip);
     printf("Port: %s\n", port);
 }

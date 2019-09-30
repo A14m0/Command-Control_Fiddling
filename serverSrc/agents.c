@@ -1,7 +1,6 @@
 #include "agents.h"
 #include "misc.h"
 
-
 void init_agent(char *agent_id){
     FILE *fd = NULL;
     char buff[2048];
@@ -47,8 +46,7 @@ int get_tasking(char *agent_id, char *tasking){
     fclose(fd);
 
     strcat(tasking, mem_dump);
-    //strcat(tasking, "NULL :)");
-    write_format(file);
+    //write_format(file);
     return 0;
 }
 

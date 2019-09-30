@@ -98,4 +98,9 @@ void init() {
         printf("Server: initialized directory 'agents'\n");
     }
 
+    if (stat("out", &st) == -1) {
+        mkdir("out", 0755);
+        printf("Server: initialized directory 'out'\n");
+    }
+
 }

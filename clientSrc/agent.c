@@ -106,7 +106,6 @@ int parse_tasking(char *tasking, ssh_channel chan){
 		// get operation int
 		char tmpbf[2];
 		strncat(tmpbf, p, 2);
-		printf(tmpbf);
 		tasking_arr[i].operation = atoi(tmpbf);
 
 		// get options for operation
@@ -146,10 +145,11 @@ int parse_tasking(char *tasking, ssh_channel chan){
 			break;
 
 		case AGENT_EXIT:
+			printf("Got agent exit request\n");
 			break;
 
 		default:
-			printf("Caught unknown tasking value\n");
+			printf("Caught unknown tasking value: %d\n", tasking_arr[j].operation);
 			break;
 		}
 	
