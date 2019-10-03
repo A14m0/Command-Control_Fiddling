@@ -9,3 +9,6 @@
 4. Obfuscate client hard-coded values
     * Maybe a simple XOR encrypt-decrypt?
         ** Would be easy, but would include non-encrypted data
+
+5. Add anti-debugging things
+    * Test for sandboxing/VM (timed delay, VMWare asm instructions)
