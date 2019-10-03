@@ -1,0 +1,14 @@
+1. Fix auto-client compilation option on server
+    * Fix copy-file functions
+
+2. Add argparsing onto client 
+    * Maybe homebrew in order to keep dependencies low?
+
+3. Create interface to store client authentication with server 
+    * No idea how its gonna go, but hey whatever
+
+4. Make sure client is using pre-compiled passphrase
+
+5. Obfuscate client hard-coded values
+    * Maybe a simple XOR encrypt-decrypt?
+        ** Would be easy, but would include non-encrypted data
