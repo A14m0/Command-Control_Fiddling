@@ -68,3 +68,45 @@ int get_file(char *name, char *ptr){
     return size;
 }
 
+void compile_agent(char *ip, char *port){
+    // In here the agent file header is editeed and recompiled against these values
+    // Also in here is where the username and password are added to the server database
+    printf("Not working yet. Working on it ;)\n");
+
+    // move over the required source files
+    char *buff[BUFSIZ];
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "client.c");
+    copy_file(buff, "out/client.c");
+
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "agent.h");
+    copy_file(buff, "out/agent.h");
+
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "agent.c");
+    copy_file(buff, "out/agent.c");
+
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "examples_common.h");
+    copy_file(buff, "out/examples_common.h");
+
+    // create config file
+    FILE *fd = NULL;
+    fd = fopen("out/config.h", "w");
+
+    memset(buff, 0, sizeof(buff));
+    strcat(buff, "#define IP ");
+    strcat(buff, ip);
+    strcat(buff, "\n#define PORT ");
+    strcat(buff, port);
+    strcat(buff, "\n");
+    fwrite(buff, 1, strlen(buff) -1, fd);
+
+    printf("IP: %s\n", ip);
+    printf("Port: %s\n", port);
+}

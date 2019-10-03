@@ -7,7 +7,8 @@ int auth_password(const char *user, const char *password){
     * Format is:
     *   Unique_ID:Hashed_passphrase(Maybe SHA512?)
     * 
-    * Unique ID is shipped with each executable
+    * Unique ID is shipped with each executable 
+    * and added to database on creation
     * Hashed passphrase is pretty straight forward
     */
 
@@ -106,4 +107,50 @@ void init() {
         printf("Server: initialized directory 'out'\n");
     }
 
+}
+
+int copy_file(char *filename, char *dest){
+    size_t len = 0 ;
+    char ch;
+
+    printf("Moving file: %s -> %s\n", filename, dest);
+
+    FILE* in = fopen( filename, "rb" ) ;
+    FILE* out = fopen( dest, "wb" ) ;
+    if( in == NULL || out == NULL )
+    {
+        perror( "An error occured while opening files" ) ;
+        in = out = 0 ;
+    }
+    while ((ch = fgetc(in)) != EOF)
+        fputc(ch, out);
+    
+    fclose(in);
+    fclose(out);
+    
+    return 0 ;
+}
+
+char *substring(char *string, int position, int length)
+{
+    char *pointer;
+    int c;
+ 
+    pointer = malloc(length+1);
+   
+    if (pointer == NULL)
+    {
+        printf("Unable to allocate memory.\n");
+        exit(1);
+    }
+ 
+    for (c = 0 ; c < position ; c++)
+    {
+        *(pointer+c) = *(string);      
+        string++;  
+    }
+ 
+    *(pointer+c) = '\0';
+ 
+    return pointer;
 }

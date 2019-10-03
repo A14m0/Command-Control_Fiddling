@@ -7,8 +7,8 @@
 #include <string.h>
 
 
-#define GLOB_ID "TEST_AGENT"
-#define GLOB_LOGIN_ID "aris"
+#define GLOB_ID "TEST_AGENT" // These two values should at some 
+#define GLOB_LOGIN_ID "aris" // point be combined into one
 #define GLOB_LOGIN_PASS "lala"
 #define HOST "127.0.0.1"
 

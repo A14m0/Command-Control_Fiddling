@@ -15,3 +15,5 @@ int index_of(char* str, char find, int rev);
 int directory_exists( const char* pzPath );
 void clean_input(char *input);
 void init();
+int copy_file(char *filename, char *dest);
+char *substring(char *string, int position, int length);
