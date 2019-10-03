@@ -8,6 +8,9 @@
 
 
 #define GLOB_ID "TEST_AGENT"
+#define GLOB_LOGIN_ID "aris"
+#define GLOB_LOGIN_PASS "lala"
+#define HOST "127.0.0.1"
 
 #define AGENT_DOWN_FILE 10
 #define AGENT_REV_SHELL 11

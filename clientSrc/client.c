@@ -262,13 +262,9 @@ int authenticate_console(ssh_session session){
       		}
     	}
 
-    	if (ssh_getpass("Password: ", password, sizeof(password), 0, 0) < 0) {
-        	return SSH_AUTH_ERROR;
-    	}
-
     	// Try to authenticate with password
     	if (method & SSH_AUTH_METHOD_PASSWORD) {
-      		rc = ssh_userauth_password(session, NULL, password);
+      		rc = ssh_userauth_password(session, NULL, GLOB_LOGIN_PASS);
       		if (rc == SSH_AUTH_ERROR) {
       			fprintf(stderr,"[-] Authentication failed: %s\n",ssh_get_error(session));
         		return rc;
@@ -446,10 +442,7 @@ int direct_forwarding(ssh_session session)
 
 
 int main(int argc, char* argv[]){
-    char user[] = "aris";
-    char host[] = "127.0.0.1";
-
-    ssh_session session = connect_ssh(host, user, 0);
+    ssh_session session = connect_ssh(HOST, GLOB_LOGIN_ID, 0);
 
 	if(session == NULL){
 		printf("Failed to create SSH session\n");
