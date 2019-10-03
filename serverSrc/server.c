@@ -282,8 +282,8 @@ static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 
 
 
-void agent_handler(struct clientNode node){
-    clientDat *agent = node.data;
+void agent_handler(struct clientNode *node){
+    clientDat *agent = node->data;
     print_clientDat(agent);
     char resp[2048];
     char *ptr = &resp;
@@ -398,8 +398,8 @@ void agent_handler(struct clientNode node){
 
 
 void *ssh_handler(void* sess){
-    struct clientNode node = *(struct clientNode*) sess;
-    clientDat *pass = node.data;
+    struct clientNode *node = (struct clientNode*) sess;
+    clientDat *pass = node->data;
     print_clientDat(pass);
 
     ssh_message message;
@@ -409,8 +409,7 @@ void *ssh_handler(void* sess){
     char buf[4096];
     char agent_id[128];
     int resp;
-        
-    srand(time(NULL));
+
     print_clientDat(pass);
     do {
 		//printf("entered message loop\n");
@@ -711,7 +710,6 @@ int main(int argc, char **argv){
         print_clientDat(&pass);
 
         pthread_mutex_lock(&session_lock);
-        printf(current);
         while(current->nxt != NULL){
             printf(current->nxt);
             current = current->nxt;
@@ -720,7 +718,7 @@ int main(int argc, char **argv){
         node.data = &pass;
         node.nxt = NULL;
         node.prev = NULL;
-        app_node(node, *current);
+        add_node(&node, current);
         pthread_mutex_unlock(&session_lock);
             
     

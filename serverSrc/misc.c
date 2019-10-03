@@ -65,6 +65,9 @@ void clean_input(char *input){
 
 
 void init() {
+    // seed random number generator
+    srand(time(NULL));
+
 	// gets current file path, so data will be written to correct folder regardless of where execution is called
 	char result[4096];
 	memset(result, 0, sizeof(result));
