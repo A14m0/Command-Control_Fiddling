@@ -17,6 +17,8 @@ clients must be made or how a client should react.
 
 #include "agent.h"
 
+
+// Agent in-memory execution definitions
 #ifdef _WIN32
 #define strncasecmp _strnicmp
 int exec_module(ssh_session session){

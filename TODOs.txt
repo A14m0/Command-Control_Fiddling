@@ -1,3 +1,5 @@
+TOP. FIX WHACK ASS DOUBLE-CORRUPT ERROR (check list implementation)
+
 1. Finish auto-client compilation option on server
 
 2. Add argparsing onto client 

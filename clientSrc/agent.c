@@ -67,6 +67,7 @@ int func_loop(ssh_session session)
 	}		
 
 	printf("Read data: %s\n", tasking);
+	sleep(30);
 	quitting = parse_tasking(tasking, channel);
 	
   	// close connections

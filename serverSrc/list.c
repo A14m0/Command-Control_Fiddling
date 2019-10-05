@@ -1,13 +1,11 @@
 #include "list.h"
 
 void remove_node(struct clientNode *node){
-    printf("Removing node...\n");
     if(node->nxt != NULL){
         (node->nxt)->prev = node->prev;
     }
     
     node->prev->nxt = node->nxt;
-    printf("Removed node\n");
 }
 
 void add_node(struct clientNode *node, struct clientNode *prevNode){
@@ -21,4 +19,15 @@ void add_node(struct clientNode *node, struct clientNode *prevNode){
         node->nxt = tmp;
         tmp->prev = node;
     }
+}
+
+int list_size(struct clientNode *entry){
+    int ctr = 0;
+    struct clientNode *curr;
+    curr = entry;
+    while(curr->nxt != NULL){
+        ctr++;
+        curr = curr->nxt;
+    }
+    return ctr;
 }
