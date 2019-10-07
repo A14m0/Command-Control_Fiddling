@@ -1,5 +1,3 @@
-TOP. FIX WHACK ASS DOUBLE-CORRUPT ERROR (check list implementation)
-
 1. Finish auto-client compilation option on server
 
 2. Add argparsing onto client 
@@ -14,3 +12,6 @@ TOP. FIX WHACK ASS DOUBLE-CORRUPT ERROR (check list implementation)
 
 5. Add anti-debugging things
     * Test for sandboxing/VM (timed delay, VMWare asm instructions)
+        **** Resources for this:
+            https://kb.vmware.com/s/article/1009458
+            https://www.cyberbit.com/blog/endpoint-security/anti-vm-and-anti-sandbox-explained/
