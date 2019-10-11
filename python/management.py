@@ -5,6 +5,7 @@ import signal
 import paramiko
 import traceback
 import time
+import paletteColors
 
 from PySide2 import QtCore, QtGui, QtWidgets, QtMultimedia, QtMultimediaWidgets
 # https://www.qt.io/qt-for-python
@@ -42,22 +43,9 @@ class Connect(QtWidgets.QDialog):
         # app.exec_()   <-- Executes the application
 
         
-
-        self.pltActive = QtGui.QPalette()
-        self.pltActive.setColor(QtGui.QPalette.Foreground, QtGui.QColor(206, 0, 0))
-        self.pltActive.setColor(QtGui.QPalette.Text, QtGui.QColor(255,50,50))
-        self.pltActive.setColor(QtGui.QPalette.Window, QtGui.QColor(30,30,30))
-        self.pltActive.setColor(QtGui.QPalette.Button, QtGui.QColor(50,50,50))
-        self.pltActive.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(206,0,0))
-        self.pltActive.setColor(QtGui.QPalette.Base, QtGui.QColor(50,50,50))
-        self.pltActive.setColor(QtGui.QPalette.Highlight, QtGui.QColor(206,0,0))
-        self.pltActive.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255,255,255))
-        self.pltActive.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(206,90,90))
-        self.pltActive.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(50,50,50))
-        self.pltActive.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(206,90,90))
-        self.pltActive.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255,255,255))
-
-        self.setPalette(self.pltActive)
+        color = paletteColors.Colors()
+        
+        self.setPalette(color.pltActive)
 
         
         self.inputDiag = QtWidgets.QLineEdit()
@@ -91,7 +79,10 @@ class Connect(QtWidgets.QDialog):
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 ssh.connect(hostname="localhost", username='aris', password='lala')
-                sshin, sshout, ssherr = ssh.exec_command("test")
+
+                # Fix this so it doesnt need a TTY and only a simple ssh shell session
+                sshin, sshout, ssherr = ssh.invoke_shell()
+                
                 sshout.channel.recv_exit_status()
                 lines = sshout.readlines()
                 for line in lines:
@@ -149,21 +140,8 @@ class Manager(QtWidgets.QWidget):
 
         
 
-        self.pltActive = QtGui.QPalette()
-        self.pltActive.setColor(QtGui.QPalette.Foreground, QtGui.QColor(206, 0, 0))
-        self.pltActive.setColor(QtGui.QPalette.Text, QtGui.QColor(255,50,50))
-        self.pltActive.setColor(QtGui.QPalette.Window, QtGui.QColor(30,30,30))
-        self.pltActive.setColor(QtGui.QPalette.Button, QtGui.QColor(50,50,50))
-        self.pltActive.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(206,0,0))
-        self.pltActive.setColor(QtGui.QPalette.Base, QtGui.QColor(50,50,50))
-        self.pltActive.setColor(QtGui.QPalette.Highlight, QtGui.QColor(206,0,0))
-        self.pltActive.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255,255,255))
-        self.pltActive.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(206,90,90))
-        self.pltActive.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(50,50,50))
-        self.pltActive.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(206,90,90))
-        self.pltActive.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255,255,255))
-
-        self.setPalette(self.pltActive)
+        color = paletteColors.Colors()
+        self.setPalette(color.pltActive)
 	
 
 
@@ -230,27 +208,33 @@ class Manager(QtWidgets.QWidget):
         self.setWindowTitle("Hunter Management Console")
 
         self.setLayout(self.controlLayout)
+
+    def has_selection(self):
+        if not self.main.currentItem():
+            QtWidgets.QMessageBox.information(self, "No Target Selected", "Select a target from the list to use this option")
+            return False
+        return True
             
     def payload(self):
+        if not self.has_selection:
+            return
+
         print("Generating payload")
     
     def shell(self):
-        if not self.main.currentItem():
-            QtWidgets.QMessageBox.information(self, "No Target Selected", "Select a target from the list to use this option")
+        if not self.has_selection():
             return
             
         print("[i] Shelling target \"%s\"..." % self.main.currentItem().text())
 
     def getInfo(self):
-        if not self.main.currentItem():
-            QtWidgets.QMessageBox.information(self, "No Target Selected", "Select a target from the list to use this option")
+        if not self.has_selection():
             return
         
         print("[i] Gathering target information...")
 
     def upload(self):
-        if not self.main.currentItem():
-            QtWidgets.QMessageBox.information(self, "No Target Selected", "Select a target from the list to use this option")
+        if not self.has_selection():
             return
         
         data = self.openFile()
@@ -260,8 +244,7 @@ class Manager(QtWidgets.QWidget):
         print("[i] Uploading file to target...")
 
     def download(self):
-        if not self.main.currentItem():
-            QtWidgets.QMessageBox.information(self, "No Target Selected", "Select a target from the list to use this option")
+        if not self.has_selection():
             return
         
         self.saveFile(self.data)

@@ -15,3 +15,8 @@
         **** Resources for this:
             https://kb.vmware.com/s/article/1009458
             https://www.cyberbit.com/blog/endpoint-security/anti-vm-and-anti-sandbox-explained/
+
+6. When manager connects to server, do not create new agent directory for it
+
+7. Add manager/server communication functions
+    * Redo call from manager to SSH_REQ_SHELL
