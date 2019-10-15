@@ -205,7 +205,7 @@ void agent_handler(struct clientNode *node){
     while (!quitting)
     {
         rc = ssh_channel_read(agent->chan, resp, sizeof(resp), 0);
-        if (rc != 0)
+        if (rc == SSH_ERROR)
         {
             printf("Client %d: Failed to handle agent: %s\n", agent->id, ssh_get_error(agent->session));
             return;
@@ -636,17 +636,17 @@ int main(int argc, char **argv){
         }
         
         printf("Current node (after loop) @ %p\n", current);
-        struct clientNode node; // somehow this is getting assigned the same address as the previous node?
-        node.data = &pass;
-        node.nxt = NULL;
-        node.prev = NULL;
-        add_node(&node, current);
-        printf("Prev node @ %p, curr node @ %p, next node @ %p\n", node.prev, &node, node.nxt);
+        struct clientNode *node = malloc(sizeof(*node)); // somehow this is getting assigned the same address as the previous node?
+        node->data = &pass;
+        node->nxt = NULL;
+        node->prev = NULL;
+        add_node(node, current);
+        printf("Prev node @ %p, curr node @ %p, next node @ %p\n", node->prev, node, node->nxt);
         pthread_mutex_unlock(&session_lock);
             
     
         // Pass the connection off to the handler
-        if(pthread_create(&thread, NULL, ssh_handler, &node)){
+        if(pthread_create(&thread, NULL, ssh_handler, node)){
             printf("Error creating thread\n");
             ssh_disconnect(session);
             break;
