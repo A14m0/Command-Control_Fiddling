@@ -631,7 +631,6 @@ int main(int argc, char **argv){
         pthread_mutex_lock(&session_lock);
         // the fucker is pointing to itself @ 3 nodes...
         while(current->nxt != NULL && inf_ctr < 100){
-            printf("Current node @ %p, Next node @ %p\n", current, current->nxt);
             current = current->nxt;
             inf_ctr++;
         }
@@ -640,13 +639,11 @@ int main(int argc, char **argv){
             printf("CAUGHT INFINITE LOOP!!\n");
         }
         
-        printf("Current node (after loop) @ %p\n", current);
         struct clientNode *node = malloc(sizeof(*node)); // somehow this is getting assigned the same address as the previous node?
         node->data = pass;
         node->nxt = NULL;
         node->prev = NULL;
         add_node(node, current);
-        printf("Prev node @ %p, curr node @ %p, next node @ %p\n", node->prev, node, node->nxt);
         pthread_mutex_unlock(&session_lock);
             
     
