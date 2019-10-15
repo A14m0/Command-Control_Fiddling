@@ -81,7 +81,7 @@ class Connect(QtWidgets.QDialog):
                 ssh.connect(hostname="localhost", username='aris', password='lala')
 
                 # Fix this so it doesnt need a TTY and only a simple ssh shell session
-                sshin, sshout, ssherr = ssh.invoke_shell()
+                sshin, sshout, ssherr = ssh.exec_command("ls")
                 
                 sshout.channel.recv_exit_status()
                 lines = sshout.readlines()
@@ -140,8 +140,8 @@ class Manager(QtWidgets.QWidget):
 
         
 
-        color = paletteColors.Colors()
-        self.setPalette(color.pltActive)
+        self.color = paletteColors.Colors()
+        self.setPalette(self.color.pltActive)
 	
 
 
@@ -257,7 +257,7 @@ class Manager(QtWidgets.QWidget):
 
         
         fileMenu = self._menu.addMenu("File")
-        fileMenu.setPalette(self.pltActive)
+        fileMenu.setPalette(self.color.pltActive)
         fileMenu.addAction("New")
         fileMenu.addAction("Open", self.openFile)
         fileMenu.addAction("Save", self.openFile)
@@ -268,6 +268,9 @@ class Manager(QtWidgets.QWidget):
         self._menu.addAction("Connect",self.connectToC2)
         
     def connectToC2(self):
+        if not self.has_selection():
+            print("[-] No server selected")
+            return 
         print("[i] Connecting to C2 server....")
         diag = QtWidgets.QInputDialog(self)
         

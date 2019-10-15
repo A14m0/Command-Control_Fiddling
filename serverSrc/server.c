@@ -197,13 +197,20 @@ void agent_handler(struct clientNode *node){
     char *ptr = &resp;
 
     int operation = -1;
+    int rc = 0;
     int quitting = 0;
     int size = 0;
     char buff[2048];
             
     while (!quitting)
     {
-        ssh_channel_read(agent->chan, resp, sizeof(resp), 0);
+        rc = ssh_channel_read(agent->chan, resp, sizeof(resp), 0);
+        if (rc != 0)
+        {
+            printf("Client %d: Failed to handle agent: %s\n", agent->id, ssh_get_error(agent->session));
+            return;
+        }
+        
         // this seems wrong...
         char tmpbf[3];
         strncat(tmpbf,resp,index_of(resp, '|', 0));
@@ -356,7 +363,7 @@ void *ssh_handler(void* sess){
         }
 
 		if (message && ssh_message_type(message) == SSH_REQUEST_CHANNEL && ssh_message_subtype(message) == SSH_CHANNEL_REQUEST_EXEC){
-			printf("Client %d: Got request for execution\n", pass->id);
+			printf("Client %d: Got connection from manager\n", pass->id);
             ssh_message_channel_request_reply_success(message);
             sftp=1;
             msgType = REQ_EXEC;
@@ -608,6 +615,7 @@ int main(int argc, char **argv){
             ssh_disconnect(session);
             break;
         }
+        ctr++;
 
         clientDat pass;
         pass.id = ctr;
@@ -615,8 +623,9 @@ int main(int argc, char **argv){
         pass.trans_id = rand();
 
         pthread_mutex_lock(&session_lock);
+        // the fucker is pointing to itself @ 3 nodes...
         while(current->nxt != NULL){
-            printf(current->nxt);
+            printf("Current node @ %p\n", current->nxt);
             current = current->nxt;
         }
         struct clientNode node;
