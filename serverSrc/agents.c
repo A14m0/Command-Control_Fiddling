@@ -109,4 +109,7 @@ void compile_agent(char *ip, char *port){
 
     printf("IP: %s\n", ip);
     printf("Port: %s\n", port);
+
+    printf("Compiling agent...\n");
+    system(COMPILE);
 }
