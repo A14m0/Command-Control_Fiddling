@@ -345,6 +345,8 @@ void *ssh_handler(void* sess){
 	if(!pass->chan){
         printf("Client %d: Channel error : %s\n", pass->id, ssh_get_error(pass->session));
         ssh_finalize();
+        free(pass);
+        remove_node(node);
         return NULL;
     }
     
@@ -379,6 +381,8 @@ void *ssh_handler(void* sess){
     
 	if(!sftp){
 		printf("Client %d: SFTP error : %s\n", pass->id, ssh_get_error(pass->session));
+        free(pass);
+        remove_node(node);
         return NULL;
     }
     //printf("it works !\n");
@@ -433,6 +437,7 @@ void *ssh_handler(void* sess){
     printf("Client %d: closing channels...\n", pass->id);
     ssh_message_free(message);
     ssh_disconnect(pass->session);
+    free(pass);
 
 	
     return NULL;
@@ -618,10 +623,10 @@ int main(int argc, char **argv){
         }
         ctr++;
 
-        clientDat pass;
-        pass.id = ctr;
-        pass.session = session;
-        pass.trans_id = rand();
+        clientDat *pass = malloc(sizeof(clientDat));
+        pass->id = ctr;
+        pass->session = session;
+        pass->trans_id = rand();
 
         pthread_mutex_lock(&session_lock);
         // the fucker is pointing to itself @ 3 nodes...
@@ -637,7 +642,7 @@ int main(int argc, char **argv){
         
         printf("Current node (after loop) @ %p\n", current);
         struct clientNode *node = malloc(sizeof(*node)); // somehow this is getting assigned the same address as the previous node?
-        node->data = &pass;
+        node->data = pass;
         node->nxt = NULL;
         node->prev = NULL;
         add_node(node, current);

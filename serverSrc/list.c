@@ -6,6 +6,7 @@ void remove_node(struct clientNode *node){
     }
     
     node->prev->nxt = node->nxt;
+    free(node);
 }
 
 void add_node(struct clientNode *node, struct clientNode *prevNode){
