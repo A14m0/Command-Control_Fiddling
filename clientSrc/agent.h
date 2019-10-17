@@ -6,12 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-#define GLOB_ID "TEST_AGENT" // These two values should at some 
-#define GLOB_LOGIN_ID "aris" // point be combined into one
-#define GLOB_LOGIN_PASS "lala"
-#define HOST "127.0.0.1"
-
 #define AGENT_DOWN_FILE 10
 #define AGENT_REV_SHELL 11
 #define AGENT_UP_FILE 12

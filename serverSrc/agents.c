@@ -68,6 +68,43 @@ int get_file(char *name, char *ptr){
     return size;
 }
 
+struct ret
+{
+    char *usr;
+    char *passwd;
+};
+
+
+struct ret *gen_creds(){
+    FILE *fd;
+    fd = fopen(DATA_FILE, "a");
+    struct ret *buf = malloc(sizeof(struct ret));
+    memset(buf, 0, sizeof(struct ret));
+    char *usr = malloc(13);
+    memset(usr, 0, 13);
+    char *pwd = malloc(13);
+    memset(usr, 0, 13);
+
+    usr[13] = '\0';
+    pwd[13] = '\0';
+
+    buf->usr = usr;
+    buf->passwd = pwd;
+
+
+    for(int i = 0; i < 12; i++){
+        usr[i] = 'A' + (random() % 26);
+    }
+
+    for(int i = 0; i < 12; i++){
+        pwd[i] = 'A' + (random() % 26);
+    }
+
+    fwrite(buf, 1, sizeof(buf), fd);
+    fclose(fd);
+    return buf;
+}
+
 void compile_agent(char *ip, char *port){
     // In here the agent file header is editeed and recompiled against these values
     // Also in here is where the username and password are added to the server database
@@ -96,16 +133,25 @@ void compile_agent(char *ip, char *port){
     copy_file(buff, "out/examples_common.h");
 
     // create config file
-    FILE *fd = NULL;
-    fd = fopen("out/config.h", "w");
+    
+    struct ret *struc = gen_creds();
 
     memset(buff, 0, sizeof(buff));
-    strcat(buff, "#define IP ");
+    strcat(buff, "#define HOST ");
     strcat(buff, ip);
     strcat(buff, "\n#define PORT ");
     strcat(buff, port);
-    strcat(buff, "\n");
+    strcat(buff, "\n#define GLOB_ID \"");
+    strcat(buff, struc->usr);
+    strcat(buff, "\"\n#define GLOB_LOGIN_PASS \"");
+    strcat(buff, struc->passwd);
+    strcat(buff, "\"\n");
+
+
+    FILE *fd = NULL;
+    fd = fopen("out/config.h", "w");
     fwrite(buff, 1, strlen(buff) -1, fd);
+    fclose(fd);
 
     printf("IP: %s\n", ip);
     printf("Port: %s\n", port);

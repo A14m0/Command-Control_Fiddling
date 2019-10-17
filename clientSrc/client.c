@@ -16,6 +16,7 @@ clients must be made or how a client should react.
  */
 
 #include "agent.h"
+#include "config.h"
 
 
 // Agent in-memory execution definitions

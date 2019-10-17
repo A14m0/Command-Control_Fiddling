@@ -2,6 +2,8 @@
 #include "agents.h"
 #include <signal.h>
 
+#define DATA_FILE "agents.dat"
+
 typedef struct {
     int id;
     ssh_session session;
