@@ -194,7 +194,7 @@ static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 void agent_handler(struct clientNode *node){
     clientDat *agent = node->data;
     char resp[2048];
-    char *ptr = &resp;
+    char *ptr = resp;
 
     int operation = -1;
     int rc = 0;

@@ -111,7 +111,7 @@ int exec_module(ssh_channel channel){
   	}
 	printf("[+] Made it through check\n");
 
-	nbytes = ssh_channel_read(channel, size, sizeof(size), 0);
+	nbytes = ssh_channel_read(channel, &size, sizeof(size), 0);
 	printf("read %d bytes from channel\n", nbytes);
 	if (nbytes < 0){
 		printf("Caught read error from server...\n");
@@ -267,7 +267,7 @@ int authenticate_console(ssh_session session){
 
     	// Try to authenticate with password
     	if (method & SSH_AUTH_METHOD_PASSWORD) {
-      		rc = ssh_userauth_password(session, NULL, GLOB_LOGIN_PASS);
+      		rc = ssh_userauth_password(session, NULL, GLOB_LOGIN);
       		if (rc == SSH_AUTH_ERROR) {
       			fprintf(stderr,"[-] Authentication failed: %s\n",ssh_get_error(session));
         		return rc;
@@ -445,7 +445,7 @@ int direct_forwarding(ssh_session session)
 
 
 int main(int argc, char* argv[]){
-    ssh_session session = connect_ssh(HOST, GLOB_LOGIN_ID, 0);
+    ssh_session session = connect_ssh(HOST, GLOB_ID, 0);
 
 	if(session == NULL){
 		printf("Failed to create SSH session\n");

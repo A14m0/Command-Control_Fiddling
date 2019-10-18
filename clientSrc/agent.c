@@ -1,4 +1,5 @@
 #include "agent.h"
+#include "config.h"
 
 struct tasking_struct{
 	int operation;

@@ -113,44 +113,44 @@ void compile_agent(char *ip, char *port){
     // move over the required source files
     char *buff[BUFSIZ];
     memset(buff, 0, sizeof(buff));
-    strcat(buff, AGENT_SOURCE);
-    strcat(buff, "client.c");
-    copy_file(buff, "out/client.c");
+    strcat(*buff, AGENT_SOURCE);
+    strcat(*buff, "client.c");
+    copy_file(*buff, "out/client.c");
+
+    memset(buff, 0, sizeof(*buff));
+    strcat(*buff, AGENT_SOURCE);
+    strcat(*buff, "agent.h");
+    copy_file(*buff, "out/agent.h");
+
+    memset(buff, 0, sizeof(*buff));
+    strcat(*buff, AGENT_SOURCE);
+    strcat(*buff, "agent.c");
+    copy_file(*buff, "out/agent.c");
 
     memset(buff, 0, sizeof(buff));
-    strcat(buff, AGENT_SOURCE);
-    strcat(buff, "agent.h");
-    copy_file(buff, "out/agent.h");
-
-    memset(buff, 0, sizeof(buff));
-    strcat(buff, AGENT_SOURCE);
-    strcat(buff, "agent.c");
-    copy_file(buff, "out/agent.c");
-
-    memset(buff, 0, sizeof(buff));
-    strcat(buff, AGENT_SOURCE);
-    strcat(buff, "examples_common.h");
-    copy_file(buff, "out/examples_common.h");
+    strcat(*buff, AGENT_SOURCE);
+    strcat(*buff, "examples_common.h");
+    copy_file(*buff, "out/examples_common.h");
 
     // create config file
     
     struct ret *struc = gen_creds();
 
-    memset(buff, 0, sizeof(buff));
-    strcat(buff, "#define HOST ");
-    strcat(buff, ip);
-    strcat(buff, "\n#define PORT ");
-    strcat(buff, port);
-    strcat(buff, "\n#define GLOB_ID \"");
-    strcat(buff, struc->usr);
-    strcat(buff, "\"\n#define GLOB_LOGIN_PASS \"");
-    strcat(buff, struc->passwd);
-    strcat(buff, "\"\n");
+    memset(buff, 0, sizeof(*buff));
+    strcat(*buff, "#define HOST ");
+    strcat(*buff, ip);
+    strcat(*buff, "\n#define PORT ");
+    strcat(*buff, port);
+    strcat(*buff, "\n#define GLOB_ID \"");
+    strcat(*buff, struc->usr);
+    strcat(*buff, "\"\n#define GLOB_LOGIN_PASS \"");
+    strcat(*buff, struc->passwd);
+    strcat(*buff, "\"\n");
 
 
     FILE *fd = NULL;
     fd = fopen("out/config.h", "w");
-    fwrite(buff, 1, strlen(buff) -1, fd);
+    fwrite(buff, 1, strlen(*buff) -1, fd);
     fclose(fd);
 
     printf("IP: %s\n", ip);
