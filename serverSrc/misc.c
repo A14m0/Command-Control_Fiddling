@@ -107,6 +107,52 @@ void init() {
         printf("Server: initialized directory 'out'\n");
     }
 
+    if (stat("agents/agents.dat", &st) == -1) {
+        int fd2 = open("agents/agents.dat", O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH);
+        printf("Server: initialized agent authentication file\n");
+        close(fd2);
+    }
+
+
+}
+
+int agent_authenticate(char *id, char *pass){
+    FILE *fd;
+    fd = fopen("agents/agents.dat", "r");
+    if (!fd)
+    {
+        printf("Server: FAILED TO OPEN AGENT DATABASE\n");
+        return 0;
+    }
+    
+    char buf[100];
+    char id_buf[100-SHA512_DIGEST_LENGTH-2];
+    char 
+    memset(buf, 0, 100);
+    for (size_t i = 0; i < count; i++)
+    {
+        fscanf(fd,"%[^\n]", buf);
+        sscanf(buf, "%[^:]", id_buf);
+        if(!strcmp(id, id_buf)){
+            printf("Found agent ID in database. Testing password...\n");
+            
+        }
+
+        memset(buf, 0, 100);
+    }
+    
+}
+
+char *digest(char *input){
+    unsigned char digest[SHA512_DIGEST_LENGTH];
+    SHA512((unsigned char*)&input, strlen(input), (unsigned char*)&digest);
+    
+    char *ret = malloc(SHA512_DIGEST_LENGTH*2+1);
+
+    for(int i = 0; i < SHA512_DIGEST_LENGTH; i++)
+         sprintf(ret[i*2], "%02x", (unsigned int)digest[i]);
+ 
+    return ret;
 }
 
 int copy_file(char *filename, char *dest){

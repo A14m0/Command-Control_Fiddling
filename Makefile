@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGSSERV=-lssh -lpthread
+CFLAGSSERV=-lssh -lpthread -lcrypto
 CFLAGSCLI=-lssh -lcurl
 CFLAGSDBG=-ggdb
 
