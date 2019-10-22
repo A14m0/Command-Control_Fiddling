@@ -63,9 +63,10 @@ char** str_split(char* a_str, const char a_delim)
 
     return result;
 }
+
 int main(){
-    char** tokens;
-    char** subtokens;
+    char** tokens = NULL;
+    char** subtokens = NULL;
 
     char *id = "aris";
     char *pass = "lala";
@@ -81,13 +82,14 @@ int main(){
 
     char buff[1000];
     memset(buff, 0, 1000);
-    printf("Buff contents before %s\n", buff);
-    char symbol;
+    buff[0] = '\0';
+    printf("Buff contents before: %s\n", buff);
+    char thing[2] = "A\0";
     if(fd != NULL)
     {
-        while((symbol = getc(fd)) != EOF)
+        while((thing[0] = getc(fd)) != EOF)
         {
-            strcat(buff, &symbol);
+            strcat(buff, thing);
         }
         fclose(fd);
     }
@@ -101,66 +103,41 @@ int main(){
         int i;
         for (i = 0; *(tokens + i); i++)
         {
-            subtokens = str_split(*(tokens + i), ':');
-            if(subtokens){
-                for(int j = 0; *(subtokens + j); j++){
-                    printf("Split String: %s", *(subtokens + j));
-                    free(*(subtokens));
-                }
-            }
-            printf("User=[%s]\n", *(tokens + i));
-            free(*(tokens + i));
+            printf("Line = %s\n", *(tokens + i));
+            //free(*(tokens + i));
         }
         printf("\n");
-        free(tokens);
+        //free(tokens);
     }
+
+    if(tokens){
+        int j;
+        for (j = 0; *(tokens + j); j++)
+        {
+            subtokens = str_split(*(tokens + j), ':');
+            if(!strcmp(id, *(subtokens))){
+                if(!strcmp(digest(pass), *(subtokens+1))){
+                    printf("User %s successfully authenticated with password %s\n", id, pass);
+                    return 1;
+                }
+                else {
+                    printf("ID works, but password is wrong\n");
+                }
+            }
+        }
+        
+    }
+
+
+
     return 0;
 }
-/*
-int main(){
-    char *id = "aris";
-    char *pass = "lala";
 
-    printf("Password hash: %s\n", digest(pass));
 
-    FILE *fd;
-    fd = fopen("test.dat", "r");
-    if (fd == NULL)
-    {
-        printf("Server: FAILED TO OPEN AGENT DATABASE\n");
-        return 0;
-    }
-    
-    char buf[SHA512_DIGEST_LENGTH];
-    char thing = '\0';
-    char id_buf[SHA512_DIGEST_LENGTH];
-    char thing2 = '\0';
-    char pass_buf[SHA512_DIGEST_LENGTH]; 
-    memset(buf, 0, SHA512_DIGEST_LENGTH);
-    memset(id_buf, 0, SHA512_DIGEST_LENGTH);
-    memset(pass_buf, 0, SHA512_DIGEST_LENGTH);
-    int count = 1;
-    for (size_t i = 0; i < count; i++)
-    {
-        fscanf(fd,"%[^\n]", buf);
-        printf("%s\n", buf);
-        sscanf(buf, "%[^:]", id_buf);
-        if(!strcmp(id, id_buf)){
-            printf("Found agent ID '%s' in database. Testing password...\n", id);
-            char term = ':';
-            int i = 0;
-            while(buf[i] != term){
-                printf("Not the character: '%c'\n", buf[i]);
-                i++;
-            }
-            printf("Found the character: '%c'\n", buf[i]);
-            printf("Thing: %s\n", buf + i);
-            sscanf(pass_buf, "%[^\n]", buf + i);
-            printf("Heres the pass: '%s'\n", pass_buf);
-            
-        }
-
-        memset(buf, 0, 100);
-    }
-    return 0;
-}*/
+/*subtokens = str_split(*(tokens + i), ':');
+            if(subtokens){
+                for(int j = 0; *(subtokens + j); j++){
+                    printf("Split String: %s\n", *(subtokens + j));
+                    free(*(subtokens + j));
+                }
+            }*/

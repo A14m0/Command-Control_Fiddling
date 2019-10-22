@@ -1,23 +1,5 @@
 #include "misc.h"
 
-int auth_password(const char *user, const char *password){
-    /*
-    * How this is gonna work:
-    * File named 'users.dat'
-    * Format is:
-    *   Unique_ID:Hashed_passphrase(Maybe SHA512?)
-    * 
-    * Unique ID is shipped with each executable 
-    * and added to database on creation
-    * Hashed passphrase is pretty straight forward
-    */
-
-    if(strcmp(user,"aris"))
-        return 0;
-    if(strcmp(password,"lala"))
-        return 0;
-    return 1; // authenticated
-}
 
 int index_of(char* str, char find, int rev){
     if (rev)
@@ -114,45 +96,6 @@ void init() {
     }
 
 
-}
-
-int agent_authenticate(char *id, char *pass){
-    FILE *fd;
-    fd = fopen("agents/agents.dat", "r");
-    if (!fd)
-    {
-        printf("Server: FAILED TO OPEN AGENT DATABASE\n");
-        return 0;
-    }
-    
-    char buf[100];
-    char id_buf[100-SHA512_DIGEST_LENGTH-2];
-    char 
-    memset(buf, 0, 100);
-    for (size_t i = 0; i < count; i++)
-    {
-        fscanf(fd,"%[^\n]", buf);
-        sscanf(buf, "%[^:]", id_buf);
-        if(!strcmp(id, id_buf)){
-            printf("Found agent ID in database. Testing password...\n");
-            
-        }
-
-        memset(buf, 0, 100);
-    }
-    
-}
-
-char *digest(char *input){
-    unsigned char digest[SHA512_DIGEST_LENGTH];
-    SHA512((unsigned char*)&input, strlen(input), (unsigned char*)&digest);
-    
-    char *ret = malloc(SHA512_DIGEST_LENGTH*2+1);
-
-    for(int i = 0; i < SHA512_DIGEST_LENGTH; i++)
-         sprintf(ret[i*2], "%02x", (unsigned int)digest[i]);
- 
-    return ret;
 }
 
 int copy_file(char *filename, char *dest){

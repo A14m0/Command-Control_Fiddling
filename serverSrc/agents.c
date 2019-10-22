@@ -1,5 +1,6 @@
 #include "agents.h"
 #include "misc.h"
+#include "authenticate.h"
 
 void init_agent(char *agent_id){
     FILE *fd = NULL;
@@ -68,42 +69,6 @@ int get_file(char *name, char *ptr){
     return size;
 }
 
-struct ret
-{
-    char *usr;
-    char *passwd;
-};
-
-
-struct ret *gen_creds(){
-    FILE *fd;
-    fd = fopen(DATA_FILE, "a");
-    struct ret *buf = malloc(sizeof(struct ret));
-    memset(buf, 0, sizeof(struct ret));
-    char *usr = malloc(13);
-    memset(usr, 0, 13);
-    char *pwd = malloc(13);
-    memset(usr, 0, 13);
-
-    usr[13] = '\0';
-    pwd[13] = '\0';
-
-    buf->usr = usr;
-    buf->passwd = pwd;
-
-
-    for(int i = 0; i < 12; i++){
-        usr[i] = 'A' + (random() % 26);
-    }
-
-    for(int i = 0; i < 12; i++){
-        pwd[i] = 'A' + (random() % 26);
-    }
-
-    fwrite(buf, 1, sizeof(buf), fd);
-    fclose(fd);
-    return buf;
-}
 
 void compile_agent(char *ip, char *port){
     // In here the agent file header is editeed and recompiled against these values

@@ -21,6 +21,7 @@ http://api.libssh.org/stable/libssh_tutorial.html
 #include "agents.h"
 #include "misc.h"
 #include "list.h"
+#include "authenticate.h"
 
 #ifdef HAVE_ARGP_H
 #include <argp.h>
@@ -416,7 +417,7 @@ void *ssh_handler(void* sess){
         
         if(!exists){
             init_agent(agent_id);
-            printf("Client %d: Initialized agent\n");
+            printf("Client %d: Initialized agent\n", pass->id);
         }
 
         char tasking[2048];
@@ -596,7 +597,7 @@ int main(int argc, char **argv){
                     switch(ssh_message_subtype(message)){
                         case SSH_AUTH_METHOD_PASSWORD:
                             printf("Server: User %s wants to auth with pass %s\n", ssh_message_auth_user(message), ssh_message_auth_password(message));
-                            if(auth_password(ssh_message_auth_user(message), ssh_message_auth_password(message))){
+                            if(authenticate(ssh_message_auth_user(message), ssh_message_auth_password(message))){
                                 auth=1;
                                 ssh_message_auth_reply_success(message,0);
                                 break;
