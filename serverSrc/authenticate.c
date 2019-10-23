@@ -98,7 +98,7 @@ int authenticate(char *usr, char *pass){
             subtokens = str_split(*(tokens + j), ':');
             if(!strcmp(usr, *(subtokens))){
                 if(!strcmp(digest(pass), *(subtokens+1))){
-                    printf("Server: ID %s successfully authenticated\n", id);
+                    printf("Server: ID %s successfully authenticated\n", usr);
                     for (int i = 0; *(tokens + i); i++)
                     {
                         free(*(tokens + i));

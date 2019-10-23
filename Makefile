@@ -4,7 +4,7 @@ CFLAGSCLI=-lssh -lcurl
 CFLAGSDBG=-ggdb -Wall
 
 hellomake: 
-	$(CC) -o serverSrc/server.out serverSrc/server.c serverSrc/misc.c serverSrc/agents.c serverSrc/list.c $(CFLAGSSERV)
+	$(CC) -o serverSrc/server.out serverSrc/server.c serverSrc/misc.c serverSrc/agents.c serverSrc/list.c serverSrc/authenticate.c $(CFLAGSSERV)
 	$(CC) -o clientSrc/client.out clientSrc/client.c clientSrc/agent.c $(CFLAGSCLI)
 
 debug:
