@@ -1,4 +1,5 @@
 #include "misc.h"
+#include "authenticate.h"
 
 
 int index_of(char* str, char find, int rev){
@@ -89,8 +90,8 @@ void init() {
         printf("Server: initialized directory 'out'\n");
     }
 
-    if (stat("agents/agents.dat", &st) == -1) {
-        int fd2 = open("agents/agents.dat", O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH);
+    if (stat(DATA_FILE, &st) == -1) {
+        int fd2 = open(DATA_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH);
         printf("Server: initialized agent authentication file\n");
         close(fd2);
     }

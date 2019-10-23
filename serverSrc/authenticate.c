@@ -71,7 +71,7 @@ int authenticate(char *usr, char *pass){
     FILE *fd;
     
     // read in data into buffer
-    fd = fopen("test.dat", "r");
+    fd = fopen(DATA_FILE, "r");
     if (fd == NULL)
     {
         printf("Server: FAILED TO OPEN AGENT DATABASE\n");
