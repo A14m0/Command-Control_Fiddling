@@ -20,3 +20,18 @@
 
 7. Add manager/server communication functions
     * Redo call from manager to SSH_REQ_SHELL
+
+8. Push connection to thread earlier than it is already
+
+9. Allow adding of agent information to the database through commandline tags
+
+10. Allow for better catching of empty data file
+
+11. Fix SEGV on 8th agent connection
+    * Happening at the free
+    ** Another SEGV at god knows where
+    *** Looks like some quality heap corruption stuffz
+        *** Take a look here:
+                https://www.youtube.com/watch?v=ZHghwsTRyzQ
+                https://www.youtube.com/watch?v=gL45bjQvZSU
+                https://www.youtube.com/watch?v=HWhzH--89UQ

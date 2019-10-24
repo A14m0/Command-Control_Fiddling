@@ -53,8 +53,9 @@ char** str_split(char* a_str, const char a_delim)
             *(result + idx++) = strdup(token);
             token = strtok(0, delim);
         }
-        assert(idx == count - 1);
-        *(result + idx) = 0;
+        if(idx == count -1){
+            *(result + idx) = 0;
+        }
     }
 
     return result;
@@ -79,13 +80,20 @@ int authenticate(char *usr, char *pass){
     }
 
     memset(buff, 0, 1000);
+    int ctr = 0;
     if(fd != NULL)
     {
         while((thing[0] = getc(fd)) != EOF)
         {
             strcat(buff, thing);
+            ctr++;
         }
         fclose(fd);
+    }
+
+    if(ctr == 0){
+        printf("Server: Found default agent file. Register agents by compiling them with this install\n");
+        return 0;
     }
 
     tokens = str_split(buff, '\n');
@@ -101,13 +109,19 @@ int authenticate(char *usr, char *pass){
                     printf("Server: ID %s successfully authenticated\n", usr);
                     for (int i = 0; *(tokens + i); i++)
                     {
+                        printf("Doing free of tokens (%p)\n", (tokens +i));
+                        //if(*(tokens + i) == NULL)
                         free(*(tokens + i));
+                        printf("Completed free\n");
                     }
                     for (int i = 0; *(subtokens+i); i++)
                     {
+                        printf("Doing free of subtokens\n");
                         free(*(subtokens+i));
                     }
+                    printf("Doing free of parent array ptrs\n");
                     free(subtokens);
+                    printf("Last one\n");
                     free(tokens);
                     return 1;
                 }
@@ -115,22 +129,25 @@ int authenticate(char *usr, char *pass){
                     // note here that we do not break the loop, to prevent brute forcing of IDs through response time correlation
                     printf("Server: ID %s failed to pass password authentication\n");
                 }
+            } else {
+                printf("Server: ID %s unknown to this server\n", usr);
             }
         }
-        
     }
-
-    printf("Server: ID %s unknown to this server\n", usr);
 
     for (int i = 0; *(tokens + i); i++)
     {
+        printf("Doing free of tokens (failure)\n");
         free(*(tokens + i));
     }
     for (int i = 0; *(subtokens+i); i++)
     {
+        printf("Doing free of subtokens (failure)\n");
         free(*(subtokens+i));
     }
+    printf("Doing free ptr (failure)\n");
     free(subtokens);
+    printf("Done (failure)\n");
     free(tokens);
 
 

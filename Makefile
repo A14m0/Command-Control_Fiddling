@@ -8,5 +8,5 @@ hellomake:
 	$(CC) -o clientSrc/client.out clientSrc/client.c clientSrc/agent.c $(CFLAGSCLI)
 
 debug:
-	$(CC) -o serverSrc/server.out serverSrc/server.c serverSrc/misc.c serverSrc/agents.c serverSrc/list.c $(CFLAGSSERV) $(CFLAGSDBG)
+	$(CC) -o serverSrc/server.out serverSrc/server.c serverSrc/misc.c serverSrc/agents.c serverSrc/list.c serverSrc/authenticate.c $(CFLAGSSERV) $(CFLAGSDBG)
 	$(CC) -o clientSrc/client.out clientSrc/client.c clientSrc/agent.c $(CFLAGSCLI) $(CFLAGSDBG)

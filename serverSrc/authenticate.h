@@ -3,8 +3,9 @@
 #include <openssl/sha.h>
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 
-#define DATA_FILE "agents.dat"
+#define DATA_FILE "agents/agents.dat"
 
 struct ret
 {
