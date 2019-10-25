@@ -21,7 +21,7 @@
 7. Add manager/server communication functions
     * Redo call from manager to SSH_REQ_SHELL
 
-8. Push connection to thread earlier than it is already
+8. Push connection to thread immediately after socket creation
 
 9. Allow adding of agent information to the database through commandline tags
 
