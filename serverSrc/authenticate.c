@@ -41,6 +41,7 @@ char** str_split(char* a_str, const char a_delim)
     count++;
 
     result = malloc(sizeof(char*) * count);
+    memset(result, 0, sizeof(char*) * count);
 
     if (result)
     {
