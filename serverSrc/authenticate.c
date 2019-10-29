@@ -5,6 +5,7 @@ char *digest(char *input){
     SHA512((unsigned char*)input, strlen(input), (unsigned char*)&digest);
     
     char *ret = malloc(SHA512_DIGEST_LENGTH*2+1);
+    ret[SHA512_DIGEST_LENGTH*2] = '\0';
 
     for(int i = 0; i < SHA512_DIGEST_LENGTH; i++)
          sprintf(&ret[i*2], "%02x", (unsigned int)digest[i]);
@@ -64,7 +65,7 @@ char** str_split(char* a_str, const char a_delim)
 
 
 
-int authenticate(char *usr, char *pass){
+int authenticate(const char *usr, const char *pass){
     // initialize variables
     char** tokens = NULL;
     char** subtokens = NULL;
@@ -110,55 +111,42 @@ int authenticate(char *usr, char *pass){
                     printf("Server: ID %s successfully authenticated\n", usr);
                     for (int i = 0; *(tokens + i); i++)
                     {
-                        printf("Doing free of tokens (%p)\n", (tokens +i));
-                        //if(*(tokens + i) == NULL)
                         free(*(tokens + i));
-                        printf("Completed free\n");
                     }
                     for (int i = 0; *(subtokens+i); i++)
                     {
-                        printf("Doing free of subtokens\n");
                         free(*(subtokens+i));
                     }
-                    printf("Doing free of parent array ptrs\n");
                     free(subtokens);
-                    printf("Last one\n");
                     free(tokens);
                     return 1;
                 }
                 else {
                     // note here that we do not break the loop, to prevent brute forcing of IDs through response time correlation
-                    printf("Server: ID %s failed to pass password authentication\n");
+                    printf("Server: ID %s failed to pass password authentication\n", usr);
+                    return 0;
                 }
-            } else {
-                printf("Server: ID %s unknown to this server\n", usr);
             }
         }
+        printf("Server: ID %s unknown to this server\n", usr);
     }
 
     for (int i = 0; *(tokens + i); i++)
     {
-        printf("Doing free of tokens (failure)\n");
         free(*(tokens + i));
     }
     for (int i = 0; *(subtokens+i); i++)
     {
-        printf("Doing free of subtokens (failure)\n");
         free(*(subtokens+i));
     }
-    printf("Doing free ptr (failure)\n");
     free(subtokens);
-    printf("Done (failure)\n");
     free(tokens);
-
 
     return 0;
 }
 
 
 struct ret *gen_creds(){
-    FILE *fd;
-    fd = fopen(DATA_FILE, "a");
     struct ret *buf = malloc(sizeof(struct ret));
     memset(buf, 0, sizeof(struct ret));
     char *usr = malloc(13);
@@ -181,7 +169,5 @@ struct ret *gen_creds(){
         pwd[i] = 'A' + (random() % 26);
     }
 
-    fwrite(buf, 1, sizeof(buf), fd);
-    fclose(fd);
     return buf;
 }

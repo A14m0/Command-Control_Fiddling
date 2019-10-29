@@ -11,11 +11,9 @@ void remove_node(struct clientNode *node){
 
 void add_node(struct clientNode *node, struct clientNode *prevNode){
     if(prevNode->nxt == 0){
-        printf("Adding node to end of list\n");
         prevNode->nxt = node;
         node->prev = prevNode;
     } else {
-        printf("Adding node in the middle thing\n");
         struct clientNode *tmp = prevNode->nxt;
         prevNode->nxt = node;
         node->prev = prevNode;

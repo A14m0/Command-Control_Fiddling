@@ -4,3 +4,4 @@
 #define GLOB_ID "TEST_AGENT" // These two values should at some 
 #define GLOB_LOGIN "lala"
 #define HOST "127.0.0.1"
+#define PORT 21

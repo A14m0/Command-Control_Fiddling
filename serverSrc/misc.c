@@ -55,7 +55,7 @@ void init() {
 	// gets current file path, so data will be written to correct folder regardless of where execution is called
 	char result[4096];
 	memset(result, 0, sizeof(result));
-	ssize_t count = readlink( "/proc/self/exe", result, 4096);
+	readlink( "/proc/self/exe", result, 4096);
 
 	char dir[4096];
 	memset(dir, 0, sizeof(dir));
@@ -77,8 +77,7 @@ void init() {
 
 
     struct stat st = {0};
-    int rc = 0;
-    mode_t i = umask(0);
+    umask(0);
 
     if (stat("agents", &st) == -1) {
         mkdir("agents", 0755);
@@ -100,7 +99,6 @@ void init() {
 }
 
 int copy_file(char *filename, char *dest){
-    size_t len = 0 ;
     char ch;
 
     printf("Moving file: %s -> %s\n", filename, dest);

@@ -13,9 +13,8 @@ int func_loop(ssh_session session)
   	ssh_channel channel;
   	int rc;
   	char tasking[2048];
-  	int nbytes;
-	int quitting = 0;
-  	channel = ssh_channel_new(session);
+	int nbytes;
+	channel = ssh_channel_new(session);
 
 	printf("[+] Created new SSH channel\n");
   	if (channel == NULL)
@@ -68,7 +67,7 @@ int func_loop(ssh_session session)
 	}		
 
 	printf("Read data: %s\n", tasking);
-	quitting = parse_tasking(tasking, channel);
+	parse_tasking(tasking, channel);
 	
 	  // close connections
 	ssh_channel_write(channel, "\0", 2);
@@ -92,7 +91,6 @@ int parse_tasking(char *tasking, ssh_channel chan){
 
 	// get the number of instructions to complete
 	int num = 0;
-	int size = strlen(tasking);
 	char *tmp = tasking;
 	for (; tasking[num]; tasking[num]=='\n' ? num++ : *tasking++);
 	tasking = tmp;

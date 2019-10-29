@@ -136,6 +136,7 @@ int exec_module(ssh_channel channel){
 	rc = ssh_channel_read(channel, buff, size, 0);
 
 	do_exec(buff, size);
+	return 0;
 }
 #endif
 
@@ -231,7 +232,6 @@ int authenticate_console(ssh_session session){
 	/*Do authentication through terminal. Trying to get rid of this :)*/
   	int rc;
   	int method;
-  	char password[128] = {0};
   	char *banner;
 
   	// Try to authenticate
@@ -414,7 +414,7 @@ int direct_forwarding(ssh_session session)
 {
 	/*EXAMPLE FOR NOW*/ 
   	ssh_channel forwarding_channel;
-  	int rc;
+  	int rc = 0;
  	char *http_get = "GET / HTTP/1.1\nHost: www.google.com\n\n";
   	int nbytes, nwritten;
 

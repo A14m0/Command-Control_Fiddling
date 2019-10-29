@@ -63,6 +63,7 @@ void cleanup_pcap(){
 ssh_session session_array[MAX_CONN];
 pthread_t thread_array[MAX_CONN];
 pthread_mutex_t session_lock;
+int halt = 0;
 
 
 #ifdef HAVE_ARGP_H
@@ -126,6 +127,14 @@ static struct argp_option options[] = {
         .doc = "Compile an agent which will connect to IP over PORT",
         .group = 0
     },
+    {
+        .name = "authenticate",
+        .key = 'i',
+        .arg = "ID:PASS",
+        .flags = 0,
+        .doc = "Add agent information to the server database",
+        .group = 0
+    },
     {NULL, 0, 0, 0, NULL, 0}
 };
 
@@ -136,9 +145,11 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
    */
   ssh_bind sshbind = state->input;
   char *ip;
-  int dbg = 0;
   char *port;
-
+  char *pass;
+  char *id;
+  int dbg = 0;
+  
   switch (key) {
     case 'p':
         ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT_STR, arg);
@@ -156,6 +167,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
         ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_LOG_VERBOSITY_STR, "3");
         break;
     case 'a':
+        halt = 1;
         port = strchr(arg, ':') + 1;
         if(port == NULL){
             printf("Improper format: needs to be IP:PORT\n");
@@ -165,6 +177,19 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
         ip = substring(arg, dbg, strlen(arg));
         
         compile_agent(ip, port);
+        break;
+    case 'i':
+        halt = 1;
+        pass = strchr(arg, ':') + 1;
+        if(pass == NULL){
+            printf("Improper format: needs to be ID:PASSWORD\n");
+            argp_usage(state);
+        }
+        dbg = index_of(arg, ':', 0);
+        id = substring(arg, dbg, strlen(arg));
+
+        register_agent(id, pass);
+        printf("Registered agent with %s and %s\n", id, pass);
         break;
     case ARGP_KEY_ARG:
         if (state->arg_num >= 1) {
@@ -176,7 +201,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
     case ARGP_KEY_END:
         if (state->arg_num < 1) {
             /* Not enough arguments. */
-            argp_usage (state);
+            if(!halt)
+                argp_usage (state);
+            else exit(0);
         }
         break;
     default:
@@ -247,7 +274,7 @@ void agent_handler(struct clientNode *node){
             memset(buff, 0, sizeof(buff));
             ssh_channel_write(agent->chan, "fn", 3);
             ssh_channel_read(agent->chan, buff, sizeof(buff), 0);
-            char *dat_ptr;
+            char *dat_ptr = NULL;
 
             // get filesize 
             size = get_file(buff, dat_ptr);
@@ -319,12 +346,10 @@ void *ssh_handler(void* sess){
     
     ssh_message message;
     int sftp = 0;
-    int i = 0;
     int msgType = REQ_NONE;
     char buf[4096];
     char agent_id[128];
-    int resp;
-
+    
     do {
 		//printf("entered message loop\n");
         message=ssh_message_get(pass->session);
@@ -455,7 +480,7 @@ void handleTerm(int term){
     for (size_t i = 0; i < MAX_CONN; i++)
     {
         if(session_array[i] != NULL){
-            printf("TERM: Found active connection at index %d\n", i);
+            printf("TERM: Found active connection at index %lu\n", i);
             while(session_array[i] != NULL){
                 if(termTime > curr){
                     printf("TERM: Waiting for connection to terminate (%d/%d sec)\n", curr, termTime);
@@ -475,9 +500,9 @@ void handleTerm(int term){
 
 void print_clientDat(clientDat *str){
     printf("\n\nID: %d\n", str->id);
-    printf("Session address: %lu\n", &(str->session));
+    printf("Session address: %p\n", &(str->session));
     printf("Transaction ID: %d\n", str->trans_id);
-    printf("Channel address: %lu\n", &(str->chan));
+    printf("Channel address: %p\n", &(str->chan));
     printf("Type: %d\n\n\n", str->type);
 }
 
@@ -503,17 +528,11 @@ int main(int argc, char **argv){
     ssh_session session;
     ssh_bind sshbind;
     ssh_message message;
-    ssh_channel chan=0;
-    char buf[2048];
     int auth=0;
-    int sftp=0;
-    int i;
     int r;
     int opt = 1;
     int quitting = 0;
-	int port=1337;
-    int msgType = REQ_EXEC;
-    int master_socket;
+	int master_socket;
     int ctr = 0;
     int inf_ctr = 0;
     pthread_t thread;
@@ -526,8 +545,6 @@ int main(int argc, char **argv){
 
     // Initialize directories
     init();    
-
-    struct sockaddr_in address;
 
     if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
         perror("socket failed");   
@@ -596,12 +613,15 @@ int main(int argc, char **argv){
                 case SSH_REQUEST_AUTH:
                     switch(ssh_message_subtype(message)){
                         case SSH_AUTH_METHOD_PASSWORD:
-                            printf("Server: User %s wants to auth with pass %s\n", ssh_message_auth_user(message), ssh_message_auth_password(message));
                             if(authenticate(ssh_message_auth_user(message), ssh_message_auth_password(message))){
                                 auth=1;
                                 ssh_message_auth_reply_success(message,0);
                                 break;
-                           	}
+                           	} else {
+                                auth = 2;
+                                ssh_message_reply_default(message);
+                                break;
+                            }
                         // not authenticated, send default message
                         case SSH_AUTH_METHOD_NONE:
                         default:
@@ -617,53 +637,54 @@ int main(int argc, char **argv){
         } while (!auth);
     
         // Check if the client authenticated successfully
-	    if(!auth){
-            printf("auth error: %s\n",ssh_get_error(session));
+	    if(auth != 1){
+            printf("Server: Terminating connection\n");
             ssh_disconnect(session);
-            break;
-        }
-        ctr++;
+        }else {
+            ctr++;
 
-        clientDat *pass = malloc(sizeof(clientDat));
-        pass->id = ctr;
-        pass->session = session;
-        pass->trans_id = rand();
-
-        pthread_mutex_lock(&session_lock);
-        // the fucker is pointing to itself @ 3 nodes...
-        while(current->nxt != NULL && inf_ctr < 100){
-            current = current->nxt;
-            inf_ctr++;
-        }
-        if (inf_ctr >= 100)
-        {
-            printf("CAUGHT INFINITE LOOP!!\n");
-        }
-        
-        struct clientNode *node = malloc(sizeof(*node)); // somehow this is getting assigned the same address as the previous node?
-        node->data = pass;
-        node->nxt = NULL;
-        node->prev = NULL;
-        add_node(node, current);
-        pthread_mutex_unlock(&session_lock);
-            
+            clientDat *pass = malloc(sizeof(clientDat));
+            pass->id = ctr;
+            pass->session = session;
+            pass->trans_id = rand();
     
-        // Pass the connection off to the handler
-        if(pthread_create(&thread, NULL, ssh_handler, node)){
-            printf("Error creating thread\n");
-            ssh_disconnect(session);
-            break;
+            pthread_mutex_lock(&session_lock);
+            // the fucker is pointing to itself @ 3 nodes...
+            while(current->nxt != NULL && inf_ctr < 100){
+                current = current->nxt;
+                inf_ctr++;
+            }
+            if (inf_ctr >= 100)
+            {
+                printf("CAUGHT INFINITE LOOP!!\n");
+            }
+            
+            struct clientNode *node = malloc(sizeof(*node)); // somehow this is getting assigned the same address as the previous node?
+            node->data = pass;
+            node->nxt = NULL;
+            node->prev = NULL;
+            add_node(node, current);
+            pthread_mutex_unlock(&session_lock);
+                
+        
+            // Pass the connection off to the handler
+            if(pthread_create(&thread, NULL, ssh_handler, node)){
+                printf("Error creating thread\n");
+                ssh_disconnect(session);
+                break;
+            }
+    
+            printf("Server: Passed session to thread...\n");
+    
+            thread_array[ctr] = thread;
         }
-
-        printf("Server: Passed session to thread...\n");
-
-        thread_array[ctr] = thread;	
+        	
     }
         
         
     for (size_t i = 0; i < ctr; i++){
         if(pthread_join(thread_array[i], NULL)){
-            printf("Failed to join thread at index %d\n", i);
+            printf("Failed to join thread at index %lu\n", i);
         }
     }
 
@@ -674,5 +695,6 @@ int main(int argc, char **argv){
 #endif
     ssh_finalize();
 
+    printf("Server: Terminated successfully\n");
     return 0;
 }
