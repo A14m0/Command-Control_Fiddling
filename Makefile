@@ -1,10 +1,10 @@
 CC=gcc
 
 CFLAGSSERV=-lssh -lpthread -lcrypto
-CFILESSERV=serverSrc/server.c serverSrc/misc.c serverSrc/agents.c serverSrc/list.c serverSrc/authenticate.c
+CFILESSERV=serverSrc/server.c serverSrc/misc.c serverSrc/agents.c serverSrc/list.c serverSrc/authenticate.c serverSrc/b64.c
 
 CFLAGSCLI=-lssh -lcurl
-CFILESCLI=clientSrc/client.c clientSrc/agent.c
+CFILESCLI=clientSrc/client.c clientSrc/agent.c clientSrc/b64.c
 CFLAGSDBG=-ggdb -Wall
 
 hellomake: 

@@ -89,6 +89,11 @@ void init() {
         printf("Server: initialized directory 'out'\n");
     }
 
+    if (stat("modules", &st) == -1) {
+        mkdir("modules", 0755);
+        printf("Server: initialized directory 'modules'\n");
+    }
+
     if (stat(DATA_FILE, &st) == -1) {
         int fd2 = open(DATA_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH);
         printf("Server: initialized agent authentication file\n");

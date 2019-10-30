@@ -23,6 +23,6 @@
 
 void init_agent(char *agent_id);
 int get_tasking(char *agent_id, char *tasking);
-int get_file(char *name, char *ptr);
+int get_file(char *name, char **ptr);
 void compile_agent(char *ip, char *port);
 void register_agent(char *id, char *port);

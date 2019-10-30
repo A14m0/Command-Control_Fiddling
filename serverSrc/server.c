@@ -22,6 +22,7 @@ http://api.libssh.org/stable/libssh_tutorial.html
 #include "misc.h"
 #include "list.h"
 #include "authenticate.h"
+#include "b64.h"
 
 #ifdef HAVE_ARGP_H
 #include <argp.h>
@@ -143,74 +144,74 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   /* Get the input argument from argp_parse, which we
    * know is a pointer to our arguments structure.
    */
-  ssh_bind sshbind = state->input;
-  char *ip;
-  char *port;
-  char *pass;
-  char *id;
-  int dbg = 0;
+    ssh_bind sshbind = state->input;
+    char *ip;
+    char *port;
+    char *pass;
+    char *id;
+    int dbg = 0;
   
-  switch (key) {
-    case 'p':
-        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT_STR, arg);
-        break;
-    case 'd':
-        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, arg);
-        break;
-    case 'k':
-        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_HOSTKEY, arg);
-        break;
-    case 'r':
-        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, arg);
-        break;
-    case 'v':
-        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_LOG_VERBOSITY_STR, "3");
-        break;
-    case 'a':
-        halt = 1;
-        port = strchr(arg, ':') + 1;
-        if(port == NULL){
-            printf("Improper format: needs to be IP:PORT\n");
-            argp_usage(state);
-        }
-        dbg = index_of(arg, ':', 0);
-        ip = substring(arg, dbg, strlen(arg));
+    switch (key) {
+        case 'p':
+            ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT_STR, arg);
+            break;
+        case 'd':
+            ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, arg);
+            break;
+        case 'k':
+            ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_HOSTKEY, arg);
+            break;
+        case 'r':
+            ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, arg);
+            break;
+        case 'v':
+            ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_LOG_VERBOSITY_STR, "3");
+            break;
+        case 'a':
+            halt = 1;
+            port = strchr(arg, ':') + 1;
+            if(port == NULL){
+                printf("Improper format: needs to be IP:PORT\n");
+                argp_usage(state);
+            }
+            dbg = index_of(arg, ':', 0);
+            ip = substring(arg, dbg, strlen(arg));
         
-        compile_agent(ip, port);
-        break;
-    case 'i':
-        halt = 1;
-        pass = strchr(arg, ':') + 1;
-        if(pass == NULL){
-            printf("Improper format: needs to be ID:PASSWORD\n");
-            argp_usage(state);
-        }
-        dbg = index_of(arg, ':', 0);
-        id = substring(arg, dbg, strlen(arg));
+            compile_agent(ip, port);
+            break;
+        case 'i':
+            halt = 1;
+            pass = strchr(arg, ':') + 1;
+            if(pass == NULL){
+                printf("Improper format: needs to be ID:PASSWORD\n");
+                argp_usage(state);
+            }
+            dbg = index_of(arg, ':', 0);
+            id = substring(arg, dbg, strlen(arg));
 
-        register_agent(id, pass);
-        printf("Registered agent with %s and %s\n", id, pass);
-        break;
-    case ARGP_KEY_ARG:
-        if (state->arg_num >= 1) {
-        /* Too many arguments. */
-            argp_usage (state);
-        }
-        ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDADDR, arg);
-        break;
-    case ARGP_KEY_END:
-        if (state->arg_num < 1) {
-            /* Not enough arguments. */
-            if(!halt)
+            register_agent(id, pass);
+            printf("Registered agent with %s and %s\n", id, pass);
+            break;
+        case ARGP_KEY_ARG:
+            if (state->arg_num >= 1) {
+            /* Too many arguments. */
                 argp_usage (state);
-            else exit(0);
-        }
-        break;
-    default:
-        return ARGP_ERR_UNKNOWN;
-  }
+            }
+            ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDADDR, arg);
+            break;
+        case ARGP_KEY_END:
+            if (state->arg_num < 1) {
+                /* Not enough arguments. */
+                if(!halt)
+                    argp_usage (state);
+                else exit(0);
+            }
+            break;
+        default:
+            return ARGP_ERR_UNKNOWN;
+    }
 
-  return 0;
+    return 0;
 }
 
 /* Our argp parser. */
@@ -240,10 +241,13 @@ void agent_handler(struct clientNode *node){
         }
         
         // this seems wrong...
-        char tmpbf[3];
-        strncat(tmpbf,resp,index_of(resp, '|', 0));
+        char tmpbf[3] = {0,0,0};
+        strncat(tmpbf,resp,2);
+        printf("Temp buffer: %s\n", tmpbf);
         operation = atoi(tmpbf);
-        ptr += index_of(resp, '|', 0);
+        ptr += 2;
+        printf("Option thing: %s\n", ptr);
+        printf("Parsed Operation: %d\n", operation);
 
         /*
         Command data structure:
@@ -269,28 +273,43 @@ void agent_handler(struct clientNode *node){
             break;
 
         case AGENT_DOWN_FILE:
+
             printf("Agent download caught\n");
         /*ADD CHECKS IN HERE FOR SAFETY*/
             memset(buff, 0, sizeof(buff));
-            ssh_channel_write(agent->chan, "fn", 3);
-            ssh_channel_read(agent->chan, buff, sizeof(buff), 0);
+            printf("Writing to channel...\n");
             char *dat_ptr = NULL;
 
             // get filesize 
-            size = get_file(buff, dat_ptr);
+            size = get_file(ptr, &dat_ptr);
+            
+            printf("Got file information\n");
             if(size < 0){
                 printf("Client %d: filename '%s' does not exist\n", agent->id, buff); 
                 ssh_channel_write(agent->chan, "er", 3);
                 break;
             }
             memset(buff, 0, sizeof(buff));
+            int size_e = b64_encoded_size(size);
+            
+            char tmpbuffer[8];
+            tmpbuffer[7] = '\0';
+            sprintf(tmpbuffer, "%d", size_e);
             
             // writes file size
-            ssh_channel_write(agent->chan, &size, sizeof(size));
+            ssh_channel_write(agent->chan, tmpbuffer, sizeof(tmpbuffer));
             ssh_channel_read(agent->chan, buff, sizeof(buff), 0);
+            printf("read response: %s\n", buff);
+
+            char *ptr = b64_encode((unsigned char *)dat_ptr, size);
+            printf("encoded data start: %.20s\n", ptr);
 
             // writes file 
-            ssh_channel_write(agent->chan, dat_ptr, size);
+            rc = ssh_channel_write(agent->chan, ptr, size_e);
+            if(rc == SSH_ERROR){
+                printf("Tada you found it: %s\n", ssh_get_error(agent->session));
+            }
+            printf("Completed\n");
 
             break;
 

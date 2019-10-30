@@ -51,19 +51,24 @@ int get_tasking(char *agent_id, char *tasking){
     return 0;
 }
 
-int get_file(char *name, char *ptr){
+int get_file(char *name, char **ptr){
     int size = 0;
-    FILE *file;
-    file = fopen(name, "r");
-    if (file)
+    size_t num = 0;
+    FILE *file = NULL;
+    printf("Opening file %s\n", name);
+    file = fopen(name, "rb");
+
+    if (file == NULL)
     {
-        fclose(file);
+        printf("Failed to open file\n");
         return -1;
     }
     fseek(file, 0L, SEEK_END);
     size = ftell(file);
-    ptr = malloc(size);
-    fread(ptr, 1, size, file);
+
+    *ptr = malloc(size);
+    rewind(file);
+    num = fread(*ptr, 1, size, file);
     fclose(file);
 
     return size;
