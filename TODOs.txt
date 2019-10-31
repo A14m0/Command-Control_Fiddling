@@ -23,6 +23,8 @@
 
 8. Push connection to thread immediately after socket creation5
 
-9. Allow adding of agent information to the database through commandline tags
+9. Cleanup out/ after agent compilation
 
 10. Allow for better catching of empty data file
+
+11. Add agent beacon functionality

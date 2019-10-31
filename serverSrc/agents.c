@@ -67,6 +67,7 @@ int get_file(char *name, char **ptr){
     size = ftell(file);
 
     *ptr = malloc(size);
+    memset(*ptr, 0, size);
     rewind(file);
     num = fread(*ptr, 1, size, file);
     fclose(file);

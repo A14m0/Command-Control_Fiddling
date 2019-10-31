@@ -274,36 +274,31 @@ void agent_handler(struct clientNode *node){
 
         case AGENT_DOWN_FILE:
 
-            printf("Agent download caught\n");
-        /*ADD CHECKS IN HERE FOR SAFETY*/
+            printf("Client %d: Sending file -> %s\n", agent->id, ptr);
             memset(buff, 0, sizeof(buff));
-            printf("Writing to channel...\n");
+            char tmpbuffer[8];
+            tmpbuffer[7] = '\0';
             char *dat_ptr = NULL;
+            int size_e = 0;
 
             // get filesize 
             size = get_file(ptr, &dat_ptr);
             
-            printf("Got file information\n");
             if(size < 0){
                 printf("Client %d: filename '%s' does not exist\n", agent->id, buff); 
                 ssh_channel_write(agent->chan, "er", 3);
                 break;
             }
             memset(buff, 0, sizeof(buff));
-            int size_e = b64_encoded_size(size);
-            
-            char tmpbuffer[8];
-            tmpbuffer[7] = '\0';
+            size_e = b64_encoded_size(size);
             sprintf(tmpbuffer, "%d", size_e);
             
             // writes file size
             ssh_channel_write(agent->chan, tmpbuffer, sizeof(tmpbuffer));
             ssh_channel_read(agent->chan, buff, sizeof(buff), 0);
-            printf("read response: %s\n", buff);
-
+            
             char *ptr = b64_encode((unsigned char *)dat_ptr, size);
-            printf("encoded data start: %.20s\n", ptr);
-
+            
             // writes file 
             rc = ssh_channel_write(agent->chan, ptr, size_e);
             if(rc == SSH_ERROR){

