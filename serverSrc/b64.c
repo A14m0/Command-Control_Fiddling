@@ -58,7 +58,6 @@ char *b64_encode(const unsigned char *in, size_t len)
 	}
 	
 	elen = b64_encoded_size(len);
-	printf("ELEN: %zu\n", elen);
 	out  = malloc(elen+1);
 	out[elen] = '\0';
 

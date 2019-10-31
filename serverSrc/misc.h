@@ -7,7 +7,7 @@
 #include <openssl/sha.h>
 
 typedef struct {
-    int id;
+    char *id;
     ssh_session session;
     int trans_id;
     ssh_channel chan;

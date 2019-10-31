@@ -65,13 +65,11 @@ void init() {
 	unsigned long index = last - result;
 	strncpy(dir, result, index);
 	
-	printf("[i] Determined directory: %s\n", dir);
-	
 	int ret = chdir(dir);
 
 
 	if(ret < 0){
-		perror("[-] Failed to change directory");
+		perror("Failed to change directory");
 		exit(-1);
 	}
 

