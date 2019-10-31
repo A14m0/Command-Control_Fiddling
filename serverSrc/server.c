@@ -205,7 +205,7 @@ void agent_handler(struct clientNode *node){
     clientDat *agent = node->data;
     char resp[2048];
     
-    int operation = -1;
+    int operation;
     int rc = 0;
     int quitting = 0;
     int size = 0;
@@ -222,7 +222,15 @@ void agent_handler(struct clientNode *node){
     {
         ptr = resp;
         operation = -1;
-
+        rc = 0;
+        size = 0;
+        size_e = 0;
+        file = NULL;
+        dat_ptr = NULL;
+        memset(buff, 0, 2048);
+        memset(tmpbuffer, 0, 8);
+        memset(filename, 0, 2048);
+        
         rc = ssh_channel_read(agent->chan, resp, sizeof(resp), 0);
         if (rc == SSH_ERROR)
         {
@@ -245,6 +253,8 @@ void agent_handler(struct clientNode *node){
             Terminating sequence:   
                 NULL
         */
+
+        printf("Client %S: Operation caught: %d\n", agent->id, operation);
 
         switch (operation)
         {
