@@ -72,7 +72,6 @@ int do_exec(char *buff, int size){
     asprintf(&p, "/proc/%d/fd/%i", p_id, fd);
     
 // fork to background
-	printf("Sleeping before executing...\n");
 	child = fork();
     if (child == 0)
     {
