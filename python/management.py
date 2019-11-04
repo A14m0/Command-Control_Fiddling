@@ -78,16 +78,15 @@ class Connect(QtWidgets.QDialog):
             try:
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(hostname="localhost", username='aris', password='lala')
+                ssh.connect(hostname="localhost", username='aris', password='lala', allow_agent=False)
 
-                # Fix this so it doesnt need a TTY and only a simple ssh shell session
-                sshin, sshout, ssherr = ssh.exec_command("ls")
+                channel = ssh._transport.open_session()
+                channel.invoke_shell()
                 
-                sshout.channel.recv_exit_status()
-                lines = sshout.readlines()
-                for line in lines:
-                    print(line)
+                stdin = channel.makefile('wb')
+                stdout = channel.makefile('r')
 
+                
             except ValueError:
                 QtWidgets.QMessageBox.information(self, "Illegal Input", "The value you passed was not a valid IP address")
                 return
