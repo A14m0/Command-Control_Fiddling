@@ -86,6 +86,13 @@ class Connect(QtWidgets.QDialog):
                 stdin = channel.makefile('wb')
                 stdout = channel.makefile('r')
 
+                # To read from channel:
+                #   recv(self, nbytes)
+                # To write to channel:
+                #   send(self, s)
+
+                channel.
+
                 
             except ValueError:
                 QtWidgets.QMessageBox.information(self, "Illegal Input", "The value you passed was not a valid IP address")

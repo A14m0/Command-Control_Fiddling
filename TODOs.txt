@@ -1,26 +1,24 @@
-1. Add argparsing onto client 
+1. Add manager handler for server
+    * Catch connection type (either agent or manager)
+
+2. Add agent beacon functionality
+
+3. Add argparsing onto client 
     * Maybe homebrew in order to keep dependencies low?
 
-2. Obfuscate client hard-coded values
+4. Cleanup out/ after agent compilation
+
+5. Allow for better catching of empty data file
+
+6. Fix NULL character buffer problems in server
+
+7. Obfuscate client hard-coded values
     * Maybe a simple XOR encrypt-decrypt?
         ** Would be easy, but would include non-encrypted data
 
-3. Add anti-debugging things
+8. Add anti-debugging things
     * Test for sandboxing/VM (timed delay, VMWare asm instructions)
-        **** Resources for this:
+        ** Resources for this:
             https://kb.vmware.com/s/article/1009458
             https://www.cyberbit.com/blog/endpoint-security/anti-vm-and-anti-sandbox-explained/
-
-4. When manager connects to server, do not create new agent directory for it
-
-5. Add manager/server communication functions
-    * Redo call from manager to SSH_REQ_SHELL
-
-6. Fix infinite loop after multiple module exectution
-
-7. Cleanup out/ after agent compilation
-
-8. Allow for better catching of empty data file
-
-9. Add agent beacon functionality
 
