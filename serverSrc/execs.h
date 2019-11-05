@@ -22,3 +22,7 @@
 #define MANAG_GET_INFO 20
 #define MANAG_GET_LOOT 21
 #define MANAG_UP_FILE 22
+#define MANAG_TASK_MODULE 23
+#define MANAG_TASK_SC 24
+#define MANAG_REQ_RVSH 25
+#define MANAG_EXIT 0

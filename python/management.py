@@ -2,11 +2,12 @@
 import sys
 import random
 import signal
-import paramiko
 import traceback
 import time
 import paletteColors
+import session
 
+from paramiko import ssh_exception
 from PySide2 import QtCore, QtGui, QtWidgets, QtMultimedia, QtMultimediaWidgets
 # https://www.qt.io/qt-for-python
 # https://doc.qt.io/qtforpython/?hsCtaTracking=fab9e910-0b90-4caa-b6d0-e202692b6f13%7Cb9e0be8d-1d85-4644-aaa2-41de4e6d37e3
@@ -52,6 +53,7 @@ class Connect(QtWidgets.QDialog):
 
         
         color = paletteColors.Colors()
+        self.session = session.Session("127.0.0.1")
         
         self.setPalette(color.pltActive)
 
@@ -84,47 +86,33 @@ class Connect(QtWidgets.QDialog):
         if value == '127.0.0.1':
             value = (value, 1337)
             try:
-                ssh = paramiko.SSHClient()
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(hostname="localhost", username='aris', password='lala', allow_agent=False)
-
-                channel = ssh._transport.open_session()
-                channel.invoke_shell()
-                
-                stdin = channel.makefile('wb')
-                stdout = channel.makefile('r')
-
-                # To read from channel:
-                #   recv(self, nbytes)
-                # To write to channel:
-                #   sendall(self, s)
-
+                self.session.init_connection()
                 
 
                 
             except ValueError:
                 QtWidgets.QMessageBox.information(self, "Illegal Input", "The value you passed was not a valid IP address")
                 return
-            except paramiko.ssh_exception.NoValidConnectionsError:
+            except ssh_exception.NoValidConnectionsError:
                 QtWidgets.QMessageBox.information(self, "Connection Refused", "The server refused the SSH connection")
                 return
-            except paramiko.ssh_exception.SSHException:
+            except ssh_exception.SSHException:
                 QtWidgets.QMessageBox.information(self, "Connection Failed", "Something happened. Check the console for more infromation")
                 print(traceback.format_exc())
                 return
 
 
             print("[+] Successfully connected!")
-            self.manager = Manager(channel)
+            self.manager = Manager(self.session)
             self.hide()
             self.manager.show()
 
 
 
 class Manager(QtWidgets.QWidget):
-    def __init__(self, socket):
+    def __init__(self, session):
         QtWidgets.QWidget.__init__(self)
-        self.channel = channel
+        self.session = session
         
         #self.text.setAlignment(Qt.AlignCenter)
 

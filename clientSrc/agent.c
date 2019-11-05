@@ -181,7 +181,9 @@ int func_loop(ssh_session session)
 	// Initialize vars
   	ssh_channel channel;
   	int rc;
-  	char tasking[2048];
+	char tasking[2048];
+	char tmp[3];
+	tmp[2] = '\0';  
 	int nbytes;
 	channel = ssh_channel_new(session);
 
@@ -214,6 +216,11 @@ int func_loop(ssh_session session)
 
 
 	// Send the global ID
+
+	rc = ssh_channel_write(channel, "1", 2);
+
+	ssh_channel_read(channel, tmp, 2, 0);
+
 	rc = ssh_channel_write(channel, GLOB_ID, strlen(GLOB_ID));
 
 	printf("Wrote ID to channel\n");

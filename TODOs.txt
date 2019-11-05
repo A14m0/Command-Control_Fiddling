@@ -1,22 +1,23 @@
 1. Add manager handler for server
-    * Catch connection type (either agent or manager)
+    
+2. Infinite looping happening when consecutive module executions
 
-2. Add agent beacon functionality
+3. Add agent beacon functionality
 
-3. Add argparsing onto client 
+4. Add argparsing onto client 
     * Maybe homebrew in order to keep dependencies low?
 
-4. Cleanup out/ after agent compilation
+5. Cleanup out/ after agent compilation
 
-5. Allow for better catching of empty data file
+6. Allow for better catching of empty data file
 
-6. Fix NULL character buffer problems in server
+7. Fix NULL character buffer problems in server
 
-7. Obfuscate client hard-coded values
+8. Obfuscate client hard-coded values
     * Maybe a simple XOR encrypt-decrypt?
         ** Would be easy, but would include non-encrypted data
 
-8. Add anti-debugging things
+9. Add anti-debugging things
     * Test for sandboxing/VM (timed delay, VMWare asm instructions)
         ** Resources for this:
             https://kb.vmware.com/s/article/1009458

