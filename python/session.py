@@ -1,5 +1,15 @@
 import paramiko
 
+class AgentStruct():
+    def __init__(self, id, ip, connection_time, hostname, ip_address, interfaces, process_owner):
+        self.id = id
+        self.ip = ip
+        self.connection_time = connection_time
+        self.hostname = hostname
+        self.ip_address = ip_address
+        self.interfaces = interfaces
+        self.process_owner = process_owner
+
 class Session():
     def __init__(self, address, port=22):
         self.address = address
@@ -7,6 +17,7 @@ class Session():
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.channel = 0
+        self.agents = []
 
 
     def update_addr(self, address):
@@ -33,6 +44,16 @@ class Session():
         self.channel.sendall("0")
         out = self.channel.recv(5)
         print(out)
+        self.channel.sendall("20|all")
+        while out != "fi":
+            out = self.channel.recv(8196).decode()
+            if out != "fi":
+                out = out.split("\n")
+                appnd = AgentStruct(out[0],out[1],out[2],out[3],out[4],out[5],out[6])
+                self.agents.append(appnd)
+                self.channel.sendall('0')
+
+        print("[+] Successfully gathered agent information")
 
     def upload_file(self, file, target):
         self.channel.sendall("22|" + file.filename)

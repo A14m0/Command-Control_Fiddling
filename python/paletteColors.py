@@ -1,4 +1,4 @@
-from PySide2 import QtCore, QtGui, QtWidgets, QtMultimedia, QtMultimediaWidgets
+from PyQt4 import QtGui
 
 class Colors():
     def __init__(self):

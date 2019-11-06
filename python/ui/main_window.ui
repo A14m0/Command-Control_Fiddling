@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QScrollArea" name="AgentSelect">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>331</width>
+      <height>551</height>
+     </rect>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>327</width>
+       <height>547</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>0</y>
+      <width>451</width>
+      <height>221</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="AgentInfo">
+     <item>
+      <widget class="QLabel" name="IP">
+       <property name="text">
+        <string>IP: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="ConnectionTime">
+       <property name="text">
+        <string>Connection Time: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="Hostname">
+       <property name="text">
+        <string>Hostname: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="Interfaces">
+       <property name="text">
+        <string>Interfaces: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="ProcOwner">
+       <property name="text">
+        <string>Process Owner: </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>340</y>
+      <width>451</width>
+      <height>211</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="Terminal">
+     <item>
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="TermOutput">
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="TermInput"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="gridLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>230</y>
+      <width>451</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QPushButton" name="PushFile">
+       <property name="text">
+        <string>Push File</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="PullFile">
+       <property name="text">
+        <string>Pull File</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="GetLoot">
+       <property name="text">
+        <string>Get Loot</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QPushButton" name="PushModule">
+       <property name="text">
+        <string>Push Module</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="ExecComm">
+       <property name="text">
+        <string>Execute Command</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QPushButton" name="RevSh">
+       <property name="text">
+        <string>Reverse Shell</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuAgents_Available">
+    <property name="title">
+     <string>Server</string>
+    </property>
+    <addaction name="actionCompile_Client"/>
+    <addaction name="actionRegister_Client_Creds"/>
+   </widget>
+   <addaction name="menuAgents_Available"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionCompile_Client">
+   <property name="text">
+    <string>Compile Client</string>
+   </property>
+  </action>
+  <action name="actionRegister_Client_Creds">
+   <property name="text">
+    <string>Register Client Creds</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

