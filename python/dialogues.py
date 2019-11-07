@@ -105,3 +105,19 @@ class AgentRegisterDialogue(QtGui.QDialog, design.Ui_AgentRegister):
         else:
             self.session.register_agent(self.Username.text(), self.Password.text())
 
+class AgentCommandDialogue(QtGui.QDialog, design.Ui_CommandDialogue):
+    def __init__(self, session, agent_id, parent=None):
+        QtGui.QDialog.__init__(self, parent)
+        self.setupUi(self)
+        self.color = paletteColors.Colors()
+        self.session = session
+        self.agent_id = agent_id
+        self.setPalette(self.color.pltActive)
+
+        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.send_comm)
+
+    def send_comm(self):
+        if self.Input.text() =="":
+            print("Found blank line")
+        else:
+            self.session.send_command(self.agent_id, self.Input.text())

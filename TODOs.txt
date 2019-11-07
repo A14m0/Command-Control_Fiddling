@@ -1,4 +1,4 @@
-1. Add manager handler for server
+1. Make sure that sending functions can send all of the file data, even when the file is bigger than the buffer
     
 2. Infinite looping happening when consecutive module executions
 

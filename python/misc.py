@@ -47,3 +47,9 @@ def open_file():
     fileObj = File(name, size, data)
     print("[i] Successfully read data from file")
     return fileObj    
+
+def getSavePath():
+    obj = QtGui.QFileDialog()
+    filepath = obj.getSaveFileName(None, "Save file", "", "All Files (*)")
+
+    return filepath

