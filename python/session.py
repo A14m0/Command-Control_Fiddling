@@ -2,12 +2,11 @@ import paramiko
 import misc
 
 class AgentStruct():
-    def __init__(self, id, ip, connection_time, hostname, ip_address, interfaces, process_owner):
+    def __init__(self, id, ip, connection_time, hostname, interfaces, process_owner):
         self.id = id
         self.ip = ip
         self.connection_time = connection_time
         self.hostname = hostname
-        self.ip_address = ip_address
         self.interfaces = interfaces
         self.process_owner = process_owner
 
@@ -50,7 +49,7 @@ class Session():
             out = self.channel.recv(8196).decode()
             if out != "fi":
                 out = out.split("\n")
-                appnd = AgentStruct(out[0],out[1],out[2],out[3],out[4],out[5],out[6])
+                appnd = AgentStruct(out[0],out[1],out[2],out[3],out[4],out[5])
                 self.agents.append(appnd)
                 self.channel.sendall('0')
 

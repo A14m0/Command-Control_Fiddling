@@ -41,6 +41,7 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
         self.actionRegister_Client_Creds.triggered.connect(self.reg_client)
         self.actionOpen_Terminal.triggered.connect(self.open_term)
         self.actionChange_C2_Server.triggered.connect(self.connect_to_c2)
+        self.AgentList.currentItemChanged.connect(self.update_info_labels)
 
         self.session = session.Session("127.0.0.1")
         self._show_connect_dialogue()
@@ -59,8 +60,16 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
         for entry in self.session.agents:
             item = QtGui.QListWidgetItem()
             item.setText(entry.id)
+            item.setData(QtCore.Qt.UserRole, entry)
             self.AgentList.addItem(item)
 
+    def update_info_labels(self):
+        self.IP.setText("IP: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).ip)
+        self.ConnectionTime.setText("Connection Time: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).connection_time)
+        self.Hostname.setText("Hostname: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).hostname)
+        self.Interfaces.setText("Interfaces: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).interfaces)
+        self.ProcOwner.setText("Process Owner: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).process_owner)
+        
     def connect_to_c2(self):
         reply = QtGui.QMessageBox.question(self, 'WARNING', 
                  'Switching C2 servers will reset all info in the console. Any active processes will be dropped. Continue?', 
