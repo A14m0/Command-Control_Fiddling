@@ -35,6 +35,16 @@
        <height>547</height>
       </rect>
      </property>
+     <widget class="QListWidget" name="AgentList">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>311</width>
+        <height>531</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QWidget" name="verticalLayoutWidget">
@@ -186,8 +196,17 @@
     </property>
     <addaction name="actionCompile_Client"/>
     <addaction name="actionRegister_Client_Creds"/>
+    <addaction name="separator"/>
+    <addaction name="actionChange_C2_Server"/>
+   </widget>
+   <widget class="QMenu" name="menuLocal">
+    <property name="title">
+     <string>Local</string>
+    </property>
+    <addaction name="actionOpen_Terminal"/>
    </widget>
    <addaction name="menuAgents_Available"/>
+   <addaction name="menuLocal"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionCompile_Client">
@@ -198,6 +217,16 @@
   <action name="actionRegister_Client_Creds">
    <property name="text">
     <string>Register Client Creds</string>
+   </property>
+  </action>
+  <action name="actionOpen_Terminal">
+   <property name="text">
+    <string>Open Terminal</string>
+   </property>
+  </action>
+  <action name="actionChange_C2_Server">
+   <property name="text">
+    <string>Change C2 Server</string>
    </property>
   </action>
  </widget>

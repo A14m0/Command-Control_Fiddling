@@ -1,4 +1,5 @@
 import paramiko
+import misc
 
 class AgentStruct():
     def __init__(self, id, ip, connection_time, hostname, ip_address, interfaces, process_owner):
@@ -73,5 +74,20 @@ class Session():
             file.write(data)
 
         self.channel.sendall("cm")
+
+    def compile_agent(self, ip, port):
+        print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
+
+        fileData = ""
+        misc.save_file(fileData)
+
+    def register_agent(self, name, password):
+        print("[ ] Registering agent with server...")
+
+    def do_download(self, agent_id, path):
+        print("[ ] Doing Download...")
+
+    def push_module(self, agent_id, filestruct):
+        print("[ ] Pushing module file to agent %s..." % agent_id)
 
 
