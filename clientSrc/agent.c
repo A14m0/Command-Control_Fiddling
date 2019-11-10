@@ -104,7 +104,7 @@ int exec_module(ssh_channel channel, char *module){
 	char buffr[128];
 	
 	memset(buffr, 0, sizeof(buffr));
-	sprintf(buffr, "14%s", module);
+	sprintf(buffr, "14|%s", module);
 	
 	printf("Downloading module...\n");
 	

