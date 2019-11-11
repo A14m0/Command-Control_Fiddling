@@ -219,22 +219,12 @@ int func_loop(ssh_session session)
 
 	// Send the global ID
 
+	printf("Identified as an agent\n");
 	rc = ssh_channel_write(channel, "1", 2);
 
 	ssh_channel_read(channel, tmp, 2, 0);
-
-	rc = ssh_channel_write(channel, GLOB_ID, strlen(GLOB_ID));
-
-	printf("Wrote ID to channel\n");
-		
-	if (rc == SSH_ERROR){
-		printf("caught ssh error: %s\n", ssh_get_error(channel));
-		ssh_channel_close(channel);
-    	ssh_channel_free(channel);
-    	return rc;
-	}
-
 	
+	printf("Waiting for read...\n");
 	nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
 	printf("read %d bytes from channel\n", nbytes);
 	if (nbytes < 0){

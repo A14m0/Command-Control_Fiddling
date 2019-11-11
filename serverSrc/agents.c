@@ -90,24 +90,31 @@ void write_format(char *path){
     fclose(fd);
 }
 
-int agent_get_tasking(char *agent_id, char *tasking){
+char *agent_get_tasking(char *agent_id){
     char file[2048];
-
-    memset(file, 0, sizeof(file));
-    sprintf(file, "agents/%s/agent.mfst", agent_id);
+    char cwd_buf[BUFSIZ];
+    char *mem_dump = NULL;
+    int size = 0;
     FILE *fd = NULL;
+    
+    memset(cwd_buf, 0, sizeof(cwd_buf));
+    memset(file, 0, sizeof(file));
+    sprintf(file, "%s/agents/%s/agent.mfst", getcwd(cwd_buf, sizeof(cwd_buf)),agent_id);
+    
     fd = fopen(file, "r");
+    if(fd == NULL) return NULL;
+    
     fseek(fd, 0L, SEEK_END);
-    int size = ftell(fd);
+    size = ftell(fd);
     rewind(fd);
-    char *mem_dump = malloc(size);
+    
+    mem_dump = malloc(size);
     memset(mem_dump, 0, size);
     fread(mem_dump, 1, size, fd);
+    
     fclose(fd);
-
-    tasking = mem_dump;
     //write_format(file);
-    return 0;
+    return mem_dump;
 }
 
 void agent_register(char *username, char *password){
