@@ -1,4 +1,4 @@
-1. Make sure that sending functions can send all of the file data, even when the file is bigger than the buffer
+1. Make sure THAT YOU FUCKING FREE ALL MALLOC MEMORY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
 2. Infinite looping happening when consecutive module executions
 
