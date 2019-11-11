@@ -105,7 +105,7 @@ int agent_get_tasking(char *agent_id, char *tasking){
     fread(mem_dump, 1, size, fd);
     fclose(fd);
 
-    strcat(tasking, mem_dump);
+    tasking = mem_dump;
     //write_format(file);
     return 0;
 }
@@ -198,15 +198,21 @@ void agent_compile(char *ip, char *port){
 }
 
 void agent_task(int operation, char *agent, char *opt){
-    switch (operation)
-    {
-    case AGENT_DOWN_FILE:
-        /* code */
-        break;
-    
-    default:
-        break;
+    FILE *file = NULL;
+    char buffer[BUFSIZ];
+    char tmpbuff[BUFSIZ];
+    memset(buffer, 0, sizeof(buffer));
+    sprintf(buffer, "%s/agents/%s/agent.mfst", getcwd(tmpbuff, sizeof(tmpbuff)), agent);
+    file = fopen(buffer, "a");
+    if(!file){
+        perror("Server failed to read agent tasking file");
+        return;
     }
+    printf("Server: Tasking %s with operation %d\n", agent, operation);
+    memset(tmpbuff, 0, sizeof(tmpbuff));
+    sprintf(tmpbuff, "%d|%s\n", operation, opt);
+    fwrite(tmpbuff, 1, strlen(tmpbuff), file);
+    fclose(file);
 }
 
 struct ret *agent_gen_creds(){

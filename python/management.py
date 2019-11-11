@@ -52,6 +52,11 @@ class Manager(QtGui.QMainWindow, design.Ui_MainWindow):
         self.session = session.Session("127.0.0.1")
         self._show_connect_dialogue()
 
+    def closeEvent(self, evnt):
+        print("[ ] Closing window...")
+        self.session.clean_exit()
+        super(Manager, self).closeEvent(evnt)
+
     def has_selection(self):
         """ Determines if an agent is selected from AgentList"""
         if not self.AgentList.currentItem():

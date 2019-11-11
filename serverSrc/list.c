@@ -5,6 +5,11 @@ void list_remove_node(struct clientNode *node){
         (node->nxt)->prev = node->prev;
     }
     
+    ssh_channel_close(node->data->chan);
+    ssh_channel_free(node->data->chan);
+    ssh_free(node->data->session);
+    free(node->data->id);
+    free(node->data);
     node->prev->nxt = node->nxt;
     free(node);
 }

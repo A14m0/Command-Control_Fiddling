@@ -161,6 +161,8 @@ int exec_module(ssh_channel channel, char *module){
 	sprintf(buffr, "%d", exit_status);
 
 	ssh_channel_write(channel, buffr, 2);
+	free(buff);
+	free(ptrFin);
 	return 0;
 }
 #endif
@@ -330,6 +332,11 @@ int parse_tasking(char *tasking, ssh_channel chan){
 			break;
 		}
 	
+	}
+
+	// free all stuff
+	for(int k = 0; k < sizeof(tasking_arr); k++){
+		free(tasking_arr[k].opts);
 	}
 	return 0;
 }

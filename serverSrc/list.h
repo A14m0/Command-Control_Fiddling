@@ -1,4 +1,6 @@
+#include <libssh/libssh.h>
 #include "misc.h"
+
 struct clientNode {
     struct clientNode *nxt;
     struct clientNode *prev;
