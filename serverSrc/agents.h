@@ -21,8 +21,9 @@
 
 #define COMPILE "gcc -lssh -lcurl -o out/client.out out/client.c out/agent.c out/b64.c"
 
-void init_agent(char *agent_id);
-int get_tasking(char *agent_id, char *tasking);
-int get_file(char *name, char **ptr);
-void compile_agent(char *ip, char *port);
-void register_agent(char *id, char *port);
+void agent_init(char *agent_id);
+int agent_get_tasking(char *agent_id, char *tasking);
+void agent_compile(char *ip, char *port);
+void agent_register(char *id, char *port);
+void agent_task(int operation, char *agent, char *opt);
+struct ret *agent_gen_creds();

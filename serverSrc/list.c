@@ -1,6 +1,6 @@
 #include "list.h"
 
-void remove_node(struct clientNode *node){
+void list_remove_node(struct clientNode *node){
     if(node->nxt != NULL){
         (node->nxt)->prev = node->prev;
     }
@@ -9,7 +9,7 @@ void remove_node(struct clientNode *node){
     free(node);
 }
 
-void add_node(struct clientNode *node, struct clientNode *prevNode){
+void list_add_node(struct clientNode *node, struct clientNode *prevNode){
     if(prevNode->nxt == 0){
         prevNode->nxt = node;
         node->prev = prevNode;
@@ -22,7 +22,7 @@ void add_node(struct clientNode *node, struct clientNode *prevNode){
     }
 }
 
-int list_size(struct clientNode *entry){
+int _list_size(struct clientNode *entry){
     int ctr = 0;
     struct clientNode *curr;
     curr = entry;

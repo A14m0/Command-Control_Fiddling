@@ -5,5 +5,5 @@ struct clientNode {
     clientDat *data;
 };
 
-void add_node(struct clientNode *node, struct clientNode *prevNode);
-void remove_node(struct clientNode *node);
+void list_add_node(struct clientNode *node, struct clientNode *prevNode);
+void list_remove_node(struct clientNode *node);

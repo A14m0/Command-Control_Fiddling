@@ -1,6 +1,6 @@
 #include "authenticate.h"
 
-char *digest(char *input){
+char *authenticate_digest(char *input){
     unsigned char digest[SHA512_DIGEST_LENGTH];
     SHA512((unsigned char*)input, strlen(input), (unsigned char*)&digest);
     
@@ -13,59 +13,7 @@ char *digest(char *input){
     return ret;
 }
 
-char** str_split(char* a_str, const char a_delim)
-{
-    char** result    = 0;
-    size_t count     = 0;
-    char* tmp        = a_str;
-    char* last_comma = 0;
-    char delim[2];
-    delim[0] = a_delim;
-    delim[1] = 0;
-
-    /* Count how many elements will be extracted. */
-    while (*tmp)
-    {
-        if (a_delim == *tmp)
-        {
-            count++;
-            last_comma = tmp;
-        }
-        tmp++;
-    }
-
-    /* Add space for trailing token. */
-    count += last_comma < (a_str + strlen(a_str) - 1);
-
-    /* Add space for terminating null string so caller
-       knows where the list of returned strings ends. */
-    count++;
-
-    result = malloc(sizeof(char*) * count);
-    memset(result, 0, sizeof(char*) * count);
-
-    if (result)
-    {
-        size_t idx  = 0;
-        char* token = strtok(a_str, delim);
-
-        while (token)
-        {
-            assert(idx < count);
-            *(result + idx++) = strdup(token);
-            token = strtok(0, delim);
-        }
-        if(idx == count -1){
-            *(result + idx) = 0;
-        }
-    }
-
-    return result;
-}
-
-
-
-int authenticate(const char *usr, const char *pass){
+int authenticate_doauth(const char *usr, const char *pass){
     // initialize variables
     char** tokens = NULL;
     char** subtokens = NULL;
@@ -98,16 +46,16 @@ int authenticate(const char *usr, const char *pass){
         return 0;
     }
 
-    tokens = str_split(buff, '\n');
+    tokens = misc_str_split(buff, '\n');
 
     // begin going through usernames and hashes to attemtp to authenticate
     if(tokens){
         int j;
         for (j = 0; *(tokens + j); j++)
         {
-            subtokens = str_split(*(tokens + j), ':');
+            subtokens = misc_str_split(*(tokens + j), ':');
             if(!strcmp(usr, *(subtokens))){
-                if(!strcmp(digest(pass), *(subtokens+1))){
+                if(!strcmp(authenticate_digest(pass), *(subtokens+1))){
                     printf("Server: ID %s successfully authenticated\n", usr);
                     for (int i = 0; *(tokens + i); i++)
                     {
@@ -143,31 +91,4 @@ int authenticate(const char *usr, const char *pass){
     free(tokens);
 
     return 0;
-}
-
-
-struct ret *gen_creds(){
-    struct ret *buf = malloc(sizeof(struct ret));
-    memset(buf, 0, sizeof(struct ret));
-    char *usr = malloc(13);
-    memset(usr, 0, 13);
-    char *pwd = malloc(13);
-    memset(usr, 0, 13);
-
-    usr[13] = '\0';
-    pwd[13] = '\0';
-
-    buf->usr = usr;
-    buf->passwd = pwd;
-
-
-    for(int i = 0; i < 12; i++){
-        usr[i] = 'A' + (random() % 26);
-    }
-
-    for(int i = 0; i < 12; i++){
-        pwd[i] = 'A' + (random() % 26);
-    }
-
-    return buf;
 }

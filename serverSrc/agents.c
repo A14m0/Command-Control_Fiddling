@@ -62,7 +62,7 @@ void agent_write_info(char *id, char *connection_time,
 
 }
 
-void init_agent(char *agent_id){
+void agent_init(char *agent_id){
     FILE *manifest = NULL;
     char parent_dir[2048];
     char *tmp = NULL;
@@ -90,7 +90,7 @@ void write_format(char *path){
     fclose(fd);
 }
 
-int get_tasking(char *agent_id, char *tasking){
+int agent_get_tasking(char *agent_id, char *tasking){
     char file[2048];
 
     memset(file, 0, sizeof(file));
@@ -110,29 +110,7 @@ int get_tasking(char *agent_id, char *tasking){
     return 0;
 }
 
-int get_file(char *name, char **ptr){
-    int size = 0;
-    FILE *file = NULL;
-    file = fopen(name, "rb");
-
-    if (file == NULL)
-    {
-        printf("Failed to open file %s\n", name);
-        return -1;
-    }
-    fseek(file, 0L, SEEK_END);
-    size = ftell(file);
-
-    *ptr = malloc(size);
-    memset(*ptr, 0, size);
-    rewind(file);
-    fread(*ptr, 1, size, file);
-    fclose(file);
-
-    return size;
-}
-
-void register_agent(char *username, char *password){
+void agent_register(char *username, char *password){
     FILE *file;
     file = fopen(DATA_FILE, "a");
     if (!file)
@@ -147,14 +125,14 @@ void register_agent(char *username, char *password){
     fwrite(":", 1, 1, file);
 
     char *buff;
-    buff = digest(password);
+    buff = authenticate_digest(password);
 
     fwrite(buff, 1, strlen(buff), file);
     fclose(file);
 }
 
 
-void compile_agent(char *ip, char *port){
+void agent_compile(char *ip, char *port){
     // In here the agent file header is editeed and recompiled against these values
     // Also in here is where the username and password are added to the server database
     
@@ -163,36 +141,36 @@ void compile_agent(char *ip, char *port){
     memset(buff, 0, sizeof(buff));
     strcat(buff, AGENT_SOURCE);
     strcat(buff, "client.c");
-    copy_file(buff, "out/client.c");
+    misc_copy_file(buff, "out/client.c");
 
     memset(buff, 0, sizeof(*buff));
     strcat(buff, AGENT_SOURCE);
     strcat(buff, "agent.h");
-    copy_file(buff, "out/agent.h");
+    misc_copy_file(buff, "out/agent.h");
 
     memset(buff, 0, sizeof(*buff));
     strcat(buff, AGENT_SOURCE);
     strcat(buff, "agent.c");
-    copy_file(buff, "out/agent.c");
+    misc_copy_file(buff, "out/agent.c");
 
     memset(buff, 0, sizeof(*buff));
     strcat(buff, AGENT_SOURCE);
     strcat(buff, "b64.h");
-    copy_file(buff, "out/b64.h");
+    misc_copy_file(buff, "out/b64.h");
 
     memset(buff, 0, sizeof(*buff));
     strcat(buff, AGENT_SOURCE);
     strcat(buff, "b64.c");
-    copy_file(buff, "out/b64.c");
+    misc_copy_file(buff, "out/b64.c");
 
     memset(buff, 0, sizeof(buff));
     strcat(buff, AGENT_SOURCE);
     strcat(buff, "examples_common.h");
-    copy_file(buff, "out/examples_common.h");
+    misc_copy_file(buff, "out/examples_common.h");
 
     // create config file
 
-    struct ret *struc = gen_creds();
+    struct ret *struc = agent_gen_creds();
 
     printf("Agent Credentials:\n\tUser: %s, Password: %s\n", struc->usr, struc->passwd);
 
@@ -215,6 +193,44 @@ void compile_agent(char *ip, char *port){
     printf("Compiling agent...\n");
     system(COMPILE);
 
-    register_agent(struc->usr, struc->passwd);
+    agent_register(struc->usr, struc->passwd);
     printf("Agent successfully compiled! Check the 'out/' directory for the client executable\n");
+}
+
+void agent_task(int operation, char *agent, char *opt){
+    switch (operation)
+    {
+    case AGENT_DOWN_FILE:
+        /* code */
+        break;
+    
+    default:
+        break;
+    }
+}
+
+struct ret *agent_gen_creds(){
+    struct ret *buf = malloc(sizeof(struct ret));
+    memset(buf, 0, sizeof(struct ret));
+    char *usr = malloc(13);
+    memset(usr, 0, 13);
+    char *pwd = malloc(13);
+    memset(usr, 0, 13);
+
+    usr[13] = '\0';
+    pwd[13] = '\0';
+
+    buf->usr = usr;
+    buf->passwd = pwd;
+
+
+    for(int i = 0; i < 12; i++){
+        usr[i] = 'A' + (random() % 26);
+    }
+
+    for(int i = 0; i < 12; i++){
+        pwd[i] = 'A' + (random() % 26);
+    }
+
+    return buf;
 }

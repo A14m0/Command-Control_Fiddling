@@ -8,6 +8,14 @@
         "initializer_list": "c",
         "utility": "c",
         "valarray": "c",
-        "authenticate.h": "c"
+        "authenticate.h": "c",
+        "*.ipp": "cpp",
+        "*.tcc": "cpp",
+        "unordered_map": "cpp",
+        "fstream": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "sstream": "cpp",
+        "*.inc": "cpp"
     }
 }
