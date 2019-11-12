@@ -138,6 +138,7 @@ int exec_module(ssh_channel channel, char *module){
 
 	// convert size to integer and allocate memory
 	int size = atoi(buffr);
+	printf("%s, %d\n", buffr, size);
 
 	buff = malloc(size+1);
 	memset(buff, 0, size+1);
@@ -187,6 +188,8 @@ int func_loop(ssh_session session)
 	char tmp[3];
 	tmp[2] = '\0';  
 	int nbytes;
+
+	memset(tasking, 0, sizeof(tasking));
 	channel = ssh_channel_new(session);
 
 	printf("[+] Created new SSH channel\n");
@@ -238,7 +241,7 @@ int func_loop(ssh_session session)
 	parse_tasking(tasking, channel);
 	
 	  // close connections
-	ssh_channel_write(channel, "\0", 2);
+	ssh_channel_write(channel, "0", 2);
 
   	ssh_channel_send_eof(channel);
   	ssh_channel_close(channel);
@@ -250,9 +253,9 @@ int parse_tasking(char *tasking, ssh_channel chan){
 	/* Parses and handles the tasking input from the server*/
 
 	// checks if there is no tasking
-	if(!strcmp(tasking, "NULL :)\n")){
+	if(!strcmp(tasking, "default\n")){
 		printf("No tasking available. Quitting...\n");
-		ssh_channel_write(chan, "\0", 2);
+		ssh_channel_write(chan, "0", 2);
 		return 1;
 	}
 
@@ -273,7 +276,8 @@ int parse_tasking(char *tasking, ssh_channel chan){
 	while(p != NULL)
 	{
 		// get operation int
-		char tmpbf[2];
+		char tmpbf[3];
+		tmpbf[2] ='\0';
 		strncat(tmpbf, p, 2);
 		tasking_arr[i].operation = atoi(tmpbf);
 
@@ -286,7 +290,7 @@ int parse_tasking(char *tasking, ssh_channel chan){
 
 		// clean up and move on
 		p = strtok(NULL, "\n");
-		memset(tmpbf, 0, 2);
+		//memset(tmpbf, 0, 2);
 		i++;
 	}
 

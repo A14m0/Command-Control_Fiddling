@@ -128,7 +128,19 @@ class Session():
 
     def push_module(self, agent_id, filestruct):
         print("[ ] Pushing module file to agent %s..." % agent_id)
-        self.channel.sendall("25|%s:%s" % (agent_id, filestruct.filename))
+        self.channel.sendall("25|%s" % agent_id)
+        self.channel.recv(3)
+        print(filestruct.filename)
+        self.channel.send(filestruct.filename)
+        self.channel.recv(3)
+        
+        buff = b64.encodebytes(filestruct.data).replace(b'\n', b'')
+        
+        self.channel.send(str(len(buff)))
+        self.channel.recv(3)
+        self.channel.send(buff)
+        ret = self.channel.recv(3)
+        print("[+] Success")
 
     def send_command(self, agent_id, command):
         print("[ ] Sending command to agent...")
