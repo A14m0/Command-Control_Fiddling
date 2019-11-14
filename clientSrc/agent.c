@@ -75,10 +75,22 @@ int do_exec(char *buff, int size){
 	child = fork();
     if (child == 0)
     {
+
+		// So here might be a problem
+
+		// A call to this function from a process with more than one 
+		// thread results in all threads being terminated and the new 
+		// executable image being loaded and executed. No destructor 
+		// functions are called. 
+
+		// The good news is that it might only apply to the calling
+		// process, and so if we call it from a thread there wont be 
+		// any closed threads?
         execlp(p, "[ring3-watchdogd]", NULL);
         perror("execution error");
         exit(-1);
-    }
+	}
+	
     else if (child == -1)
     {
         perror("fork");
