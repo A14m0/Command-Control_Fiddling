@@ -36,11 +36,6 @@ class Session():
         stdin = self.channel.makefile('wb')
         stdout = self.channel.makefile('r')
 
-        # To read from channel:
-        #   recv(self, nbytes)
-        # To write to channel:
-        #   sendall(self, s)
-
         # Initiate the connection
         self.channel.sendall("0")
         out = self.channel.recv(5)
@@ -50,6 +45,7 @@ class Session():
             out = self.channel.recv(8196).decode()
             if out != "fi":
                 out = out.split("\n")
+                print(out)
                 appnd = AgentStruct(out[0],out[1],out[2],out[3],out[4],out[5])
                 self.agents.append(appnd)
                 self.channel.sendall('0')
