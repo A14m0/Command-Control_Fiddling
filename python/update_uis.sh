@@ -10,5 +10,5 @@ echo "Updating UI files"
 echo "" > ./python/design.py
 
 for file in ./python/ui/*.ui; do
-    pyuic4 $file >> ./python/design.py
+    pyuic5 $file >> ./python/design.py
 done

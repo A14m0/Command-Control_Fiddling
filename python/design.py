@@ -3,353 +3,293 @@
 
 # Form implementation generated from reading ui file './python/ui/agent_command_dialogue.ui'
 #
-# Created by: PyQt4 UI code generator 4.12.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_CommandDialogue(object):
     def setupUi(self, CommandDialogue):
-        CommandDialogue.setObjectName(_fromUtf8("CommandDialogue"))
+        CommandDialogue.setObjectName("CommandDialogue")
         CommandDialogue.resize(400, 173)
-        self.buttonBox = QtGui.QDialogButtonBox(CommandDialogue)
+        self.buttonBox = QtWidgets.QDialogButtonBox(CommandDialogue)
         self.buttonBox.setGeometry(QtCore.QRect(-70, 120, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.Title = QtGui.QLabel(CommandDialogue)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.Title = QtWidgets.QLabel(CommandDialogue)
         self.Title.setGeometry(QtCore.QRect(10, 10, 131, 19))
-        self.Title.setObjectName(_fromUtf8("Title"))
-        self.Info = QtGui.QLabel(CommandDialogue)
+        self.Title.setObjectName("Title")
+        self.Info = QtWidgets.QLabel(CommandDialogue)
         self.Info.setGeometry(QtCore.QRect(20, 50, 221, 19))
-        self.Info.setObjectName(_fromUtf8("Info"))
-        self.Input = QtGui.QLineEdit(CommandDialogue)
+        self.Info.setObjectName("Info")
+        self.Input = QtWidgets.QLineEdit(CommandDialogue)
         self.Input.setGeometry(QtCore.QRect(20, 80, 351, 25))
-        self.Input.setObjectName(_fromUtf8("Input"))
+        self.Input.setObjectName("Input")
 
         self.retranslateUi(CommandDialogue)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), CommandDialogue.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), CommandDialogue.reject)
+        self.buttonBox.accepted.connect(CommandDialogue.accept)
+        self.buttonBox.rejected.connect(CommandDialogue.reject)
         QtCore.QMetaObject.connectSlotsByName(CommandDialogue)
 
     def retranslateUi(self, CommandDialogue):
-        CommandDialogue.setWindowTitle(_translate("CommandDialogue", "Dialog", None))
-        self.Title.setText(_translate("CommandDialogue", "Command Dialogue", None))
-        self.Info.setText(_translate("CommandDialogue", "Enter Command to Send to Agent", None))
-
+        _translate = QtCore.QCoreApplication.translate
+        CommandDialogue.setWindowTitle(_translate("CommandDialogue", "Dialog"))
+        self.Title.setText(_translate("CommandDialogue", "Command Dialogue"))
+        self.Info.setText(_translate("CommandDialogue", "Enter Command to Send to Agent"))
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file './python/ui/agent_compile_dialogue.ui'
 #
-# Created by: PyQt4 UI code generator 4.12.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_AgentCompile(object):
     def setupUi(self, AgentCompile):
-        AgentCompile.setObjectName(_fromUtf8("AgentCompile"))
+        AgentCompile.setObjectName("AgentCompile")
         AgentCompile.resize(357, 227)
-        self.buttonBox = QtGui.QDialogButtonBox(AgentCompile)
+        self.buttonBox = QtWidgets.QDialogButtonBox(AgentCompile)
         self.buttonBox.setGeometry(QtCore.QRect(-10, 170, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.Title = QtGui.QLabel(AgentCompile)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.Title = QtWidgets.QLabel(AgentCompile)
         self.Title.setGeometry(QtCore.QRect(10, 10, 191, 19))
-        self.Title.setObjectName(_fromUtf8("Title"))
-        self.ServerIP = QtGui.QLineEdit(AgentCompile)
+        self.Title.setObjectName("Title")
+        self.ServerIP = QtWidgets.QLineEdit(AgentCompile)
         self.ServerIP.setGeometry(QtCore.QRect(20, 80, 181, 25))
-        self.ServerIP.setObjectName(_fromUtf8("ServerIP"))
-        self.ServerPort = QtGui.QLineEdit(AgentCompile)
+        self.ServerIP.setObjectName("ServerIP")
+        self.ServerPort = QtWidgets.QLineEdit(AgentCompile)
         self.ServerPort.setGeometry(QtCore.QRect(20, 140, 101, 25))
-        self.ServerPort.setObjectName(_fromUtf8("ServerPort"))
-        self.IPLable = QtGui.QLabel(AgentCompile)
+        self.ServerPort.setObjectName("ServerPort")
+        self.IPLable = QtWidgets.QLabel(AgentCompile)
         self.IPLable.setGeometry(QtCore.QRect(20, 50, 61, 19))
-        self.IPLable.setObjectName(_fromUtf8("IPLable"))
-        self.PortLabel = QtGui.QLabel(AgentCompile)
+        self.IPLable.setObjectName("IPLable")
+        self.PortLabel = QtWidgets.QLabel(AgentCompile)
         self.PortLabel.setGeometry(QtCore.QRect(20, 110, 61, 19))
-        self.PortLabel.setObjectName(_fromUtf8("PortLabel"))
+        self.PortLabel.setObjectName("PortLabel")
 
         self.retranslateUi(AgentCompile)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), AgentCompile.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), AgentCompile.reject)
+        self.buttonBox.accepted.connect(AgentCompile.accept)
+        self.buttonBox.rejected.connect(AgentCompile.reject)
         QtCore.QMetaObject.connectSlotsByName(AgentCompile)
 
     def retranslateUi(self, AgentCompile):
-        AgentCompile.setWindowTitle(_translate("AgentCompile", "Dialog", None))
-        self.Title.setText(_translate("AgentCompile", "Agent Compilation Options", None))
-        self.IPLable.setText(_translate("AgentCompile", "Server IP", None))
-        self.PortLabel.setText(_translate("AgentCompile", "Port", None))
-
+        _translate = QtCore.QCoreApplication.translate
+        AgentCompile.setWindowTitle(_translate("AgentCompile", "Dialog"))
+        self.Title.setText(_translate("AgentCompile", "Agent Compilation Options"))
+        self.IPLable.setText(_translate("AgentCompile", "Server IP"))
+        self.PortLabel.setText(_translate("AgentCompile", "Port"))
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file './python/ui/agent_download_dialogue.ui'
 #
-# Created by: PyQt4 UI code generator 4.12.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_AgentDownload(object):
     def setupUi(self, AgentDownload):
-        AgentDownload.setObjectName(_fromUtf8("AgentDownload"))
+        AgentDownload.setObjectName("AgentDownload")
         AgentDownload.resize(344, 171)
-        self.buttonBox = QtGui.QDialogButtonBox(AgentDownload)
+        self.buttonBox = QtWidgets.QDialogButtonBox(AgentDownload)
         self.buttonBox.setGeometry(QtCore.QRect(-90, 120, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.Path = QtGui.QLineEdit(AgentDownload)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.Path = QtWidgets.QLineEdit(AgentDownload)
         self.Path.setGeometry(QtCore.QRect(30, 80, 271, 25))
-        self.Path.setObjectName(_fromUtf8("Path"))
-        self.Title = QtGui.QLabel(AgentDownload)
+        self.Path.setObjectName("Path")
+        self.Title = QtWidgets.QLabel(AgentDownload)
         self.Title.setGeometry(QtCore.QRect(10, 20, 201, 19))
-        self.Title.setObjectName(_fromUtf8("Title"))
-        self.AgentPathLabel = QtGui.QLabel(AgentDownload)
+        self.Title.setObjectName("Title")
+        self.AgentPathLabel = QtWidgets.QLabel(AgentDownload)
         self.AgentPathLabel.setGeometry(QtCore.QRect(30, 50, 131, 19))
-        self.AgentPathLabel.setObjectName(_fromUtf8("AgentPathLabel"))
+        self.AgentPathLabel.setObjectName("AgentPathLabel")
 
         self.retranslateUi(AgentDownload)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), AgentDownload.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), AgentDownload.reject)
+        self.buttonBox.accepted.connect(AgentDownload.accept)
+        self.buttonBox.rejected.connect(AgentDownload.reject)
         QtCore.QMetaObject.connectSlotsByName(AgentDownload)
 
     def retranslateUi(self, AgentDownload):
-        AgentDownload.setWindowTitle(_translate("AgentDownload", "Dialog", None))
-        self.Title.setText(_translate("AgentDownload", "Agent File Download Dialogue", None))
-        self.AgentPathLabel.setText(_translate("AgentDownload", "Path to File (Agent)", None))
-
+        _translate = QtCore.QCoreApplication.translate
+        AgentDownload.setWindowTitle(_translate("AgentDownload", "Dialog"))
+        self.Title.setText(_translate("AgentDownload", "Agent File Download Dialogue"))
+        self.AgentPathLabel.setText(_translate("AgentDownload", "Path to File (Agent)"))
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file './python/ui/agent_registration_dialogue.ui'
 #
-# Created by: PyQt4 UI code generator 4.12.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_AgentRegister(object):
     def setupUi(self, AgentRegister):
-        AgentRegister.setObjectName(_fromUtf8("AgentRegister"))
+        AgentRegister.setObjectName("AgentRegister")
         AgentRegister.resize(198, 191)
-        self.buttonBox = QtGui.QDialogButtonBox(AgentRegister)
+        self.buttonBox = QtWidgets.QDialogButtonBox(AgentRegister)
         self.buttonBox.setGeometry(QtCore.QRect(-160, 150, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.Title = QtGui.QLabel(AgentRegister)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.Title = QtWidgets.QLabel(AgentRegister)
         self.Title.setGeometry(QtCore.QRect(10, 10, 181, 19))
-        self.Title.setObjectName(_fromUtf8("Title"))
-        self.Username = QtGui.QLineEdit(AgentRegister)
+        self.Title.setObjectName("Title")
+        self.Username = QtWidgets.QLineEdit(AgentRegister)
         self.Username.setGeometry(QtCore.QRect(20, 60, 161, 25))
-        self.Username.setObjectName(_fromUtf8("Username"))
-        self.Password = QtGui.QLineEdit(AgentRegister)
+        self.Username.setObjectName("Username")
+        self.Password = QtWidgets.QLineEdit(AgentRegister)
         self.Password.setGeometry(QtCore.QRect(20, 120, 161, 25))
-        self.Password.setObjectName(_fromUtf8("Password"))
-        self.UsernameLabel = QtGui.QLabel(AgentRegister)
+        self.Password.setObjectName("Password")
+        self.UsernameLabel = QtWidgets.QLabel(AgentRegister)
         self.UsernameLabel.setGeometry(QtCore.QRect(20, 40, 181, 19))
-        self.UsernameLabel.setObjectName(_fromUtf8("UsernameLabel"))
-        self.PasswordLabel = QtGui.QLabel(AgentRegister)
+        self.UsernameLabel.setObjectName("UsernameLabel")
+        self.PasswordLabel = QtWidgets.QLabel(AgentRegister)
         self.PasswordLabel.setGeometry(QtCore.QRect(20, 100, 181, 19))
-        self.PasswordLabel.setObjectName(_fromUtf8("PasswordLabel"))
+        self.PasswordLabel.setObjectName("PasswordLabel")
 
         self.retranslateUi(AgentRegister)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), AgentRegister.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), AgentRegister.reject)
+        self.buttonBox.accepted.connect(AgentRegister.accept)
+        self.buttonBox.rejected.connect(AgentRegister.reject)
         QtCore.QMetaObject.connectSlotsByName(AgentRegister)
 
     def retranslateUi(self, AgentRegister):
-        AgentRegister.setWindowTitle(_translate("AgentRegister", "Dialog", None))
-        self.Title.setText(_translate("AgentRegister", "Agent Registration Options", None))
-        self.UsernameLabel.setText(_translate("AgentRegister", "Username", None))
-        self.PasswordLabel.setText(_translate("AgentRegister", "Password", None))
-
+        _translate = QtCore.QCoreApplication.translate
+        AgentRegister.setWindowTitle(_translate("AgentRegister", "Dialog"))
+        self.Title.setText(_translate("AgentRegister", "Agent Registration Options"))
+        self.UsernameLabel.setText(_translate("AgentRegister", "Username"))
+        self.PasswordLabel.setText(_translate("AgentRegister", "Password"))
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file './python/ui/main_window.ui'
 #
-# Created by: PyQt4 UI code generator 4.12.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        MainWindow.setObjectName(_fromUtf8("MainWindow"))
+        MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
-        self.centralwidget = QtGui.QWidget(MainWindow)
-        self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-        self.AgentSelect = QtGui.QScrollArea(self.centralwidget)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.AgentSelect = QtWidgets.QScrollArea(self.centralwidget)
         self.AgentSelect.setGeometry(QtCore.QRect(0, 0, 331, 551))
         self.AgentSelect.setWidgetResizable(True)
-        self.AgentSelect.setObjectName(_fromUtf8("AgentSelect"))
-        self.scrollAreaWidgetContents = QtGui.QWidget()
+        self.AgentSelect.setObjectName("AgentSelect")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
         self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 327, 547))
-        self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
-        self.AgentList = QtGui.QListWidget(self.scrollAreaWidgetContents)
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.AgentList = QtWidgets.QListWidget(self.scrollAreaWidgetContents)
         self.AgentList.setGeometry(QtCore.QRect(10, 10, 311, 531))
-        self.AgentList.setObjectName(_fromUtf8("AgentList"))
+        self.AgentList.setObjectName("AgentList")
         self.AgentSelect.setWidget(self.scrollAreaWidgetContents)
-        self.verticalLayoutWidget = QtGui.QWidget(self.centralwidget)
+        self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(340, 0, 451, 221))
-        self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
-        self.AgentInfo = QtGui.QVBoxLayout(self.verticalLayoutWidget)
-        self.AgentInfo.setMargin(0)
-        self.AgentInfo.setObjectName(_fromUtf8("AgentInfo"))
-        self.IP = QtGui.QLabel(self.verticalLayoutWidget)
-        self.IP.setObjectName(_fromUtf8("IP"))
+        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
+        self.AgentInfo = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
+        self.AgentInfo.setContentsMargins(0, 0, 0, 0)
+        self.AgentInfo.setObjectName("AgentInfo")
+        self.IP = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.IP.setObjectName("IP")
         self.AgentInfo.addWidget(self.IP)
-        self.ConnectionTime = QtGui.QLabel(self.verticalLayoutWidget)
-        self.ConnectionTime.setObjectName(_fromUtf8("ConnectionTime"))
+        self.ConnectionTime = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.ConnectionTime.setObjectName("ConnectionTime")
         self.AgentInfo.addWidget(self.ConnectionTime)
-        self.Hostname = QtGui.QLabel(self.verticalLayoutWidget)
-        self.Hostname.setObjectName(_fromUtf8("Hostname"))
+        self.Hostname = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.Hostname.setObjectName("Hostname")
         self.AgentInfo.addWidget(self.Hostname)
-        self.Interfaces = QtGui.QLabel(self.verticalLayoutWidget)
-        self.Interfaces.setObjectName(_fromUtf8("Interfaces"))
+        self.Interfaces = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.Interfaces.setObjectName("Interfaces")
         self.AgentInfo.addWidget(self.Interfaces)
-        self.ProcOwner = QtGui.QLabel(self.verticalLayoutWidget)
-        self.ProcOwner.setObjectName(_fromUtf8("ProcOwner"))
+        self.ProcOwner = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.ProcOwner.setObjectName("ProcOwner")
         self.AgentInfo.addWidget(self.ProcOwner)
-        self.verticalLayoutWidget_3 = QtGui.QWidget(self.centralwidget)
+        self.verticalLayoutWidget_3 = QtWidgets.QWidget(self.centralwidget)
         self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(340, 340, 451, 211))
-        self.verticalLayoutWidget_3.setObjectName(_fromUtf8("verticalLayoutWidget_3"))
-        self.Terminal = QtGui.QVBoxLayout(self.verticalLayoutWidget_3)
-        self.Terminal.setMargin(0)
-        self.Terminal.setObjectName(_fromUtf8("Terminal"))
-        self.line = QtGui.QFrame(self.verticalLayoutWidget_3)
-        self.line.setFrameShape(QtGui.QFrame.HLine)
-        self.line.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line.setObjectName(_fromUtf8("line"))
+        self.verticalLayoutWidget_3.setObjectName("verticalLayoutWidget_3")
+        self.Terminal = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_3)
+        self.Terminal.setContentsMargins(0, 0, 0, 0)
+        self.Terminal.setObjectName("Terminal")
+        self.line = QtWidgets.QFrame(self.verticalLayoutWidget_3)
+        self.line.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line.setObjectName("line")
         self.Terminal.addWidget(self.line)
-        self.TermOutput = QtGui.QFrame(self.verticalLayoutWidget_3)
-        self.TermOutput.setFrameShape(QtGui.QFrame.StyledPanel)
-        self.TermOutput.setFrameShadow(QtGui.QFrame.Raised)
-        self.TermOutput.setObjectName(_fromUtf8("TermOutput"))
+        self.TermOutput = QtWidgets.QFrame(self.verticalLayoutWidget_3)
+        self.TermOutput.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.TermOutput.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.TermOutput.setObjectName("TermOutput")
         self.Terminal.addWidget(self.TermOutput)
-        self.TermInput = QtGui.QLineEdit(self.verticalLayoutWidget_3)
-        self.TermInput.setObjectName(_fromUtf8("TermInput"))
+        self.TermInput = QtWidgets.QLineEdit(self.verticalLayoutWidget_3)
+        self.TermInput.setObjectName("TermInput")
         self.Terminal.addWidget(self.TermInput)
-        self.gridLayoutWidget = QtGui.QWidget(self.centralwidget)
+        self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(340, 230, 451, 101))
-        self.gridLayoutWidget.setObjectName(_fromUtf8("gridLayoutWidget"))
-        self.gridLayout = QtGui.QGridLayout(self.gridLayoutWidget)
-        self.gridLayout.setMargin(0)
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.PushFile = QtGui.QPushButton(self.gridLayoutWidget)
-        self.PushFile.setObjectName(_fromUtf8("PushFile"))
+        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
+        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setObjectName("gridLayout")
+        self.PushFile = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.PushFile.setObjectName("PushFile")
         self.gridLayout.addWidget(self.PushFile, 0, 1, 1, 1)
-        self.PullFile = QtGui.QPushButton(self.gridLayoutWidget)
-        self.PullFile.setObjectName(_fromUtf8("PullFile"))
+        self.PullFile = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.PullFile.setObjectName("PullFile")
         self.gridLayout.addWidget(self.PullFile, 0, 0, 1, 1)
-        self.GetLoot = QtGui.QPushButton(self.gridLayoutWidget)
-        self.GetLoot.setObjectName(_fromUtf8("GetLoot"))
+        self.GetLoot = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.GetLoot.setObjectName("GetLoot")
         self.gridLayout.addWidget(self.GetLoot, 1, 0, 1, 1)
-        self.PushModule = QtGui.QPushButton(self.gridLayoutWidget)
-        self.PushModule.setObjectName(_fromUtf8("PushModule"))
+        self.PushModule = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.PushModule.setObjectName("PushModule")
         self.gridLayout.addWidget(self.PushModule, 1, 1, 1, 1)
-        self.ExecComm = QtGui.QPushButton(self.gridLayoutWidget)
-        self.ExecComm.setObjectName(_fromUtf8("ExecComm"))
+        self.ExecComm = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.ExecComm.setObjectName("ExecComm")
         self.gridLayout.addWidget(self.ExecComm, 2, 0, 1, 1)
-        self.RevSh = QtGui.QPushButton(self.gridLayoutWidget)
-        self.RevSh.setObjectName(_fromUtf8("RevSh"))
+        self.RevSh = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.RevSh.setObjectName("RevSh")
         self.gridLayout.addWidget(self.RevSh, 2, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtGui.QMenuBar(MainWindow)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 24))
-        self.menubar.setObjectName(_fromUtf8("menubar"))
-        self.menuAgents_Available = QtGui.QMenu(self.menubar)
-        self.menuAgents_Available.setObjectName(_fromUtf8("menuAgents_Available"))
-        self.menuLocal = QtGui.QMenu(self.menubar)
-        self.menuLocal.setObjectName(_fromUtf8("menuLocal"))
+        self.menubar.setObjectName("menubar")
+        self.menuAgents_Available = QtWidgets.QMenu(self.menubar)
+        self.menuAgents_Available.setObjectName("menuAgents_Available")
+        self.menuLocal = QtWidgets.QMenu(self.menubar)
+        self.menuLocal.setObjectName("menuLocal")
         MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtGui.QStatusBar(MainWindow)
-        self.statusbar.setObjectName(_fromUtf8("statusbar"))
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionCompile_Client = QtGui.QAction(MainWindow)
-        self.actionCompile_Client.setObjectName(_fromUtf8("actionCompile_Client"))
-        self.actionRegister_Client_Creds = QtGui.QAction(MainWindow)
-        self.actionRegister_Client_Creds.setObjectName(_fromUtf8("actionRegister_Client_Creds"))
-        self.actionOpen_Terminal = QtGui.QAction(MainWindow)
-        self.actionOpen_Terminal.setObjectName(_fromUtf8("actionOpen_Terminal"))
-        self.actionChange_C2_Server = QtGui.QAction(MainWindow)
-        self.actionChange_C2_Server.setObjectName(_fromUtf8("actionChange_C2_Server"))
+        self.actionCompile_Client = QtWidgets.QAction(MainWindow)
+        self.actionCompile_Client.setObjectName("actionCompile_Client")
+        self.actionRegister_Client_Creds = QtWidgets.QAction(MainWindow)
+        self.actionRegister_Client_Creds.setObjectName("actionRegister_Client_Creds")
+        self.actionOpen_Terminal = QtWidgets.QAction(MainWindow)
+        self.actionOpen_Terminal.setObjectName("actionOpen_Terminal")
+        self.actionChange_C2_Server = QtWidgets.QAction(MainWindow)
+        self.actionChange_C2_Server.setObjectName("actionChange_C2_Server")
         self.menuAgents_Available.addAction(self.actionCompile_Client)
         self.menuAgents_Available.addAction(self.actionRegister_Client_Creds)
         self.menuAgents_Available.addSeparator()
@@ -362,114 +302,90 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
-        self.IP.setText(_translate("MainWindow", "IP: ", None))
-        self.ConnectionTime.setText(_translate("MainWindow", "Connection Time: ", None))
-        self.Hostname.setText(_translate("MainWindow", "Hostname: ", None))
-        self.Interfaces.setText(_translate("MainWindow", "Interfaces: ", None))
-        self.ProcOwner.setText(_translate("MainWindow", "Process Owner: ", None))
-        self.PushFile.setText(_translate("MainWindow", "Push File", None))
-        self.PullFile.setText(_translate("MainWindow", "Pull File", None))
-        self.GetLoot.setText(_translate("MainWindow", "Get Loot", None))
-        self.PushModule.setText(_translate("MainWindow", "Push Module", None))
-        self.ExecComm.setText(_translate("MainWindow", "Execute Command", None))
-        self.RevSh.setText(_translate("MainWindow", "Reverse Shell", None))
-        self.menuAgents_Available.setTitle(_translate("MainWindow", "Server", None))
-        self.menuLocal.setTitle(_translate("MainWindow", "Local", None))
-        self.actionCompile_Client.setText(_translate("MainWindow", "Compile Client", None))
-        self.actionRegister_Client_Creds.setText(_translate("MainWindow", "Register Client Creds", None))
-        self.actionOpen_Terminal.setText(_translate("MainWindow", "Open Terminal", None))
-        self.actionChange_C2_Server.setText(_translate("MainWindow", "Change C2 Server", None))
-
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.IP.setText(_translate("MainWindow", "IP: "))
+        self.ConnectionTime.setText(_translate("MainWindow", "Connection Time: "))
+        self.Hostname.setText(_translate("MainWindow", "Hostname: "))
+        self.Interfaces.setText(_translate("MainWindow", "Interfaces: "))
+        self.ProcOwner.setText(_translate("MainWindow", "Process Owner: "))
+        self.PushFile.setText(_translate("MainWindow", "Push File"))
+        self.PullFile.setText(_translate("MainWindow", "Pull File"))
+        self.GetLoot.setText(_translate("MainWindow", "Get Loot"))
+        self.PushModule.setText(_translate("MainWindow", "Push Module"))
+        self.ExecComm.setText(_translate("MainWindow", "Execute Command"))
+        self.RevSh.setText(_translate("MainWindow", "Reverse Shell"))
+        self.menuAgents_Available.setTitle(_translate("MainWindow", "Server"))
+        self.menuLocal.setTitle(_translate("MainWindow", "Local"))
+        self.actionCompile_Client.setText(_translate("MainWindow", "Compile Client"))
+        self.actionRegister_Client_Creds.setText(_translate("MainWindow", "Register Client Creds"))
+        self.actionOpen_Terminal.setText(_translate("MainWindow", "Open Terminal"))
+        self.actionChange_C2_Server.setText(_translate("MainWindow", "Change C2 Server"))
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file './python/ui/manager_connection_dialogue.ui'
 #
-# Created by: PyQt4 UI code generator 4.12.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_ManagerServerConnect(object):
     def setupUi(self, ManagerServerConnect):
-        ManagerServerConnect.setObjectName(_fromUtf8("ManagerServerConnect"))
+        ManagerServerConnect.setObjectName("ManagerServerConnect")
         ManagerServerConnect.resize(272, 207)
-        self.IP = QtGui.QLineEdit(ManagerServerConnect)
+        self.IP = QtWidgets.QLineEdit(ManagerServerConnect)
         self.IP.setGeometry(QtCore.QRect(30, 70, 211, 25))
-        self.IP.setObjectName(_fromUtf8("IP"))
-        self.Connect = QtGui.QPushButton(ManagerServerConnect)
+        self.IP.setObjectName("IP")
+        self.Connect = QtWidgets.QPushButton(ManagerServerConnect)
         self.Connect.setGeometry(QtCore.QRect(30, 170, 214, 29))
-        self.Connect.setObjectName(_fromUtf8("Connect"))
-        self.Title = QtGui.QLabel(ManagerServerConnect)
+        self.Connect.setObjectName("Connect")
+        self.Title = QtWidgets.QLabel(ManagerServerConnect)
         self.Title.setGeometry(QtCore.QRect(10, 20, 191, 19))
-        self.Title.setObjectName(_fromUtf8("Title"))
-        self.Port = QtGui.QLineEdit(ManagerServerConnect)
+        self.Title.setObjectName("Title")
+        self.Port = QtWidgets.QLineEdit(ManagerServerConnect)
         self.Port.setGeometry(QtCore.QRect(30, 130, 81, 25))
-        self.Port.setObjectName(_fromUtf8("Port"))
-        self.IPLabel = QtGui.QLabel(ManagerServerConnect)
+        self.Port.setObjectName("Port")
+        self.IPLabel = QtWidgets.QLabel(ManagerServerConnect)
         self.IPLabel.setGeometry(QtCore.QRect(30, 50, 191, 19))
-        self.IPLabel.setObjectName(_fromUtf8("IPLabel"))
-        self.PortLabel = QtGui.QLabel(ManagerServerConnect)
+        self.IPLabel.setObjectName("IPLabel")
+        self.PortLabel = QtWidgets.QLabel(ManagerServerConnect)
         self.PortLabel.setGeometry(QtCore.QRect(30, 110, 191, 19))
-        self.PortLabel.setObjectName(_fromUtf8("PortLabel"))
+        self.PortLabel.setObjectName("PortLabel")
 
         self.retranslateUi(ManagerServerConnect)
         QtCore.QMetaObject.connectSlotsByName(ManagerServerConnect)
 
     def retranslateUi(self, ManagerServerConnect):
-        ManagerServerConnect.setWindowTitle(_translate("ManagerServerConnect", "Dialog", None))
-        self.Connect.setText(_translate("ManagerServerConnect", "Connect", None))
-        self.Title.setText(_translate("ManagerServerConnect", "Server Connection Dialogue", None))
-        self.IPLabel.setText(_translate("ManagerServerConnect", "Server IP Address", None))
-        self.PortLabel.setText(_translate("ManagerServerConnect", "Server Port (defualt 22)", None))
-
+        _translate = QtCore.QCoreApplication.translate
+        ManagerServerConnect.setWindowTitle(_translate("ManagerServerConnect", "Dialog"))
+        self.Connect.setText(_translate("ManagerServerConnect", "Connect"))
+        self.Title.setText(_translate("ManagerServerConnect", "Server Connection Dialogue"))
+        self.IPLabel.setText(_translate("ManagerServerConnect", "Server IP Address"))
+        self.PortLabel.setText(_translate("ManagerServerConnect", "Server Port (defualt 22)"))
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file './python/ui/terminal_dialogue.ui'
 #
-# Created by: PyQt4 UI code generator 4.12.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_Terminal(object):
     def setupUi(self, Terminal):
-        Terminal.setObjectName(_fromUtf8("Terminal"))
+        Terminal.setObjectName("Terminal")
         Terminal.resize(890, 512)
 
         self.retranslateUi(Terminal)
         QtCore.QMetaObject.connectSlotsByName(Terminal)
 
     def retranslateUi(self, Terminal):
-        Terminal.setWindowTitle(_translate("Terminal", "Dialog", None))
-
+        _translate = QtCore.QCoreApplication.translate
+        Terminal.setWindowTitle(_translate("Terminal", "Dialog"))

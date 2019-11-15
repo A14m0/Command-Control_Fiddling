@@ -11,13 +11,13 @@ import dialogues
 import misc
 
 from paramiko import ssh_exception
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 # https://www.qt.io/qt-for-python
 # https://doc.qt.io/qtforpython/?hsCtaTracking=fab9e910-0b90-4caa-b6d0-e202692b6f13%7Cb9e0be8d-1d85-4644-aaa2-41de4e6d37e3
 # https://matplotlib.org/gallery/user_interfaces/embedding_in_qt_sgskip.html#sphx-glr-gallery-user-interfaces-embedding-in-qt-sgskip-py
 
 
-class Manager(QtGui.QMainWindow, design.Ui_MainWindow):
+class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self, parent=None):
         # Initialize the GUI
         super(Manager, self).__init__(parent)
@@ -60,7 +60,7 @@ class Manager(QtGui.QMainWindow, design.Ui_MainWindow):
     def has_selection(self):
         """ Determines if an agent is selected from AgentList"""
         if not self.AgentList.currentItem():
-            reply = QtGui.QMessageBox.information(self, "No Target Selected", "Select a target from the list to use this option")
+            reply = QtWidgets.QMessageBox.information(self, "No Target Selected", "Select a target from the list to use this option")
             return False
         return True
 
@@ -71,7 +71,7 @@ class Manager(QtGui.QMainWindow, design.Ui_MainWindow):
         dialog = dialogues.ConnectDialogue(self.session)
         dialog.exec()
         for entry in self.session.agents:
-            item = QtGui.QListWidgetItem()
+            item = QtWidgets.QListWidgetItem()
             item.setText(entry.id)
             item.setData(QtCore.Qt.UserRole, entry)
             self.AgentList.addItem(item)
@@ -86,18 +86,17 @@ class Manager(QtGui.QMainWindow, design.Ui_MainWindow):
         
     def connect_to_c2(self):
         """Wrapper for _show_connect_dialogue which checks if the user really wants to"""
-        reply = QtGui.QMessageBox.question(self, 'WARNING', 
+        reply = QtWidgets.QMessageBox.question(self, 'WARNING', 
                  'Switching C2 servers will reset all info in the console. Any active processes will be dropped. Continue?', 
-                 QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-        if reply == QtGui.QMessageBox.Yes:
+                 QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
             self._show_connect_dialogue() 
 
     def open_term(self):
         """Opens a local terminal"""
         diag = dialogues.TerminalWidget()
         diag.show()
-        diag.exec()
-
+        
     def push_file(self):
         """Dialogue to push a file to server"""
         if not self.has_selection():
@@ -154,7 +153,7 @@ class Manager(QtGui.QMainWindow, design.Ui_MainWindow):
         
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     connect = Manager()
     connect.show()
     
