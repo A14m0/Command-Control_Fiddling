@@ -78,11 +78,19 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     def update_info_labels(self):
         """Updates the info labels when a new agent is clicked"""
-        self.IP.setText("IP: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).ip)
-        self.ConnectionTime.setText("Connection Time: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).connection_time)
-        self.Hostname.setText("Hostname: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).hostname)
-        self.Interfaces.setText("Interfaces: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).interfaces)
-        self.ProcOwner.setText("Process Owner: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).process_owner)
+        try:
+            self.IP.setText("IP: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).ip)
+            self.ConnectionTime.setText("Connection Time: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).connection_time)
+            self.Hostname.setText("Hostname: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).hostname)
+            self.Interfaces.setText("Interfaces: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).interfaces)
+            self.ProcOwner.setText("Process Owner: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).process_owner)
+        except AttributeError:
+            # Resetting the dialogue stuff
+            self.IP.setText("IP: ")
+            self.ConnectionTime.setText("Connection Time: ")
+            self.Hostname.setText("Hostname: ")
+            self.Interfaces.setText("Interfaces: ")
+            self.ProcOwner.setText("Process Owner: ")
         
     def connect_to_c2(self):
         """Wrapper for _show_connect_dialogue which checks if the user really wants to"""

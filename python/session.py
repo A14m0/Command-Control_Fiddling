@@ -149,7 +149,13 @@ class Session():
     def compile_agent(self, ip, port):
         print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
         self.channel.sendall("28|%s:%s" % (ip, port))
-        fileData = ""
+        fileData = b""
+        data = self.channel.recv(128).decode()
+        print(data)
+        size = int(data)
+        #size = int(self.channel.recv(128).decode())
+        self.channel.send("ok")
+        fileData = self.channel.recv(size)
         misc.save_file(fileData)
 
     def register_agent(self, name, password):

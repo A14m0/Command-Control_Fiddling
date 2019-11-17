@@ -8,7 +8,7 @@ class File():
 
 def save_file(fileData):
     obj = QtWidgets.QFileDialog()
-    filepath = obj.getSaveFileName(None, "Save file", "", "All Files (*)")
+    filepath, filter = obj.getSaveFileName(None, "Save file", "", "All Files (*)")
 
     if not filepath:
         return 1

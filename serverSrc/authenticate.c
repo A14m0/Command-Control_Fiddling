@@ -22,6 +22,7 @@ int authenticate_doauth(const char *usr, const char *pass){
     FILE *fd;
     
     // read in data into buffer
+    // TODO: STACK SMASHING DETECTED HERE FOR WHATEVER FUCKING REASON
     fd = fopen(DATA_FILE, "r");
     if (fd == NULL)
     {
