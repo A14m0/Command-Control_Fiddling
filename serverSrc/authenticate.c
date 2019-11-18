@@ -17,32 +17,14 @@ int authenticate_doauth(const char *usr, const char *pass){
     // initialize variables
     char** tokens = NULL;
     char** subtokens = NULL;
-    char buff[1000];
+    char *buff;
     char thing[2] = "A\0";
-    FILE *fd;
+    int size = 0;
     
     // read in data into buffer
-    // TODO: STACK SMASHING DETECTED HERE FOR WHATEVER FUCKING REASON
-    fd = fopen(DATA_FILE, "r");
-    if (fd == NULL)
-    {
-        printf("Server: FAILED TO OPEN AGENT DATABASE\n");
-        return 0;
-    }
-
-    memset(buff, 0, 1000);
-    int ctr = 0;
-    if(fd != NULL)
-    {
-        while((thing[0] = getc(fd)) != EOF)
-        {
-            strcat(buff, thing);
-            ctr++;
-        }
-        fclose(fd);
-    }
-
-    if(ctr == 0){
+    size = misc_get_file(DATA_FILE, &buff);
+    
+    if(size == 0){
         printf("Server: Found default agent file. Register agents by compiling them with this install\n");
         return 0;
     }
