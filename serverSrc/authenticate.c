@@ -18,7 +18,6 @@ int authenticate_doauth(const char *usr, const char *pass){
     char** tokens = NULL;
     char** subtokens = NULL;
     char *buff;
-    char thing[2] = "A\0";
     int size = 0;
     
     // read in data into buffer

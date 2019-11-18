@@ -65,13 +65,23 @@ void agent_write_info(char *id, char *connection_time,
 void agent_init(char *agent_id){
     FILE *manifest = NULL;
     char parent_dir[2048];
+    char tmp_buff[BUFSIZ];
     char *tmp = NULL;
     char *buff = NULL;
+    int rc = 0;
+
+    // TODO: Server is not correctly passing the agent ID to this function on first connection
     memset(parent_dir, 0, sizeof(parent_dir));
-    sprintf(parent_dir, "agents/%s", agent_id);
+    memset(tmp_buff, 0, sizeof(tmp_buff));
+    printf("Agent ID: %s\n", agent_id);
+    sprintf(parent_dir, "%s/agents/%s", getcwd(tmp_buff, sizeof(tmp_buff)), agent_id);
+    printf("Parent directory: %s\n", parent_dir);
     buff = strdup(parent_dir);
     tmp = strdup(parent_dir);
-    mkdir(parent_dir, 0755);
+    rc = mkdir(parent_dir, 0755);
+    if(rc != 0){
+        perror("");
+    }
     mkdir(strcat(parent_dir, "/loot"), 0755);
     mkdir(strcat(tmp, "/tasking"), 0755);
 
@@ -100,6 +110,7 @@ char *agent_get_tasking(char *agent_id){
     memset(cwd_buf, 0, sizeof(cwd_buf));
     memset(file, 0, sizeof(file));
     sprintf(file, "%s/agents/%s/agent.mfst", getcwd(cwd_buf, sizeof(cwd_buf)),agent_id);
+    printf("Opening file %s\n", file);
     
     fd = fopen(file, "r");
     if(fd == NULL) return NULL;

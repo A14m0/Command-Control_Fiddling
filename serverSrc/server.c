@@ -912,8 +912,8 @@ void client_handler(void* sess){
 
             tasking = agent_get_tasking(pass->id);
             if(!tasking){
-                printf("Failed to open file\n");
-                perror("");
+                printf("Client %s: Failed to open tasking file\n", pass->id);
+                perror("Reason");
                 break;
             }
             printf("Tasking being sent: %s\n", tasking);
