@@ -832,7 +832,6 @@ void client_handler(void* sess){
     int rc = 0;
     int msgType = REQ_NONE;
     char buf[4096];
-    char agent_id[128];
     char tmp_buffer[3];
     char *tasking;
     memset(tmp_buffer, 0, 3);
@@ -906,7 +905,7 @@ void client_handler(void* sess){
             int exists = misc_directory_exists(strcat(buf, pass->id));
         
             if(!exists){
-                agent_init(agent_id);
+                agent_init(pass->id);
                 printf("Client %s: Initialized agent\n", pass->id);
             }
 
