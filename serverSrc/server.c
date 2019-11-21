@@ -794,7 +794,7 @@ void agent_handler(struct clientNode *node){
 
         case AGENT_DOWN_FILE:
             sprintf(buff, "agents/%s/tasking/%s", agent->id, ptr);
-            server_upload_file(agent, ptr, 0);
+            server_upload_file(agent, buff, 0);
             break;
 
         case AGENT_UP_FILE:
@@ -811,7 +811,8 @@ void agent_handler(struct clientNode *node){
 
         case AGENT_EXEC_MODULE:
             printf("Sending executable\n");
-            server_upload_file(agent, ptr, 1);
+            sprintf(buff, "agents/%s/tasking/%s", agent->id, ptr);
+            server_upload_file(agent, buff, 1);
             break;
 
         default:

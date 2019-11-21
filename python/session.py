@@ -38,20 +38,20 @@ class Session():
         # Initiate the connection
         self.channel.sendall("0")
         out = self.channel.recv(5)
-        print(out)
+        #print(out)
         self.channel.sendall("20|all")
         while out != "fi":
             out = self.channel.recv(8196).decode()
             if out != "fi":
                 out = out.split("\n")
-                print(out)
+                #print(out)
                 if len(out) < 5:
                     print("Out was too short of a fuckin list")
                     continue
                 appnd = AgentStruct(out[0],out[2],out[3],out[1],out[4])
                 self.agents.append(appnd)
                 self.channel.sendall('0')
-                print("looped")
+                #print("looped")
 
         print("[+] Successfully gathered agent information")
 

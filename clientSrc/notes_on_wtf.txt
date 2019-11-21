@@ -1,3 +1,0 @@
-GDB (when exiting the python interpreter) says that it exited an inferior process. Is the thread suddenly becoming the main program?
-
-Maybe stuff like the stack and heap arent getting returned to their previous states when the thread exits???

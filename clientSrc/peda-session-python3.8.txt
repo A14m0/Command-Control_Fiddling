@@ -1,9 +1,0 @@
-break memfd_create
-break execlp
-break main
-disable $bpnum
-break exec_module
-disable $bpnum
-break do_exec
-disable $bpnum
-

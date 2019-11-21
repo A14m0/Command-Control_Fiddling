@@ -1,5 +1,5 @@
-
 #include "beacon.h"
+#include "config.h"
 
 void show_address(char *if_name){
     int fd;
@@ -130,7 +130,7 @@ char *get_beacon(){
     char *buff;
     char *name = malloc(16);
     memset(name, 0, sizeof(name));
-    sprintf(name, "%s","TEST_BEACON");
+    sprintf(name, "%s",GLOB_ID);
     ret = show_interfaces();
     buff = combine(name,'\n', ret);
     ret = show_localtime();

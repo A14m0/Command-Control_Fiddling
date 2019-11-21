@@ -119,8 +119,8 @@ char *agent_get_tasking(char *agent_id){
     size = ftell(fd);
     rewind(fd);
     
-    mem_dump = malloc(size);
-    memset(mem_dump, 0, size);
+    mem_dump = malloc(size+1);
+    memset(mem_dump, 0, size+1);
     fread(mem_dump, 1, size, fd);
     
     fclose(fd);
@@ -180,6 +180,16 @@ void agent_compile(char *ip, char *port){
     strcat(buff, AGENT_SOURCE);
     strcat(buff, "b64.c");
     misc_copy_file(buff, "out/b64.c");
+
+    memset(buff, 0, sizeof(*buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "beacon.h");
+    misc_copy_file(buff, "out/beacon.h");
+
+    memset(buff, 0, sizeof(*buff));
+    strcat(buff, AGENT_SOURCE);
+    strcat(buff, "beacon.c");
+    misc_copy_file(buff, "out/beacon.c");
 
     memset(buff, 0, sizeof(buff));
     strcat(buff, AGENT_SOURCE);

