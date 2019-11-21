@@ -58,13 +58,6 @@
     </property>
     <layout class="QVBoxLayout" name="AgentInfo">
      <item>
-      <widget class="QLabel" name="IP">
-       <property name="text">
-        <string>IP: </string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QLabel" name="ConnectionTime">
        <property name="text">
         <string>Connection Time: </string>
@@ -132,7 +125,7 @@
       <x>340</x>
       <y>230</y>
       <width>451</width>
-      <height>101</height>
+      <height>116</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
@@ -187,7 +180,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuAgents_Available">

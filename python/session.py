@@ -45,9 +45,13 @@ class Session():
             if out != "fi":
                 out = out.split("\n")
                 print(out)
-                appnd = AgentStruct(out[0],out[1],out[2],out[3],out[4])
+                if len(out) < 5:
+                    print("Out was too short of a fuckin list")
+                    continue
+                appnd = AgentStruct(out[0],out[2],out[3],out[1],out[4])
                 self.agents.append(appnd)
                 self.channel.sendall('0')
+                print("looped")
 
         print("[+] Successfully gathered agent information")
 

@@ -42,9 +42,9 @@ class ConnectDialogue(QtWidgets.QDialog, design.Ui_ManagerServerConnect):
         try:
             self.session.init_connection()
  
-        except ValueError:
-            QtWidgets.QMessageBox.information(self, "Illegal Input", "The value you passed was not a valid IP address")
-            return
+        #except ValueError:
+         #   QtWidgets.QMessageBox.information(self, "Illegal Input", "The value you passed was not a valid IP address")
+          #  return
         except ssh_exception.NoValidConnectionsError:
             QtWidgets.QMessageBox.information(self, "Connection Refused", "The server refused the SSH connection")
             return
