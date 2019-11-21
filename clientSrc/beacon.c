@@ -1,18 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h> /* for strncpy */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <net/if.h>
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-
-#include <time.h>
-#include <pwd.h>
+#include "beacon.h"
 
 void show_address(char *if_name){
     int fd;
@@ -38,7 +25,8 @@ void show_address(char *if_name){
 char *get_address(char *if_name){
     int fd;
     struct ifreq ifr;// = malloc(sizeof(struct ifreq));
-    char *ret = malloc(strlen(if_name) + 18);
+    char *ret = NULL;
+    ret = malloc(strlen(if_name) + 18);
     memset(ret, 0, sizeof(ret));
     
 
@@ -66,7 +54,8 @@ char *combine(char *str1, const char delim, char *str2){
     if(str2 == NULL) printf("Tada you got it\n");
     int size1 = strlen(str1);
     int size2 = strlen(str2);
-    char *ret = malloc(size1+size2+2);
+    char *ret = NULL;
+    ret = malloc(size1+size2+2);
     memset(ret, 0, sizeof(ret));
 
     sprintf(ret, "%s%c%s", str1, delim, str2);
@@ -105,7 +94,8 @@ char *show_interfaces(){
 
 char *show_localtime(){
     time_t t = time(NULL);
-    char *ret = malloc(20);
+    char *ret = NULL;
+    ret = malloc(20);
     memset(ret, 0, sizeof(ret));
     struct tm tm = *localtime(&t);
     sprintf(ret, "%d-%d-%d %d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1,tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
@@ -123,7 +113,8 @@ char *show_hostname(){
     return buff;
 }
 char *show_procowner(){
-    char *buff = malloc(128);
+    char *buff = NULL;
+    buff = malloc(128);
     memset(buff, 0, sizeof(buff));
     struct passwd *p;
     uid_t uid;
@@ -149,11 +140,4 @@ char *get_beacon(){
     ret = show_procowner();
     buff = combine(buff, '\n', ret);
     return buff;
-}
-
-int main()
-{
-    char *beacon = get_beacon();
-    printf("Beacon frame: %s\n", beacon);
-    return 0;
 }

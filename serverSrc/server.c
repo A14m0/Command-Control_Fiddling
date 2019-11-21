@@ -832,6 +832,7 @@ void client_handler(void* sess){
     int rc = 0;
     int msgType = REQ_NONE;
     char buf[4096];
+    char beacon[BUFSIZ];
     char tmp_buffer[3];
     char *tasking;
     memset(tmp_buffer, 0, 3);
@@ -908,10 +909,20 @@ void client_handler(void* sess){
                 agent_init(pass->id);
                 printf("Client %s: Initialized agent\n", pass->id);
             }
+            rc = ssh_channel_write(pass->chan, "ok", 3);
+            if(rc == SSH_ERROR){
+                printf("Client %s: caught ssh error: %s", pass->id, ssh_get_error(ssh_channel_get_session(pass->chan)));
+            }
+
+            rc = ssh_channel_read(pass->chan, beacon, sizeof(beacon), 0);
+            if(rc == SSH_ERROR){
+                printf("Client %s: caught ssh error: %s", pass->id, ssh_get_error(ssh_channel_get_session(pass->chan)));
+            }
+            agent_write_beacon(pass->id, beacon);
 
             tasking = agent_get_tasking(pass->id);
             if(!tasking){
-                printf("Client %s: Failed to open tasking file\n", pass->id);
+                printf("Client %s: caught ssh error\n", pass->id);
                 perror("Reason");
                 break;
             }

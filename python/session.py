@@ -3,9 +3,8 @@ import misc
 import base64 as b64
 
 class AgentStruct():
-    def __init__(self, id, ip, connection_time, hostname, interfaces, process_owner):
+    def __init__(self, id, connection_time, hostname, interfaces, process_owner):
         self.id = id
-        self.ip = ip
         self.connection_time = connection_time
         self.hostname = hostname
         self.interfaces = interfaces
@@ -46,7 +45,7 @@ class Session():
             if out != "fi":
                 out = out.split("\n")
                 print(out)
-                appnd = AgentStruct(out[0],out[1],out[2],out[3],out[4],out[5])
+                appnd = AgentStruct(out[0],out[1],out[2],out[3],out[4])
                 self.agents.append(appnd)
                 self.channel.sendall('0')
 

