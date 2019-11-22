@@ -584,11 +584,14 @@ int server_direct_forwarding(ssh_session session)
     int nbytes, nwritten;
     forwarding_channel = ssh_channel_new(session);
     if (forwarding_channel == NULL) {
+        printf("Failed to create forwarding channel\n");
         return rc;
     }
     rc = ssh_channel_open_forward(forwarding_channel,"www.google.com", 80,"localhost", 5555);
     if (rc != SSH_OK)
     {
+
+        printf("Failed to open forwarding channel\n");
         ssh_channel_free(forwarding_channel);
         return rc;
     }
@@ -596,6 +599,8 @@ int server_direct_forwarding(ssh_session session)
     nwritten = ssh_channel_write(forwarding_channel,http_get,nbytes);
     if (nbytes != nwritten)
     {
+
+        printf("Failed to write to forwarding channel\n");
         ssh_channel_free(forwarding_channel);
         return SSH_ERROR;
     }
