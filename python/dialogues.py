@@ -8,6 +8,7 @@ import design
 from paramiko import ssh_exception
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class TerminalWidget(QtWidgets.QWidget, design.Ui_Terminal):
 
     def __init__(self, parent=None):
@@ -17,10 +18,12 @@ class TerminalWidget(QtWidgets.QWidget, design.Ui_Terminal):
         self.terminal = QtWidgets.QWidget(self)
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(self.terminal)
-        self.process.start('urxvt',['-embed', str(self.terminal.winId())])
         # Works also with urxvt:
         #self.process.start(
                 #'urxvt',['-embed', str(self.terminal.winId())])
+    def start(self):
+        print("Started application")
+        self.process.start('urxvt',['-embed', str(self.terminal.winId())])
 
 class ConnectDialogue(QtWidgets.QDialog, design.Ui_ManagerServerConnect):
     def __init__(self, session, parent=None):

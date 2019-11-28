@@ -9,6 +9,7 @@ import session
 import design
 import dialogues
 import misc
+import os
 
 from paramiko import ssh_exception
 from PyQt5 import QtGui, QtCore, QtWidgets
@@ -47,6 +48,9 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.actionOpen_Terminal.triggered.connect(self.open_term)
         self.actionChange_C2_Server.triggered.connect(self.connect_to_c2)
         self.AgentList.currentItemChanged.connect(self.update_info_labels)
+
+        self.winList = []
+        self.winListIndex = 0
 
         # Initialize the session and attempt to start a connection
         self.session = session.Session("127.0.0.1")
@@ -100,8 +104,10 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     def open_term(self):
         """Opens a local terminal"""
-        diag = dialogues.TerminalWidget()
-        diag.show()
+        if sys.platform == "linux":
+            os.system("urxvt")
+        else:
+            os.system("cmd.exe")
         
     def push_file(self):
         """Dialogue to push a file to server"""
@@ -123,7 +129,8 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         if not self.has_selection():
             return
         diag = dialogues.AgentCommandDialogue(self.session, self.AgentList.currentItem().text())
-        diag.exec()
+        diag.show()
+        return diag
 
     def rev_sh(self):
         """Dialogue to request reverse shell from agent"""
@@ -150,12 +157,14 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def get_client(self):
         """Dialogue to get a compiled agent from server"""
         diag = dialogues.AgentCompileDialogue(self.session)
-        diag.exec()
+        diag.show()
+        return diag
 
     def reg_client(self):
         """Dialogue to register credentials with the server"""
         diag = dialogues.AgentRegisterDialogue(self.session)
-        diag.exec()
+        diag.show()
+        return diag
         
 
 if __name__ == "__main__":
