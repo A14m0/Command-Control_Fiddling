@@ -127,6 +127,12 @@ int main(int argc, char **argv){
                         chan=ssh_message_channel_request_open_reply_accept(message);
                         break;
                     }
+                case SSH_GLOBAL_REQUEST_TCPIP_FORWARD:
+                    // TAKE A LOOK:
+                    // https://libssh.libssh.narkive.com/rbLQgaQn/reverse-port-forwarding-requests-server-implementation
+
+                //ssh_message_global_request_reply_success
+                    break;
                 default:
                 ssh_message_reply_default(message);
             }
