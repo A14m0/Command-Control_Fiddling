@@ -27,7 +27,7 @@ char *get_address(char *if_name){
     struct ifreq ifr;// = malloc(sizeof(struct ifreq));
     char *ret = NULL;
     ret = malloc(strlen(if_name) + 18);
-    memset(ret, 0, sizeof(ret));
+    memset(ret, 0, strlen(if_name) + 18);
     
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -56,7 +56,7 @@ char *combine(char *str1, const char delim, char *str2){
     int size2 = strlen(str2);
     char *ret = NULL;
     ret = malloc(size1+size2+2);
-    memset(ret, 0, sizeof(ret));
+    memset(ret, 0, size1+size2+2);
 
     sprintf(ret, "%s%c%s", str1, delim, str2);
     free(str1);
@@ -96,7 +96,7 @@ char *show_localtime(){
     time_t t = time(NULL);
     char *ret = NULL;
     ret = malloc(20);
-    memset(ret, 0, sizeof(ret));
+    memset(ret, 0, 20);
     struct tm tm = *localtime(&t);
     sprintf(ret, "%d-%d-%d %d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1,tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
     return ret;
@@ -115,7 +115,7 @@ char *show_hostname(){
 char *show_procowner(){
     char *buff = NULL;
     buff = malloc(128);
-    memset(buff, 0, sizeof(buff));
+    memset(buff, 0, 128);
     struct passwd *p;
     uid_t uid;
     uid = getuid();
@@ -129,7 +129,7 @@ char *get_beacon(){
     char *ret;
     char *buff;
     char *name = malloc(16);
-    memset(name, 0, sizeof(name));
+    memset(name, 0, 16);
     sprintf(name, "%s",GLOB_ID);
     ret = show_interfaces();
     buff = combine(name,'\n', ret);

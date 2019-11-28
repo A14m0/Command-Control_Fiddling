@@ -230,6 +230,7 @@ void agent_task(int operation, char *agent, char *opt){
     char buffer[BUFSIZ];
     char tmpbuff[BUFSIZ];
     memset(buffer, 0, sizeof(buffer));
+    printf("Agent: %s, Filename: %s\n", agent,opt);
     sprintf(buffer, "%s/agents/%s/agent.mfst", getcwd(tmpbuff, sizeof(tmpbuff)), agent);
     file = fopen(buffer, "a");
     if(!file){

