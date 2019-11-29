@@ -83,7 +83,7 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         dialog.exec()
         self.update_agents()
         
-    def update_agents_failed():
+    def update_agents_failed(self):
         self.BackendStatus.setText("ERROR")
 
     def update_agents(self):
@@ -137,7 +137,7 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
             return
         ret = self.session.upload_file(self.AgentList.currentItem().text(), file)
         if ret == 0:
-            reply = QtWidgets.QMessageBox.information(self, "Success!", "Successfully retrieved agent loot")
+            reply = QtWidgets.QMessageBox.information(self, "Success!", "Successfully pushed file to agent")
             return
         
     def pull_file(self):
@@ -170,6 +170,8 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         
         print("Getting loot")
         self.session.download_loot(self.AgentList.currentItem().text())
+        reply = QtWidgets.QMessageBox.information(self, "Success!", "Successfully got loot from agent")
+            
 
     def push_module(self):
         """Dialogue to push a module to agent"""
@@ -180,6 +182,8 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
             return
 
         self.session.push_module(self.AgentList.currentItem().text(), file)
+        reply = QtWidgets.QMessageBox.information(self, "Success!", "Pushed module to agent")
+
 
     def get_client(self):
         """Dialogue to get a compiled agent from server"""

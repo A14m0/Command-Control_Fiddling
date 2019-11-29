@@ -1,23 +1,20 @@
-1. Make sure THAT YOU FUCKING FREE ALL MALLOC MEMORY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
+1. Fix problems related to uncleared server buffers
+    * Check out loot downloading
+
 2. Infinite looping happening when consecutive module executions
 
-3. Add agent beacon functionality
-
-4. Add argparsing onto client 
+3. Add argparsing onto client 
     * Maybe homebrew in order to keep dependencies low?
 
-5. Cleanup out/ after agent compilation
+4. Cleanup out/ after agent compilation
 
-6. Allow for better catching of empty data file
+5. Allow for better catching of empty data file
 
-7. Fix NULL character buffer problems in server
-
-8. Obfuscate client hard-coded values
+6. Obfuscate client hard-coded values
     * Maybe a simple XOR encrypt-decrypt?
         ** Would be easy, but would include non-encrypted data
 
-9. Add anti-debugging things
+7. Add anti-debugging things
     * Test for sandboxing/VM (timed delay, VMWare asm instructions)
         ** Resources for this:
             https://kb.vmware.com/s/article/1009458
