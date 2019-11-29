@@ -133,14 +133,20 @@
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="BackendStatusLabel">
     <property name="geometry">
      <rect>
       <x>340</x>
       <y>530</y>
-      <width>449</width>
+      <width>111</width>
       <height>20</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
     </property>
     <property name="text">
      <string>Backend status: </string>
@@ -285,13 +291,54 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>100</y>
+        <y>130</y>
         <width>431</width>
-        <height>261</height>
+        <height>231</height>
        </rect>
       </property>
      </widget>
+     <widget class="QLabel" name="InterfacesLabel">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>111</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Interfaces:</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::RichText</enum>
+      </property>
+     </widget>
     </widget>
+   </widget>
+   <widget class="QLabel" name="BackendStatus">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>530</y>
+      <width>331</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

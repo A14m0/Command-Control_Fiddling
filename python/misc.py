@@ -6,6 +6,33 @@ class File():
         self.filesize = size
         self.data = data
 
+class BackendUpdater(QtCore.QThread):
+    signal = QtCore.pyqtSignal('PyQt_PyObject')
+    update_sig_ok = QtCore.pyqtSignal()
+    update_sig_er = QtCore.pyqtSignal()
+
+
+    def __init__(self, session, parent=None):
+        QtCore.QThread.__init__(self)
+        self.session = session
+        self.parent = parent
+
+    def run(self):
+        def work():
+            print("Starting work func")
+            QtCore.QThread.sleep(10)
+            ret = self.session.update()
+            if ret == 0:
+                self.update_sig_ok.emit()
+            else:
+                self.update_sig_er.emit()
+
+        timer = QtCore.QTimer()
+        timer.timeout.connect(work)
+        timer.start(10000)
+        self.exec_()
+
+
 class InterfaceModel(QtCore.QAbstractTableModel):
     def __init__(self, interface_list, address_list, parent=None):
         super(InterfaceModel, self).__init__(parent)

