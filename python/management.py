@@ -27,6 +27,7 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         # Set color palette
         self.color = paletteColors.Colors()
         self.setPalette(self.color.pltActive)
+        self.interfaceModel = misc.InterfaceModel("", "")
 
         # Set button tooltips
         self.PushFile.setToolTip("Push file to selected agent")
@@ -48,6 +49,8 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.actionOpen_Terminal.triggered.connect(self.open_term)
         self.actionChange_C2_Server.triggered.connect(self.connect_to_c2)
         self.AgentList.currentItemChanged.connect(self.update_info_labels)
+        self.InterfaceTable.setModel(self.interfaceModel)
+        self.InterfaceTable.show()
 
         self.winList = []
         self.winListIndex = 0
@@ -83,16 +86,17 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def update_info_labels(self):
         """Updates the info labels when a new agent is clicked"""
         try:
-            self.ConnectionTime.setText("Connection Time: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).connection_time)
-            self.Hostname.setText("Hostname: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).hostname)
-            self.Interfaces.setText("Interfaces: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).interfaces)
-            self.ProcOwner.setText("Process Owner: " + self.AgentList.currentItem().data(QtCore.Qt.UserRole).process_owner)
+            self.ConnectionTime.setText(self.AgentList.currentItem().data(QtCore.Qt.UserRole).connection_time)
+            self.Hostname.setText(self.AgentList.currentItem().data(QtCore.Qt.UserRole).hostname)
+            self.interfaceModel.update(self.AgentList.currentItem().data(QtCore.Qt.UserRole).interfaces)
+            self.ProcOwner.setText(self.AgentList.currentItem().data(QtCore.Qt.UserRole).process_owner)
+            #self.InterfaceTable.show()
         except AttributeError:
             # Resetting the dialogue stuff
-            self.ConnectionTime.setText("Connection Time: ")
-            self.Hostname.setText("Hostname: ")
-            self.Interfaces.setText("Interfaces: ")
-            self.ProcOwner.setText("Process Owner: ")
+            self.ConnectionTime.setText("")
+            self.Hostname.setText("")
+            self.interfaceModel.update(["", ""])
+            self.ProcOwner.setText("")
         
     def connect_to_c2(self):
         """Wrapper for _show_connect_dialogue which checks if the user really wants to"""
@@ -115,6 +119,8 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
             return
         print("[ ] Waiting for file selection...")
         file = misc.open_file()
+        if file == 0:
+            return
         self.session.upload_file(self.AgentList.currentItem().text(), file)
 
     def pull_file(self):
@@ -122,15 +128,16 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         if not self.has_selection():
             return
         diag = dialogues.AgentDownloadDialogue(self.session, self.AgentList.currentItem().text())
+        diag.show()
         diag.exec()
-
+        
     def exec_comm(self):
         """Dialogue to task command for agent"""
         if not self.has_selection():
             return
         diag = dialogues.AgentCommandDialogue(self.session, self.AgentList.currentItem().text())
         diag.show()
-        return diag
+        diag.exec()
 
     def rev_sh(self):
         """Dialogue to request reverse shell from agent"""
@@ -152,19 +159,22 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         if not self.has_selection():
             return
         file = misc.open_file()
+        if file == 0:
+            return
+
         self.session.push_module(self.AgentList.currentItem().text(), file)
 
     def get_client(self):
         """Dialogue to get a compiled agent from server"""
         diag = dialogues.AgentCompileDialogue(self.session)
         diag.show()
-        return diag
+        diag.exec()
 
     def reg_client(self):
         """Dialogue to register credentials with the server"""
         diag = dialogues.AgentRegisterDialogue(self.session)
         diag.show()
-        return diag
+        diag.exec()
         
 
 if __name__ == "__main__":

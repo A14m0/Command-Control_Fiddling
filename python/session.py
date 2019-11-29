@@ -26,6 +26,26 @@ class Session():
     def update_port(self, port):
         self.port = port
 
+    def parse_interfaces(self, inp):
+        interfaces = []
+        addresses = []
+        ret = []
+        data = inp.split(",")
+        try:
+            for d_set in data:
+                d_set = d_set.split(":")
+                if d_set[0] == "NA":
+                    raise IndexError("Got NA interface data")
+                interfaces.append(d_set[0])
+                addresses.append(d_set[1])
+        except IndexError:
+            interfaces.append("NA")
+            addresses.append("NA")
+
+        ret.append(interfaces)
+        ret.append(addresses)
+        return ret
+
     def init_connection(self):
         self.ssh.connect(hostname=self.address, port=self.port, username='aris', password='lala', allow_agent=False)
 
@@ -38,21 +58,20 @@ class Session():
         # Initiate the connection
         self.channel.sendall("0")
         out = self.channel.recv(5)
-        #print(out)
         self.channel.sendall("20|all")
         while out != "fi":
             out = self.channel.recv(8196).decode()
             if out != "fi":
                 out = out.split("\n")
-                #print(out)
                 if len(out) < 5:
                     print("Out was too short of a fuckin list")
                     continue
-                appnd = AgentStruct(out[0],out[2],out[3],out[1],out[4])
+
+                interfaces = self.parse_interfaces(out[1])
+                appnd = AgentStruct(out[0],out[2],out[3],interfaces,out[4])
                 self.agents.append(appnd)
                 self.channel.sendall('0')
-                #print("looped")
-
+        
         print("[+] Successfully gathered agent information")
 
     def download_loot(self, agent_id):

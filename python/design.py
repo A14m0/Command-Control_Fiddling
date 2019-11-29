@@ -3,7 +3,7 @@
 
 # Form implementation generated from reading ui file './python/ui/agent_command_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -44,7 +44,7 @@ class Ui_CommandDialogue(object):
 
 # Form implementation generated from reading ui file './python/ui/agent_compile_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -92,7 +92,7 @@ class Ui_AgentCompile(object):
 
 # Form implementation generated from reading ui file './python/ui/agent_download_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -133,7 +133,7 @@ class Ui_AgentDownload(object):
 
 # Form implementation generated from reading ui file './python/ui/agent_registration_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -181,7 +181,7 @@ class Ui_AgentRegister(object):
 
 # Form implementation generated from reading ui file './python/ui/main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -192,7 +192,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 600)
+        MainWindow.resize(791, 600)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.AgentSelect = QtWidgets.QScrollArea(self.centralwidget)
@@ -206,45 +206,19 @@ class Ui_MainWindow(object):
         self.AgentList.setGeometry(QtCore.QRect(10, 10, 311, 531))
         self.AgentList.setObjectName("AgentList")
         self.AgentSelect.setWidget(self.scrollAreaWidgetContents)
-        self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(340, 0, 451, 221))
-        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
-        self.AgentInfo = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
-        self.AgentInfo.setContentsMargins(0, 0, 0, 0)
-        self.AgentInfo.setObjectName("AgentInfo")
-        self.ConnectionTime = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.ConnectionTime.setObjectName("ConnectionTime")
-        self.AgentInfo.addWidget(self.ConnectionTime)
-        self.Hostname = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.Hostname.setObjectName("Hostname")
-        self.AgentInfo.addWidget(self.Hostname)
-        self.Interfaces = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.Interfaces.setObjectName("Interfaces")
-        self.AgentInfo.addWidget(self.Interfaces)
-        self.ProcOwner = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.ProcOwner.setObjectName("ProcOwner")
-        self.AgentInfo.addWidget(self.ProcOwner)
         self.verticalLayoutWidget_3 = QtWidgets.QWidget(self.centralwidget)
-        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(340, 340, 451, 211))
+        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(340, 510, 451, 31))
         self.verticalLayoutWidget_3.setObjectName("verticalLayoutWidget_3")
         self.Terminal = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_3)
         self.Terminal.setContentsMargins(0, 0, 0, 0)
         self.Terminal.setObjectName("Terminal")
-        self.line = QtWidgets.QFrame(self.verticalLayoutWidget_3)
-        self.line.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line.setObjectName("line")
-        self.Terminal.addWidget(self.line)
-        self.TermOutput = QtWidgets.QFrame(self.verticalLayoutWidget_3)
-        self.TermOutput.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.TermOutput.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.TermOutput.setObjectName("TermOutput")
-        self.Terminal.addWidget(self.TermOutput)
-        self.TermInput = QtWidgets.QLineEdit(self.verticalLayoutWidget_3)
-        self.TermInput.setObjectName("TermInput")
-        self.Terminal.addWidget(self.TermInput)
+        self.line_2 = QtWidgets.QFrame(self.verticalLayoutWidget_3)
+        self.line_2.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line_2.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_2.setObjectName("line_2")
+        self.Terminal.addWidget(self.line_2)
         self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(340, 230, 451, 116))
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(340, 390, 451, 116))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -267,9 +241,67 @@ class Ui_MainWindow(object):
         self.RevSh = QtWidgets.QPushButton(self.gridLayoutWidget)
         self.RevSh.setObjectName("RevSh")
         self.gridLayout.addWidget(self.RevSh, 2, 1, 1, 1)
+        self.line = QtWidgets.QFrame(self.centralwidget)
+        self.line.setGeometry(QtCore.QRect(340, 370, 451, 20))
+        self.line.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line.setObjectName("line")
+        self.label = QtWidgets.QLabel(self.centralwidget)
+        self.label.setGeometry(QtCore.QRect(340, 530, 449, 20))
+        self.label.setObjectName("label")
+        self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
+        self.scrollArea.setGeometry(QtCore.QRect(339, 3, 451, 371))
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 447, 367))
+        self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
+        self.HostnameLabel = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
+        self.HostnameLabel.setGeometry(QtCore.QRect(10, 10, 81, 25))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.HostnameLabel.setFont(font)
+        self.HostnameLabel.setTextFormat(QtCore.Qt.AutoText)
+        self.HostnameLabel.setObjectName("HostnameLabel")
+        self.ConnectionTimeLabel = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
+        self.ConnectionTimeLabel.setGeometry(QtCore.QRect(10, 40, 121, 25))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.ConnectionTimeLabel.setFont(font)
+        self.ConnectionTimeLabel.setTextFormat(QtCore.Qt.RichText)
+        self.ConnectionTimeLabel.setObjectName("ConnectionTimeLabel")
+        self.ProcOwnerLabel = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
+        self.ProcOwnerLabel.setGeometry(QtCore.QRect(10, 70, 111, 25))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.ProcOwnerLabel.setFont(font)
+        self.ProcOwnerLabel.setTextFormat(QtCore.Qt.RichText)
+        self.ProcOwnerLabel.setObjectName("ProcOwnerLabel")
+        self.Hostname = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
+        self.Hostname.setGeometry(QtCore.QRect(90, 10, 381, 25))
+        self.Hostname.setText("")
+        self.Hostname.setTextFormat(QtCore.Qt.AutoText)
+        self.Hostname.setObjectName("Hostname")
+        self.ConnectionTime = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
+        self.ConnectionTime.setGeometry(QtCore.QRect(135, 40, 331, 25))
+        self.ConnectionTime.setText("")
+        self.ConnectionTime.setTextFormat(QtCore.Qt.RichText)
+        self.ConnectionTime.setObjectName("ConnectionTime")
+        self.ProcOwner = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
+        self.ProcOwner.setGeometry(QtCore.QRect(120, 70, 341, 25))
+        self.ProcOwner.setText("")
+        self.ProcOwner.setTextFormat(QtCore.Qt.RichText)
+        self.ProcOwner.setObjectName("ProcOwner")
+        self.InterfaceTable = QtWidgets.QTableView(self.scrollAreaWidgetContents_2)
+        self.InterfaceTable.setGeometry(QtCore.QRect(10, 100, 431, 261))
+        self.InterfaceTable.setObjectName("InterfaceTable")
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 30))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 791, 30))
         self.menubar.setObjectName("menubar")
         self.menuAgents_Available = QtWidgets.QMenu(self.menubar)
         self.menuAgents_Available.setObjectName("menuAgents_Available")
@@ -300,17 +332,17 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.ConnectionTime.setText(_translate("MainWindow", "Connection Time: "))
-        self.Hostname.setText(_translate("MainWindow", "Hostname: "))
-        self.Interfaces.setText(_translate("MainWindow", "Interfaces: "))
-        self.ProcOwner.setText(_translate("MainWindow", "Process Owner: "))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Control Console"))
         self.PushFile.setText(_translate("MainWindow", "Push File"))
         self.PullFile.setText(_translate("MainWindow", "Pull File"))
         self.GetLoot.setText(_translate("MainWindow", "Get Loot"))
         self.PushModule.setText(_translate("MainWindow", "Push Module"))
         self.ExecComm.setText(_translate("MainWindow", "Execute Command"))
         self.RevSh.setText(_translate("MainWindow", "Reverse Shell"))
+        self.label.setText(_translate("MainWindow", "Backend status: "))
+        self.HostnameLabel.setText(_translate("MainWindow", "Hostname: "))
+        self.ConnectionTimeLabel.setText(_translate("MainWindow", "Connection Time: "))
+        self.ProcOwnerLabel.setText(_translate("MainWindow", "Process Owner: "))
         self.menuAgents_Available.setTitle(_translate("MainWindow", "Server"))
         self.menuLocal.setTitle(_translate("MainWindow", "Local"))
         self.actionCompile_Client.setText(_translate("MainWindow", "Compile Client"))
@@ -321,7 +353,7 @@ class Ui_MainWindow(object):
 
 # Form implementation generated from reading ui file './python/ui/manager_connection_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -366,7 +398,7 @@ class Ui_ManagerServerConnect(object):
 
 # Form implementation generated from reading ui file './python/ui/terminal_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
