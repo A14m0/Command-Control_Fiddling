@@ -21,7 +21,7 @@ clients must be made or how a client should react.
 
 void remchar(char *, char, char *);
 int authenticate_console(ssh_session);
-ssh_session connect_ssh(const char *, const char *,int);
+ssh_session connect_ssh(const char *, const char *);
 
 void remchar(char *msg, char rem, char *buff){
     int size;
@@ -75,7 +75,7 @@ int authenticate_console(ssh_session session){
   	return rc;
 }
 
-ssh_session connect_ssh(const char *host, const char *user,int verbosity){
+ssh_session connect_ssh(const char *host, const char *user){
 	/*Connect to server*/
     ssh_session session;
     int auth=0;
@@ -98,8 +98,7 @@ ssh_session connect_ssh(const char *host, const char *user,int verbosity){
     if (ssh_options_set(session, SSH_OPTIONS_HOST, host) < 0) {
         return NULL;
     }
-    ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-
+	
 	// do the connection
     if(ssh_connect(session)){
         fprintf(stderr,"Connection failed : %s\n",ssh_get_error(session));
@@ -155,7 +154,7 @@ int direct_forwarding(ssh_session session)
 
 
 int main(int argc, char* argv[]){
-    ssh_session session = connect_ssh(HOST, GLOB_ID, 0);
+    ssh_session session = connect_ssh(HOST, GLOB_ID);
 
 	if(session == NULL){
 		printf("Failed to create SSH session\n");
@@ -167,8 +166,6 @@ int main(int argc, char* argv[]){
 
 	func_loop(session);
 
-	// Check out this function:
-	// ssh_channel_write()
 
 	ssh_disconnect(session);
 	ssh_free(session);

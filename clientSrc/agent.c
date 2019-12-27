@@ -583,7 +583,7 @@ int parse_tasking(char *tasking, ssh_channel chan){
 	// free all stuff
 	for(int k = 0; k < num; k++){
 		// Something is broken in here
-		printf("Freeing shit.\nOperation: %d\nOptions: %s\n", tasking_arr[k]->operation, tasking_arr[k]->opts);
+		//printf("Freeing shit.\nOperation: %d\nOptions: %s\n", tasking_arr[k]->operation, tasking_arr[k]->opts);
 		if(tasking_arr[k] == NULL) continue;
 		if(tasking_arr[k]->opts != NULL) free(tasking_arr[k]->opts);
 		free(tasking_arr[k]);

@@ -2,60 +2,47 @@
 #include "misc.h"
 #include "authenticate.h"
 
-void agent_write_info(char *id, char *connection_time,
-     char *hostname, char *ip_addr, char *interfaces, char *proc_owner){
-    
+void agent_write_info(char *id, char *connection_time, char *hostname, char *ip_addr, char *interfaces, char *proc_owner){
     char buff[BUFSIZ];
+    char *na = "NA";
     FILE *fd = NULL;
+
     memset(buff, 0, sizeof(buff));
     sprintf(buff, "agents/%s/info.txt", id);
+    
     fd = fopen(buff, "w");
     if(fd == NULL){
         perror("");
         return;
     }
+    
     memset(buff, 0, sizeof(buff));
-    if(id != NULL){
-        strcat(buff, id);
-    } else {
-        strcat(buff, "NA");
+    
+    if(id == NULL){
+        id = na;
     }
-    strcat(buff, "\n");
 
-    if(connection_time != NULL){
-        strcat(buff, connection_time);
-    } else {
-        strcat(buff, "NA");
-    }
-    strcat(buff, "\n");
+    if(connection_time == NULL){
+        connection_time = na;
+    } 
 
-    if(hostname != NULL){
-        strcat(buff, hostname);
-    } else {
-        strcat(buff, "NA");
+    if(hostname == NULL){
+        hostname = na;
     }
-    strcat(buff, "\n");
 
-    if(ip_addr != NULL){
-        strcat(buff, ip_addr);
-    } else {
-        strcat(buff, "NA");
+    if(ip_addr == NULL){
+        ip_addr = na;
     }
-    strcat(buff, "\n");
 
-    if(interfaces != NULL){
-        strcat(buff, interfaces);
-    } else {
-        strcat(buff, "NA");
+    if(interfaces == NULL){
+        interfaces = na;
     }
-    strcat(buff, "\n");
 
     if(proc_owner != NULL){
-        strcat(buff, proc_owner);
-    } else {
-        strcat(buff, "NA");
-    }
-    strcat(buff, "\n");
+        proc_owner = na;
+    } 
+
+    sprintf(buff, "%s\n%s\n%s\n%s\n%s\n%s\n", id, connection_time, hostname, ip_addr, interfaces, proc_owner);
 
     fclose(fd);
 

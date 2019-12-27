@@ -1,5 +1,6 @@
 #include "misc.h"
 #include "authenticate.h"
+#include "log.h"
 
 
 int misc_index_of(char* str, char find, int rev){
@@ -98,7 +99,7 @@ void misc_serverinit() {
         close(fd2);
     }
 
-
+    init_log();
 }
 
 int misc_copy_file(char *filename, char *dest){

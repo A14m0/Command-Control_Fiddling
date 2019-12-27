@@ -15,6 +15,6 @@ clients must be made or how a client should react.
 int authenticate_console(ssh_session session);
 int authenticate_kbdint(ssh_session session, const char *password);
 int verify_knownhost(ssh_session session);
-ssh_session connect_ssh(const char *hostname, const char *user, int verbosity);
+ssh_session connect_ssh(const char *hostname, const char *user);
 
 #endif /* EXAMPLES_COMMON_H_ */

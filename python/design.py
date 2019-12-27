@@ -3,7 +3,7 @@
 
 # Form implementation generated from reading ui file './python/ui/agent_command_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -44,7 +44,7 @@ class Ui_CommandDialogue(object):
 
 # Form implementation generated from reading ui file './python/ui/agent_compile_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -92,7 +92,7 @@ class Ui_AgentCompile(object):
 
 # Form implementation generated from reading ui file './python/ui/agent_download_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -133,7 +133,7 @@ class Ui_AgentDownload(object):
 
 # Form implementation generated from reading ui file './python/ui/agent_registration_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -181,7 +181,7 @@ class Ui_AgentRegister(object):
 
 # Form implementation generated from reading ui file './python/ui/main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -374,7 +374,7 @@ class Ui_MainWindow(object):
 
 # Form implementation generated from reading ui file './python/ui/manager_connection_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -419,7 +419,7 @@ class Ui_ManagerServerConnect(object):
 
 # Form implementation generated from reading ui file './python/ui/terminal_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.0
 #
 # WARNING! All changes made in this file will be lost!
 

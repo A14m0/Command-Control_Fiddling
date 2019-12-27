@@ -216,8 +216,9 @@ class Session():
         return 0
 
     def clean_exit(self):
-        self.channel.sendall("00")
-        self.channel = 0
-        print("[+] Backend closed down")
+        if self.channel != 0:
+            self.channel.sendall("00")
+            self.channel = 0
+            print("[+] Backend closed down")
 
     
