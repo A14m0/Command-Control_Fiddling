@@ -1,5 +1,5 @@
 #include "log.h"
-FILE *log_file;
+extern FILE *log_file;
 
 int init_log(){
     log_file = fopen("log.txt", "a");
@@ -11,7 +11,13 @@ int init_log(){
 }
 
 void log_info(char *data){
-    fwrite(log_file, 1, strlen(data), data);
+    if (!log_file)
+    {
+        printf("Log File not open!!! WTF???\n%s\n", data);
+        return;
+    }
+    
+    fwrite(data, 1, strlen(data), log_file);
     printf("%s", data);
 }
 

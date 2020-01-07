@@ -64,3 +64,4 @@ serverSrc/agents
 serverSrc/out
 serverSrc/agents.dat
 serverSrc/modules
+serverSrc/log.txt

@@ -20,3 +20,13 @@
             https://kb.vmware.com/s/article/1009458
             https://www.cyberbit.com/blog/endpoint-security/anti-vm-and-anti-sandbox-explained/
 
+
+
+
+
+Check out this method for handling custom methods over multiple processes and fds
+https://github.com/curesec/tools/tree/master/aesshell
+
+
+Server gets a connection from client to start shell listener. The server then enters the specific handler and chooses a random high port and adds a structure to a global data list. The manager can then querry the available ports to connect to and connects to the one that has been selected. the server just forwards the plaintext information between the two different connections. Could maybe specify a shell in the reverse-shell request options so you could load a meterpreter over ssh? Check if it is possible to spawn a terminal app with a specific file descriptors
+

