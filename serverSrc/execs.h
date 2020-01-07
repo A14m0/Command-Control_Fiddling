@@ -29,4 +29,5 @@
 #define MANAG_REQ_RVSH 27 // created
 #define MANAG_GET_AGENT 28 // created
 #define MANAG_REG_AGENT 29 // created
+#define MANAG_REQ_PORTS 30 // 
 #define MANAG_EXIT 0 // done

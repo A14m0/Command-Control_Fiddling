@@ -204,7 +204,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 #endif /* HAVE_ARGP_H */
 
-
+/*Downloads file from connected entity*/
 int server_file_download(clientDat *session, char *ptr, int is_manager, char *extra){
     int rc = 0;
     int size = 0;
@@ -304,6 +304,7 @@ int server_file_download(clientDat *session, char *ptr, int is_manager, char *ex
     return 0;
 }
 
+/*Sends over all of the loot to the manager*/
 int server_get_loot(clientDat *manager, char *ptr){
     char buff[BUFSIZ];
     char name[BUFSIZ];
@@ -461,6 +462,7 @@ int server_get_loot(clientDat *manager, char *ptr){
     return 0;
 }
 
+/*Uploads a file to some connected entity*/
 int server_upload_file(clientDat *agent, char *ptr, int is_module){
     char buff[BUFSIZ];
     char directory[BUFSIZ];
@@ -547,6 +549,13 @@ int server_upload_file(clientDat *agent, char *ptr, int is_module){
 
 }
 
+
+/*Returns all listening ports for both remote shells and local port access*/
+int server_get_ports(clientDat *manager, char *ptr){
+    return 0;
+}
+
+/*Returns information on all of the agents the server manages*/
 int server_get_info(clientDat *manager, char *ptr){
     int size = 0;
     int rc = 0;
@@ -627,6 +636,7 @@ int server_get_info(clientDat *manager, char *ptr){
 
 }
 
+/*Place holder example for session forwarding*/
 int server_direct_forwarding(ssh_session session)
 {
     ssh_channel forwarding_channel;
@@ -660,6 +670,7 @@ int server_direct_forwarding(ssh_session session)
     return SSH_OK;
 }
 
+/*Handler for manager connections and flow*/
 void manager_handler(struct clientNode *node){
     clientDat *manager = node->data;
     char resp[2048];
@@ -831,6 +842,10 @@ void manager_handler(struct clientNode *node){
             server_get_info(manager, ptr);
             break;
 
+        case MANAG_REQ_PORTS:
+            server_get_ports(manager, ptr);
+            break;
+
         default:
             sprintf(logbuff, "Manager %s: Unknown operation value '%d'\n", manager->id, operation); 
             log_info(logbuff);
@@ -847,6 +862,7 @@ void manager_handler(struct clientNode *node){
     
 }
 
+/*Handler for agent connections and flow*/
 void agent_handler(struct clientNode *node){
     clientDat *agent = node->data;
     char resp[2048];
@@ -944,7 +960,7 @@ void agent_handler(struct clientNode *node){
     }
 }
 
-
+/*Handler for generic connection. Determines if it is manager or agent*/
 void client_handler(void* sess){
     struct clientNode *node = (struct clientNode*) sess;
     clientDat *pass = node->data;
@@ -1077,6 +1093,7 @@ void client_handler(void* sess){
     return;
 }
 
+/*Initialized the connection and prepares data structures for handlers*/
 void *handle_conn(void *input){
     int auth=0;
     ssh_message message;
@@ -1165,6 +1182,8 @@ void handleTerm(int term){
     log_info("Server shutting down");
     close_log();
     return;
+// Breaks here for now...
+
     printf("Terminating...\n");
     int termTime = 10;
     int curr = 0;
