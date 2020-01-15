@@ -1,3 +1,7 @@
+SWITCH BASE TO C++ TO MODULARIZE EVERYTHING!!!!!
+
+
+
 1. Fix problems related to uncleared server buffers
     * Check out loot downloading
 
