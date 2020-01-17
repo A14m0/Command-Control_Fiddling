@@ -8,8 +8,8 @@
 class AgentInformationHandler
 {
 private:
-    class List nodeHandler;
-    class Log logger;
+    class List *nodeHandler;
+    class Log *logger;
 public:
     AgentInformationHandler();
     ~AgentInformationHandler();

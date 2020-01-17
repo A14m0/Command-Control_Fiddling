@@ -49,58 +49,6 @@ void misc_clean_input(char *input){
 }
 
 
-void misc_serverinit() {
-    // seed random number generator
-    srand(time(NULL));
-
-	// gets current file path, so data will be written to correct folder regardless of where execution is called
-	char result[4096];
-	memset(result, 0, sizeof(result));
-	readlink( "/proc/self/exe", result, 4096);
-
-	char dir[4096];
-	memset(dir, 0, sizeof(dir));
-	char* last;
-	last = strrchr(result, '/');
-
-	unsigned long index = last - result;
-	strncpy(dir, result, index);
-	
-	int ret = chdir(dir);
-
-
-	if(ret < 0){
-		perror("Failed to change directory");
-		exit(-1);
-	}
-
-
-    struct stat st = {0};
-    umask(0);
-
-    if (stat("agents", &st) == -1) {
-        mkdir("agents", 0755);
-        printf("Server: initialized directory 'agents'\n");
-    }
-
-    if (stat("out", &st) == -1) {
-        mkdir("out", 0755);
-        printf("Server: initialized directory 'out'\n");
-    }
-
-    if (stat("modules", &st) == -1) {
-        mkdir("modules", 0755);
-        printf("Server: initialized directory 'modules'\n");
-    }
-
-    if (stat(DATA_FILE, &st) == -1) {
-        int fd2 = open(DATA_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH);
-        printf("Server: initialized agent authentication file\n");
-        close(fd2);
-    }
-
-    init_log();
-}
 
 int misc_copy_file(char *filename, char *dest){
     char ch;
@@ -128,7 +76,7 @@ char *misc_substring(char *string, int position, int length)
     char *pointer;
     int c;
  
-    pointer = malloc(length+1);
+    pointer = (char *)malloc(length+1);
    
     if (pointer == NULL)
     {
@@ -160,7 +108,7 @@ int misc_get_file(char *name, char **ptr){
     fseek(file, 0L, SEEK_END);
     size = ftell(file);
 
-    *ptr = malloc(size);
+    *ptr = (char *)malloc(size);
     memset(*ptr, 0, size);
     rewind(file);
     fread(*ptr, 1, size, file);
@@ -197,7 +145,7 @@ char** misc_str_split(char* a_str, const char a_delim)
        knows where the list of returned strings ends. */
     count++;
 
-    result = malloc(sizeof(char*) * count);
+    result = (char **)malloc(sizeof(char*) * count);
     memset(result, 0, sizeof(char*) * count);
 
     if (result)

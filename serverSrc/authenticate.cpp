@@ -1,6 +1,6 @@
 #include "authenticate.h"
 
-char *authenticate_digest(char *input){
+char *authenticate_digest(const char *input){
     unsigned char digest[SHA512_DIGEST_LENGTH];
     SHA512((unsigned char*)input, strlen(input), (unsigned char*)&digest);
     

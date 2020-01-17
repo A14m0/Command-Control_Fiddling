@@ -41,7 +41,7 @@ int AgentInformationHandler::register_agent(char *username, char *password){
     {
         printf("Failed to open file thing\n");
         fclose(file);
-        return;
+        return 1;
     }
     fseek(file, 0L, SEEK_END);
     fwrite("\n", 1, 1, file);
@@ -173,7 +173,7 @@ int AgentInformationHandler::compile(char *ip, char *port){
     if (!fd)
     {
         printf("Failed to open  the config header file\n");
-        return;
+        return 1;
     }
     
     fwrite(buff, 1, strlen(buff) -1, fd);

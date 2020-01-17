@@ -1,3 +1,5 @@
+#pragma once
+
 #include "transport.h"
 #include "log.h"
 #include "list.h"
@@ -18,7 +20,7 @@ public:
     void get_loot(class ServerTransport *transport);
 
     // handler functions
-    void *handle_connection(void *input);
+    static void *handle_connection(void *input);
     void authenticate(void *sess);
     void manager_handler(class ServerTransport *transport);
     void agent_handler(class ServerTransport *transport);

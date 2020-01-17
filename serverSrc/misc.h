@@ -1,4 +1,5 @@
 #pragma once
+
 #include "agents.h"
 #include "typedefs.h"
 

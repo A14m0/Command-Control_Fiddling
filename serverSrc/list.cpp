@@ -13,7 +13,7 @@ int List::remove_node(pClientNode node){
         printf("Node already freed!\n");
         pthread_mutex_unlock(&(this->session_lock));
         this->size--;
-        return;
+        return 0;
     }
     
     if(node->nxt != NULL){
@@ -36,6 +36,7 @@ int List::remove_node(pClientNode node){
     free(node);    
     pthread_mutex_unlock(&(this->session_lock));
     this->size--;
+    return 0;
 }
 
 int List::add_node(pClientNode node){
@@ -46,6 +47,8 @@ int List::add_node(pClientNode node){
     this->last = node;
     pthread_mutex_unlock(&(this->session_lock));
     this->size++;
+    
+    return 0;
 }
 
 int List::get_size(){

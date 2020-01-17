@@ -177,6 +177,55 @@ pthread_t thread_array[MAX_CONN];
 Server::Server(){
     this->logger = new Log();
     this->list = new List();
+
+    // seed random number generator
+    srand(time(NULL));
+
+	// gets current file path, so data will be written to correct folder regardless of where execution is called
+	char result[4096];
+	memset(result, 0, sizeof(result));
+	readlink( "/proc/self/exe", result, 4096);
+
+	char dir[4096];
+	memset(dir, 0, sizeof(dir));
+	char* last;
+	last = strrchr(result, '/');
+
+	unsigned long index = last - result;
+	strncpy(dir, result, index);
+	
+	int ret = chdir(dir);
+
+
+	if(ret < 0){
+		perror("Failed to change directory");
+		exit(-1);
+	}
+
+
+    struct stat st = {0};
+    umask(0);
+
+    if (stat("agents", &st) == -1) {
+        mkdir("agents", 0755);
+        printf("Server: initialized directory 'agents'\n");
+    }
+
+    if (stat("out", &st) == -1) {
+        mkdir("out", 0755);
+        printf("Server: initialized directory 'out'\n");
+    }
+
+    if (stat("modules", &st) == -1) {
+        mkdir("modules", 0755);
+        printf("Server: initialized directory 'modules'\n");
+    }
+
+    if (stat(DATA_FILE, &st) == -1) {
+        int fd2 = open(DATA_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH);
+        printf("Server: initialized agent authentication file\n");
+        close(fd2);
+    }
 }
 
 Server::~Server(){
@@ -641,21 +690,23 @@ void print_clientDat(clientDat *str){
 
 
 int main(int argc, char **argv){
+// TODO: UPDATE SIGHANDLERS TO MODERN STUFF
+
     // set up signal handlers
-    struct sigaction sigIntHandler;
-	struct sigaction sigTermHandler;
+    //struct sigaction sigIntHandler;
+	//struct sigaction sigTermHandler;
 
 
-	sigIntHandler.sa_handler = handleTerm;
-   	sigemptyset(&sigIntHandler.sa_mask);
-   	sigIntHandler.sa_flags = 0;
+	//sigIntHandler.sa_handler = handleTerm;
+   	//sigemptyset(&sigIntHandler.sa_mask);
+   	//sigIntHandler.sa_flags = 0;
 
-	sigTermHandler.sa_handler = handleTerm;
-	sigemptyset(&sigTermHandler.sa_mask);
-	sigTermHandler.sa_flags = 0;
+	//sigTermHandler.sa_handler = handleTerm;
+	//sigemptyset(&sigTermHandler.sa_mask);
+	//sigTermHandler.sa_flags = 0;
 
-   	sigaction(SIGINT, &sigIntHandler, NULL);
-    sigaction(SIGTERM, &sigTermHandler, NULL);
+   	//sigaction(SIGINT, &sigIntHandler, NULL);
+    //sigaction(SIGTERM, &sigTermHandler, NULL);
     
     // initialize variables
     ssh_session session;
@@ -666,10 +717,8 @@ int main(int argc, char **argv){
 	int master_socket;
     int ctr = 0;
     pthread_t thread;
+    class Server *server = new Server();
     
-    // Initialize directories
-    misc_serverinit();    
-
     if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
         perror("Server: Socket Failure");   
         exit(EXIT_FAILURE);   
@@ -726,7 +775,7 @@ int main(int argc, char **argv){
         }
 
         // pass connection to handler thread
-        if(pthread_create(&thread, NULL, handle_conn, session)){
+        if(pthread_create(&thread, NULL, server->handle_connection, session)){
             printf("Error creating thread\n");
             ssh_disconnect(session);
             break;
