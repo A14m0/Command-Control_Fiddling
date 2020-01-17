@@ -2,6 +2,15 @@
 #include "misc.h"
 #include "authenticate.h"
 
+AgentInformationHandler::AgentInformationHandler(){
+
+}
+
+AgentInformationHandler::~AgentInformationHandler(){
+
+}
+
+
 int AgentInformationHandler::init(char *agent_id){
     FILE *manifest = NULL;
     char parent_dir[2048];
@@ -49,7 +58,7 @@ int AgentInformationHandler::register_agent(char *username, char *password){
     fwrite(":", 1, 1, file);
 
     char *buff;
-    buff = authenticate_digest(password);
+    buff = Authenticate::digest(password);
 
     fwrite(buff, 1, strlen(buff), file);
     fclose(file);
@@ -85,7 +94,7 @@ char *AgentInformationHandler::get_tasking(char *agent_id){
     return mem_dump;
 }
 
-struct ret *AgentInformationHandler::gen_creds(){
+pPasswd AgentInformationHandler::gen_creds(){
     struct ret *buf = (struct ret *) malloc(sizeof(struct ret));
     memset(buf, 0, sizeof(struct ret));
     char *usr = (char *)malloc(13);

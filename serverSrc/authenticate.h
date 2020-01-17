@@ -3,5 +3,10 @@
 #include "misc.h"
 #include "typedefs.h"
 
-int authenticate_doauth(const char *usr, const char *pass);
-char *authenticate_digest(char *input);
+class Authenticate {
+private:
+public:
+    static int doauth(const char *usr, const char *passwd);
+    static char* digest(const char *input);
+};
+

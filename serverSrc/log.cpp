@@ -27,5 +27,5 @@ int Log::log(char *data){
 }
 
 Log::~Log(){
-    fclose(log_file);
+    fclose(this->logfile);
 }

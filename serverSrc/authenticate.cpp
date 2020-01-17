@@ -1,6 +1,6 @@
 #include "authenticate.h"
 
-char *authenticate_digest(const char *input){
+char* Authenticate::digest(const char *input){
     unsigned char digest[SHA512_DIGEST_LENGTH];
     SHA512((unsigned char*)input, strlen(input), (unsigned char*)&digest);
     
@@ -13,7 +13,7 @@ char *authenticate_digest(const char *input){
     return ret;
 }
 
-int authenticate_doauth(const char *usr, const char *pass){
+int Authenticate::doauth(const char *usr, const char *pass){
     // initialize variables
     char** tokens = NULL;
     char** subtokens = NULL;
@@ -37,7 +37,7 @@ int authenticate_doauth(const char *usr, const char *pass){
         {
             subtokens = misc_str_split(*(tokens + j), ':');
             if(!strcmp(usr, *(subtokens))){
-                if(!strcmp(authenticate_digest(pass), *(subtokens+1))){
+                if(!strcmp(Authenticate::digest(pass), *(subtokens+1))){
                     printf("Server: ID %s successfully authenticated\n", usr);
                     for (int i = 0; *(tokens + i); i++)
                     {
