@@ -24,4 +24,5 @@ public:
     int handle(void *sess) override;
     void make_agent(char *dat_ptr, char *d_ptr) override;
     int init_reverse_shell() override;
+    pClientNode get_node() override;
 };

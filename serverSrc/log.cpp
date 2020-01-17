@@ -6,14 +6,15 @@ Log::Log(){
     if (!this->logfile)
     {
         printf("Log file failed to open!\n");
-        perror("");
+        perror("Reason");
         exit(1);
     }
+    pthread_mutex_init(&(this->session_lock), NULL);
 }
 
 int Log::log(char *data){
     pthread_mutex_lock(&(this->session_lock));
-    if (this->logfile)
+    if (!this->logfile)
     {
         printf("Log File not open!!! WTF???\n%s\n", data);
         pthread_mutex_unlock(&(this->session_lock));

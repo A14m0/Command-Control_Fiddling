@@ -37,7 +37,7 @@ size_t B64::dec_size(const char *in)
 	return ret;
 }
 
-void B64::encode(const unsigned char *in, size_t len, char *buff)
+void B64::encode(const unsigned char *in, size_t len, char **buff)
 {
 	char   *out;
 	size_t  elen;
@@ -73,7 +73,7 @@ void B64::encode(const unsigned char *in, size_t len, char *buff)
 		}
 	}
 
-	buff = out;
+	*buff = out;
 	return;
 }
 

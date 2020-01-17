@@ -539,12 +539,39 @@ void ConnectionInstance::agent_handler(class ServerTransport *transport){
         ptr = resp;
         operation = -1;
         rc = 0;
-        memset(buff, 0, 2048);
-        memset(tmpbuffer, 0, 8);
-        memset(filename, 0, 2048);
-        memset(resp, 0, sizeof(resp));
-        memset(logbuff, 0, sizeof(logbuff));
+        memset((void*)buff, 0, 2048);
+        memset((void*)tmpbuffer, 0, 8);
+        memset((void*)filename, 0, 2048);
+        memset((void*)resp, 0, sizeof(resp));
+        memset((void*)logbuff, 0, sizeof(logbuff));
+
+        if (node == nullptr)
+        {
+            printf("NODE IS FUCKIN DED\n");
+        }
+
+        if(node->data == nullptr) printf("data died\n");
         
+
+        if(node->data->chan == NULL){
+            printf("dis broke\n");
+        }
+        if(resp == NULL){
+            printf("da other ting broke\n");
+        }
+        
+        // IT JUST FUCKIN DIEZ HERE
+/*
+   0x0000555555558e62 <+260>:   call   0x5555555571b0 <memset@plt>
+   0x0000555555558e67 <+265>:   mov    rax,QWORD PTR [rbp-0x3830]
+=> 0x0000555555558e6e <+272>:   mov    rax,QWORD PTR [rax+0x10]
+   0x0000555555558e72 <+276>:   mov    rax,QWORD PTR [rax+0x18]
+   0x0000555555558e76 <+280>:   lea    rsi,[rbp-0x3810]
+   0x0000555555558e7d <+287>:   mov    ecx,0x0
+   0x0000555555558e82 <+292>:   mov    edx,0x800
+   0x0000555555558e87 <+297>:   mov    rdi,rax
+   0x0000555555558e8a <+300>:   call   0x555555557260 <ssh_channel_read@plt>
+*/
         rc = ssh_channel_read(node->data->chan, resp, sizeof(resp), 0);
         if (rc == SSH_ERROR)
         {
@@ -667,22 +694,25 @@ void *ConnectionInstance::handle_connection(void *input){
         pass->id = name;
         pass->session = session;
         pass->trans_id = rand();
-    
             
         pClientNode node = (pClientNode)malloc(sizeof(*node));
         node->data = pass;
         node->nxt = NULL;
         node->prev = NULL;
+
         class ConnectionInstance *instance = new ConnectionInstance();
         class Log *logger = instance->get_logger();
         class List *list = instance->get_list();
         class ServerTransport *transport = new Ssh_Transport(logger, list, node);
         int handler = transport->determine_handler();
+        printf("Called transport type parser\n");
         if (handler == AGENT_TYPE)
         {
+            printf("Starting agent handler\n");
             instance->agent_handler(transport);
         } else if(handler == MANAG_TYPE)
         {
+            printf("Starting manager handler\n");
             instance->manager_handler(transport);
         } else
         {
