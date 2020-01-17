@@ -1,5 +1,7 @@
-SWITCH BASE TO C++ TO MODULARIZE EVERYTHING!!!!!
-
+Network communications need to be modified in the server in order to modularize it to incorporate 
+multiple different kinds of transports. The Server class should only do the network comms over
+the designated transport!!!!!!
+_____________________________________________________________________________________________________
 
 
 1. Fix problems related to uncleared server buffers

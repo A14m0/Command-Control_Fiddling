@@ -1,7 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "common.h"
 
-int init_log();
-void close_log();
-void log_info(char *dat);
+
+class Log
+{
+private:
+    FILE *logfile;
+    pthread_mutex_t session_lock;
+public:
+    Log(/* args */);
+    ~Log();
+    int log(char *dat);
+};

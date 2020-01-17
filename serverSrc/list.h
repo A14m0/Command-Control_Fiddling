@@ -1,11 +1,22 @@
-#include <libssh/libssh.h>
+#include "common.h"
 #include "misc.h"
+#include "typedefs.h"
 
-struct clientNode {
-    struct clientNode *nxt;
-    struct clientNode *prev;
-    clientDat *data;
+class List
+{
+private:
+    pClientNode first;
+    pClientNode last;
+    int size;
+    pthread_mutex_t session_lock;
+public:
+    List();
+    ~List();
+    int remove_node(pClientNode node);
+    int add_node(pClientNode node);
+    int get_size();
 };
+
 
 void list_add_node(struct clientNode *node, struct clientNode *prevNode);
 void list_remove_node(struct clientNode *node);

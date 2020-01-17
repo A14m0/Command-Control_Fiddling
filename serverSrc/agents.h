@@ -1,30 +1,25 @@
 #pragma once
+#include "common.h"
 #include "config.h"
 #include "execs.h"
+#include "list.h"
+#include "log.h"
 
-#include <libssh/libssh.h>
-#include <libssh/server.h>
-
-#include <pthread.h>
-
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-
-#include <sys/stat.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
-
-#define COMPILE "gcc -lssh -lcurl -o out/client.out out/client.c out/agent.c out/b64.c out/beacon.c"
-
-void agent_init(char *agent_id);
-char *agent_get_tasking(char *agent_id);
-void agent_compile(char *ip, char *port);
-void agent_register(char *id, char *port);
-void agent_task(int operation, char *agent, char *opt);
-struct ret *agent_gen_creds();
-void agent_write_beacon(char *id, char *beacon);
+class AgentInformationHandler
+{
+private:
+    class List nodeHandler;
+    class Log logger;
+public:
+    AgentInformationHandler();
+    ~AgentInformationHandler();
+    int init(char *agent_id);
+    int register_agent(char *username, char *password);
+    int compile(char *ip, char *port);
+    int task(int operation, char *agent, char *opt);
+    int write_beacon(char *id, char *beacon);
+    int write_info(char *id, char *connection_time, char *hostname, char *ip_addr, char *interfaces, char *proc_owner);
+    int write_format(char *path);
+    char *get_tasking(char *agent_id);
+    struct ret *gen_creds();
+};

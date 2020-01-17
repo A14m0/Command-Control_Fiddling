@@ -1,18 +1,6 @@
 #pragma once
 #include "agents.h"
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <openssl/sha.h>
-
-typedef struct {
-    char *id;
-    ssh_session session;
-    int trans_id;
-    ssh_channel chan;
-    int type;
-}clientDat;
+#include "typedefs.h"
 
 int misc_get_file(char *name, char **ptr);
 int misc_index_of(char* str, char find, int rev);

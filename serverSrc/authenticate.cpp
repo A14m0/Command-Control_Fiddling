@@ -4,7 +4,7 @@ char *authenticate_digest(char *input){
     unsigned char digest[SHA512_DIGEST_LENGTH];
     SHA512((unsigned char*)input, strlen(input), (unsigned char*)&digest);
     
-    char *ret = malloc(SHA512_DIGEST_LENGTH*2+1);
+    char *ret = (char *)malloc(SHA512_DIGEST_LENGTH*2+1);
     ret[SHA512_DIGEST_LENGTH*2] = '\0';
 
     for(int i = 0; i < SHA512_DIGEST_LENGTH; i++)

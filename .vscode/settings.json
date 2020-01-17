@@ -16,6 +16,7 @@
         "istream": "cpp",
         "ostream": "cpp",
         "sstream": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "system_error": "cpp"
     }
 }
