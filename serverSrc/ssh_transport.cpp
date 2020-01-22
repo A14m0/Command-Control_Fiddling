@@ -10,6 +10,8 @@ Ssh_Transport::Ssh_Transport(class Log *logger, class List *list, pClientNode no
 
 Ssh_Transport::~Ssh_Transport()
 {
+    ssh_bind_free(this->sshbind);
+    ssh_finalize();
 }
 
 int Ssh_Transport::determine_handler(){
@@ -26,14 +28,14 @@ int Ssh_Transport::determine_handler(){
     
     do {
 		//printf("entered message loop\n");
-        message = ssh_message_get(this->node->data->session);
+        message = ssh_message_get(this->session);
         if(message){
             switch(ssh_message_type(message)){
                 case SSH_REQUEST_CHANNEL_OPEN:
                     sprintf(logbuff, "Client %s: Got request for opening channel\n", this->node->data->id); 
                     this->logger->log(logbuff);
                     if(ssh_message_subtype(message)==SSH_CHANNEL_SESSION){
-                        this->node->data->chan=ssh_message_channel_request_open_reply_accept(message);
+                        this->channel=ssh_message_channel_request_open_reply_accept(message);
                         break;
                     }
                 default:
@@ -41,10 +43,10 @@ int Ssh_Transport::determine_handler(){
             }
             ssh_message_free(message);
         }
-    } while(message && !this->node->data->chan);
+    } while(message && !this->channel);
     
-	if(!this->node->data->chan){
-        sprintf(logbuff, "Client %s: Channel error : %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
+	if(!this->channel){
+        sprintf(logbuff, "Client %s: Channel error : %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         ssh_finalize();
         list->remove_node(this->node);
@@ -52,7 +54,7 @@ int Ssh_Transport::determine_handler(){
     }
     
 	do {
-        message=ssh_message_get(this->node->data->session);
+        message=ssh_message_get(this->session);
         if(message && ssh_message_type(message)==SSH_REQUEST_CHANNEL &&
            ssh_message_subtype(message)==SSH_CHANNEL_REQUEST_SHELL){
 				printf("Client %s: Got tasking request\n", this->node->data->id);
@@ -67,10 +69,10 @@ int Ssh_Transport::determine_handler(){
     switch (msgType)
     {
     case REQ_TASKING:
-        ssh_channel_read(this->node->data->chan, tmp_buffer, 2, 0);
+        ssh_channel_read(this->channel, tmp_buffer, 2, 0);
             
         if(tmp_buffer[0] == '0'){
-            ssh_channel_write(this->node->data->chan, "ok", 2);
+            ssh_channel_write(this->channel, "ok", 2);
         
             sprintf(logbuff, "Manager %s: Caught manager connection\n", this->node->data->id);
             this->logger->log(logbuff);
@@ -88,16 +90,16 @@ int Ssh_Transport::determine_handler(){
                 sprintf(logbuff, "Client %s: Initialized agent\n", this->node->data->id);
                 this->logger->log(logbuff);
             }
-            rc = ssh_channel_write(this->node->data->chan, "ok", 3);
+            rc = ssh_channel_write(this->channel, "ok", 3);
             if(rc == SSH_ERROR){
-                sprintf(logbuff, "Client %s: caught ssh error: %s", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                sprintf(logbuff, "Client %s: caught ssh error: %s", this->node->data->id, ssh_get_error(this->session));
                 this->logger->log(logbuff);
                 break;
             }
 
-            rc = ssh_channel_read(this->node->data->chan, beacon, sizeof(beacon), 0);
+            rc = ssh_channel_read(this->channel, beacon, sizeof(beacon), 0);
             if(rc == SSH_ERROR){
-                sprintf(logbuff, "Client %s: caught ssh error: %s", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                sprintf(logbuff, "Client %s: caught ssh error: %s", this->node->data->id, ssh_get_error(this->session));
                 this->logger->log(logbuff);
                 break;
             }
@@ -112,9 +114,9 @@ int Ssh_Transport::determine_handler(){
             }
             printf("Tasking being sent: %s\n", tasking);
             // Write tasking
-            rc = ssh_channel_write(this->node->data->chan, tasking, strlen(tasking));
+            rc = ssh_channel_write(this->channel, tasking, strlen(tasking));
             if(rc == SSH_ERROR){
-                sprintf(logbuff, "Client %s: Failed to write to channel: %s", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                sprintf(logbuff, "Client %s: Failed to write to channel: %s", this->node->data->id, ssh_get_error(this->session));
                 this->logger->log(logbuff);
                 break;
             }
@@ -167,9 +169,9 @@ int Ssh_Transport::upload_file(char *ptr, int is_module){
         sprintf(logbuff,"Client %s: filename '%s' does not exist\n", this->node->data->id, buff); 
         this->logger->log(logbuff);
     
-        rc = ssh_channel_write(this->node->data->chan, "er", 3);
+        rc = ssh_channel_write(this->channel, "er", 3);
         if(rc == SSH_ERROR){
-            sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
+            sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->session));
             this->logger->log(logbuff);
         }
         return 2;
@@ -179,16 +181,16 @@ int Ssh_Transport::upload_file(char *ptr, int is_module){
     sprintf(tmpbuffer, "%d", size_e);
         
     // writes file size
-    rc = ssh_channel_write(this->node->data->chan, tmpbuffer, sizeof(tmpbuffer));
+    rc = ssh_channel_write(this->channel, tmpbuffer, sizeof(tmpbuffer));
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
+        sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         return 1;
     }
     
-    rc = ssh_channel_read(this->node->data->chan, buff, sizeof(buff), 0);
+    rc = ssh_channel_read(this->channel, buff, sizeof(buff), 0);
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "Client %s: Failed to read data to channel: %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
+        sprintf(logbuff, "Client %s: Failed to read data to channel: %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         return 1;
     }
@@ -196,17 +198,17 @@ int Ssh_Transport::upload_file(char *ptr, int is_module){
      B64::encode((unsigned char *)file_data, size, &enc_data);
         
     // writes file 
-    rc = ssh_channel_write(this->node->data->chan, enc_data, size_e);
+    rc = ssh_channel_write(this->channel, enc_data, size_e);
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
+        sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         return 1;
     }
     memset(tmpbuffer, 0, 8);
     
-    rc = ssh_channel_read(this->node->data->chan, tmpbuffer, 8, 0);
+    rc = ssh_channel_read(this->channel, tmpbuffer, 8, 0);
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->node->data->session));
+        sprintf(logbuff, "Client %s: Failed to write data to channel: %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         return 1;
     }
@@ -235,17 +237,17 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
     FILE *file;
 
 
-    rc = ssh_channel_write(this->node->data->chan, "ok", 3);
+    rc = ssh_channel_write(this->channel, "ok", 3);
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+        sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         return 1;
     }
 
     memset(tmpbuffer, 0, sizeof(tmpbuffer));
-    rc = ssh_channel_read(this->node->data->chan, tmpbuffer, sizeof(tmpbuffer), 0);
+    rc = ssh_channel_read(this->channel, tmpbuffer, sizeof(tmpbuffer), 0);
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+        sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         return 1;
     }
@@ -255,9 +257,9 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
     memset((void*)data_ptr, 0, size+1);
             
     // writes file size
-    rc = ssh_channel_write(this->node->data->chan, "ok", 3);
+    rc = ssh_channel_write(this->channel, "ok", 3);
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+        sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->channel));
         this->logger->log(logbuff);
         return 1;
     }
@@ -265,9 +267,9 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
     int tmpint = 0;
     while (tmpint < size)
     {
-        rc = ssh_channel_read(this->node->data->chan, (void *)data_ptr+strlen(data_ptr), size-tmpint, 0);
+        rc = ssh_channel_read(this->channel, (void *)data_ptr+strlen(data_ptr), size-tmpint, 0);
         if(rc == SSH_ERROR){
-            sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+            sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
             this->logger->log(logbuff);
             return 1;
         }
@@ -284,9 +286,9 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
         this->logger->log(logbuff);
         free((void*)data_ptr);
         free(enc_ptr);
-        rc = ssh_channel_write(this->node->data->chan, "er", 3);
+        rc = ssh_channel_write(this->channel, "er", 3);
         if(rc == SSH_ERROR){
-            sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+            sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
             this->logger->log(logbuff);
             return 1;
         }
@@ -295,9 +297,9 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
     free((void*)data_ptr);
             
     // writes file 
-    rc = ssh_channel_write(this->node->data->chan, "ok", 3);
+    rc = ssh_channel_write(this->channel, "ok", 3);
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+        sprintf(logbuff, "%s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         return 1;
     }
@@ -362,16 +364,16 @@ int Ssh_Transport::get_loot(char *loot){
     memset(name, 0, sizeof(name));
     sprintf(name, "%d", count);
     
-    rc = ssh_channel_write(this->node->data->chan, name, strlen(name));
+    rc = ssh_channel_write(this->channel, name, strlen(name));
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         return 1;
     }
     
-    rc = ssh_channel_read(this->node->data->chan, tmpbf, 3, 0);//rd
+    rc = ssh_channel_read(this->channel, tmpbf, 3, 0);//rd
     if(rc == SSH_ERROR){
-        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->channel));
         this->logger->log(logbuff);
         return 1;
     }
@@ -388,16 +390,16 @@ int Ssh_Transport::get_loot(char *loot){
                 sprintf(buff, "%s/agents/%s/loot/%s", getcwd(name, sizeof(name)), loot, ent->d_name);
                 file = fopen(buff, "r");
                 
-                rc = ssh_channel_write(this->node->data->chan, ent->d_name, strlen(ent->d_name));
+                rc = ssh_channel_write(this->channel, ent->d_name, strlen(ent->d_name));
                 if(rc == SSH_ERROR){
-                    sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                    sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
                     this->logger->log(logbuff);
                     return 1;
                 }
 
-                rc = ssh_channel_read(this->node->data->chan, tmpbf, 3, 0); //ok
+                rc = ssh_channel_read(this->channel, tmpbf, 3, 0); //ok
                 if(rc == SSH_ERROR){
-                    sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                    sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
                     this->logger->log(logbuff);
                     return 1;
                 }
@@ -423,21 +425,21 @@ int Ssh_Transport::get_loot(char *loot){
                     memset(buff, 0, 256);
                     sprintf(buff, "%d", size_e);
                     
-                    rc = ssh_channel_write(this->node->data->chan, buff, strlen(buff));
+                    rc = ssh_channel_write(this->channel, buff, strlen(buff));
                     if(rc == SSH_ERROR){
-                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
                         this->logger->log(logbuff);
                         return 1;
                     }
 
-                    rc = ssh_channel_read(this->node->data->chan, tmpbf, 3, 0);//ok
+                    rc = ssh_channel_read(this->channel, tmpbf, 3, 0);//ok
                     if(rc == SSH_ERROR){
-                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
                         this->logger->log(logbuff);
                         return 1;
                     }
                     
-                    rc = ssh_channel_write(this->node->data->chan, tmp_ptr2, strlen(tmp_ptr2));
+                    rc = ssh_channel_write(this->channel, tmp_ptr2, strlen(tmp_ptr2));
                     fclose(file);
                     free(tmp_ptr2);
 
@@ -445,9 +447,9 @@ int Ssh_Transport::get_loot(char *loot){
                     {
                         printf("Finished writing loot to channel\n");
                         
-                        rc = ssh_channel_write(this->node->data->chan, "fi", 3);
+                        rc = ssh_channel_write(this->channel, "fi", 3);
                         if(rc == SSH_ERROR){
-                            sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                            sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
                             this->logger->log(logbuff);
                             return 1;
                         }
@@ -455,17 +457,17 @@ int Ssh_Transport::get_loot(char *loot){
                         break;
                     }                             
                     
-                    rc = ssh_channel_write(this->node->data->chan, "nx", 3);
+                    rc = ssh_channel_write(this->channel, "nx", 3);
                     if(rc == SSH_ERROR){
-                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
                         this->logger->log(logbuff);
                         return 1;
                     }
                     printf("wrote next\n");
                     
-                    rc = ssh_channel_read(this->node->data->chan, tmpbf, 3, 0); //rd
+                    rc = ssh_channel_read(this->channel, tmpbf, 3, 0); //rd
                     if(rc == SSH_ERROR){
-                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
                         this->logger->log(logbuff);
                         return 1;
                     }
@@ -528,33 +530,33 @@ int Ssh_Transport::get_info(char *ptr){
                     rewind(file);
                     fread(dat, 1, size, file);
                     
-                    rc = ssh_channel_write(this->node->data->chan, dat, strlen(dat));
+                    rc = ssh_channel_write(this->channel, dat, strlen(dat));
                     free(dat);
                     if(rc == SSH_ERROR){
-                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
                         this->logger->log(logbuff);
                         return 1;
                     }
                     
-                    rc = ssh_channel_read(this->node->data->chan, tmpbf, 3, 0);
+                    rc = ssh_channel_read(this->channel, tmpbf, 3, 0);
                     if(rc == SSH_ERROR){
-                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+                        sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
                         this->logger->log(logbuff);
                         return 1;
                     }
                 }
             }
         }
-        rc = ssh_channel_write(this->node->data->chan, "fi", 2);
+        rc = ssh_channel_write(this->channel, "fi", 2);
         if(rc == SSH_ERROR){
-            sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+            sprintf(logbuff, "Manager %s: Caught channel error: %s\n", this->node->data->id, ssh_get_error(this->session));
             this->logger->log(logbuff);
             return 1;
         }
         closedir (dir);
     } else {
         /* could not open directory */
-        sprintf(logbuff, "Manager %s: Failed to open directory: %s\n", this->node->data->id, ssh_get_error(ssh_channel_get_session(this->node->data->chan)));
+        sprintf(logbuff, "Manager %s: Failed to open directory: %s\n", this->node->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
             
         perror ("");
@@ -583,14 +585,14 @@ int Ssh_Transport::handle(void* sess){
     
     do {
 		//printf("entered message loop\n");
-        message=ssh_message_get(pass->session);
+        message=ssh_message_get(this->session);
         if(message){
             switch(ssh_message_type(message)){
                 case SSH_REQUEST_CHANNEL_OPEN:
 					sprintf(logbuff, "Client %s: Got request for opening channel\n", pass->id); 
                     this->logger->log(logbuff);
                     if(ssh_message_subtype(message)==SSH_CHANNEL_SESSION){
-                        pass->chan=ssh_message_channel_request_open_reply_accept(message);
+                        this->channel=ssh_message_channel_request_open_reply_accept(message);
                         break;
                     }
                 default:
@@ -598,10 +600,10 @@ int Ssh_Transport::handle(void* sess){
             }
             ssh_message_free(message);
         }
-    } while(message && !pass->chan);
+    } while(message && !this->channel);
     
-	if(!pass->chan){
-        sprintf(logbuff, "Client %s: Channel error : %s\n", pass->id, ssh_get_error(pass->session));
+	if(!this->channel){
+        sprintf(logbuff, "Client %s: Channel error : %s\n", pass->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         ssh_finalize();
         free(pass);
@@ -610,7 +612,7 @@ int Ssh_Transport::handle(void* sess){
     }
     
 	do {
-        message=ssh_message_get(pass->session);
+        message=ssh_message_get(this->session);
         if(message && ssh_message_type(message)==SSH_REQUEST_CHANNEL &&
            ssh_message_subtype(message)==SSH_CHANNEL_REQUEST_SHELL){
 				printf("Client %s: Got tasking request\n", pass->id);
@@ -625,10 +627,10 @@ int Ssh_Transport::handle(void* sess){
     switch (msgType)
     {
     case REQ_TASKING:
-        ssh_channel_read(pass->chan, tmp_buffer, 2, 0);
+        ssh_channel_read(this->channel, tmp_buffer, 2, 0);
             
         if(tmp_buffer[0] == '0'){
-            ssh_channel_write(pass->chan, "ok", 2);
+            ssh_channel_write(this->channel, "ok", 2);
         
             sprintf(logbuff, "Manager %s: Caught manager connection\n", pass->id);
             this->logger->log(logbuff);
@@ -645,16 +647,16 @@ int Ssh_Transport::handle(void* sess){
                 sprintf(logbuff, "Client %s: Initialized agent\n", pass->id);
                 this->logger->log(logbuff);
             }
-            rc = ssh_channel_write(pass->chan, "ok", 3);
+            rc = ssh_channel_write(this->channel, "ok", 3);
             if(rc == SSH_ERROR){
-                sprintf(logbuff, "Client %s: caught ssh error: %s", pass->id, ssh_get_error(ssh_channel_get_session(pass->chan)));
+                sprintf(logbuff, "Client %s: caught ssh error: %s", pass->id, ssh_get_error(ssh_channel_get_session(this->channel)));
                 this->logger->log(logbuff);
                 break;
             }
 
-            rc = ssh_channel_read(pass->chan, beacon, sizeof(beacon), 0);
+            rc = ssh_channel_read(this->channel, beacon, sizeof(beacon), 0);
             if(rc == SSH_ERROR){
-                sprintf(logbuff, "Client %s: caught ssh error: %s", pass->id, ssh_get_error(ssh_channel_get_session(pass->chan)));
+                sprintf(logbuff, "Client %s: caught ssh error: %s", pass->id, ssh_get_error(ssh_channel_get_session(this->channel)));
                 this->logger->log(logbuff);
                 break;
             }
@@ -669,9 +671,9 @@ int Ssh_Transport::handle(void* sess){
             }
             printf("Tasking being sent: %s\n", tasking);
             // Write tasking
-            rc = ssh_channel_write(pass->chan, tasking, strlen(tasking));
+            rc = ssh_channel_write(this->channel, tasking, strlen(tasking));
             if(rc == SSH_ERROR){
-                sprintf(logbuff, "Client %s: Failed to write to channel: %s", pass->id, ssh_get_error(ssh_channel_get_session(pass->chan)));
+                sprintf(logbuff, "Client %s: Failed to write to channel: %s", pass->id, ssh_get_error(ssh_channel_get_session(this->channel)));
                 this->logger->log(logbuff);
                 break;
             }
@@ -706,4 +708,153 @@ int Ssh_Transport::init_reverse_shell(){
 
 pClientNode Ssh_Transport::get_node(){
     return this->node;
+}
+
+int Ssh_Transport::listen(int master_socket){
+    ssh_session session;
+    ssh_bind sshbind;
+    int r;
+    int quitting = 0;
+    class ServerTransport *server = new Ssh_Transport(logger, list, node);
+    
+    this->sshbind=ssh_bind_new();
+    this->session=ssh_new();
+
+    ssh_options_set(this->session, SSH_OPTIONS_FD, &master_socket);
+	
+    ssh_bind_options_set(this->sshbind, SSH_BIND_OPTIONS_DSAKEY, KEYS_FOLDER "ssh_host_dsa_key");
+    ssh_bind_options_set(this->sshbind, SSH_BIND_OPTIONS_RSAKEY, KEYS_FOLDER "ssh_host_rsa_key");
+
+    if(ssh_bind_listen(this->sshbind)<0){
+        printf("Error listening to socket: %s\n", ssh_get_error(this->sshbind));
+        return 1;
+    }
+
+    // bind the listener to the port
+    printf("Server: Bound to listening port\n");
+
+    r=ssh_bind_accept(this->sshbind, this->session);
+    printf("Server: Accepting connection\n");
+    if(r==SSH_ERROR){
+      	printf("Error accepting a connection : %s\n",ssh_get_error(this->sshbind));
+        return 1;
+    }
+    if (ssh_handle_key_exchange(this->session)) {
+        printf("ssh_handle_key_exchange: %s\n", ssh_get_error(this->session));
+        return 1;
+    }
+
+    this->node = this->authenticate();
+    if (!this->node)
+    {
+        this->logger->log("Node Failed creation\n");
+        return 1;
+    }
+    return 0;
+
+}
+
+
+pClientNode Ssh_Transport::authenticate(){
+    // initialize variables
+    int auth=0;
+    char *name = NULL;
+    ssh_message message;
+    
+    do {
+        message=ssh_message_get(this->session);
+        if(!message)
+            break;
+        switch(ssh_message_type(message)){
+            case SSH_REQUEST_AUTH:
+                switch(ssh_message_subtype(message)){
+                    // authenticate connection
+                    case SSH_AUTH_METHOD_PASSWORD:
+                        if(Authenticate::doauth(ssh_message_auth_user(message), ssh_message_auth_password(message))){
+                            auth=1;
+                            name = (char*)malloc(strlen(ssh_message_auth_user(message)));
+                            memset(name, 0, strlen(ssh_message_auth_user(message)));
+                            sprintf(name, "%s", ssh_message_auth_user(message));
+                            ssh_message_auth_reply_success(message,0);
+                            break;
+                       	} else {
+                            auth = 2;
+                            ssh_message_reply_default(message);
+                            break;
+                        }
+                    // not authenticated, send default message
+                    case SSH_AUTH_METHOD_NONE:
+                    default:
+                        ssh_message_auth_set_methods(message,SSH_AUTH_METHOD_PASSWORD);
+                        ssh_message_reply_default(message);
+                        break;
+                }
+                break;
+            default:
+                ssh_message_reply_default(message);
+        }
+        ssh_message_free(message);
+    } while (!auth);
+    
+    // Check if the client authenticated successfully
+	if(auth != 1){
+        printf("Server: Terminating connection\n");
+        ssh_disconnect(this->session);
+        return nullptr;
+    } else {
+        pClientDat pass = (pClientDat)malloc(sizeof(clientDat));
+        pass->id = name;
+        
+        pClientNode node = (pClientNode)malloc(sizeof(*node));
+        node->data = pass;
+        node->nxt = NULL;
+        node->prev = NULL;
+
+        return node;
+    }
+    return nullptr;
+}
+
+int Ssh_Transport::read(char **buff){
+    int rc = 0;
+    rc = ssh_channel_read(this->channel, &buff, sizeof(&buff), 0);
+    if (rc == SSH_ERROR)
+    {
+        char logbuff[BUFSIZ];
+        memset(logbuff, 0, sizeof(logbuff));
+        
+        sprintf(logbuff, "Manager %s: Failed to handle agent: %s\n", this->node->data->id, ssh_get_error(this->session));
+        this->logger->log(logbuff);
+        return 1;
+    }
+    return 0;
+        
+}
+
+int Ssh_Transport::send_err(){
+    int rc = 0;
+    rc = ssh_channel_write(this->channel, "er", 3);
+    if (rc == SSH_ERROR)
+    {
+        char logbuff[BUFSIZ];
+        memset(logbuff, 0, sizeof(logbuff));
+        sprintf(logbuff, "Manager %s: Failed to handle agent: %s\n", node->data->id, ssh_get_error(this->session));
+        this->logger->log(logbuff);
+        return 1;
+    }
+    return 0;
+}
+
+int Ssh_Transport::send_ok(){
+    int rc = 0;
+    rc = ssh_channel_write(this->channel, "ok", 3);
+    if (rc == SSH_ERROR)
+    {
+        char logbuff[BUFSIZ];
+        memset(logbuff, 0, sizeof(logbuff));
+        sprintf(logbuff, "Manager %s: Failed to handle agent: %s\n", node->data->id, ssh_get_error(this->session));
+        this->logger->log(logbuff);
+        return 1;
+    }
+    return 0;
 }

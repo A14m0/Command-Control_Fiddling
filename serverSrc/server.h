@@ -27,16 +27,16 @@ public:
     class List *get_list();
 
     // fetch functions
-    void get_info(class ServerTransport *transport, char *ptr);
-    void get_ports(class ServerTransport *transport, char *ptr);
+    void get_info(char *ptr);
+    void get_ports(char *ptr);
     
     // handler functions
     static void *handle_connection(void *input);
     void authenticate(void *sess);
-    void manager_handler(class ServerTransport *transport);
-    void agent_handler(class ServerTransport *transport);
+    void manager_handler();
+    void agent_handler();
     
     // file functions
-    void reverse_shell(class ServerTransport *transport);
+    void reverse_shell();
 };
 

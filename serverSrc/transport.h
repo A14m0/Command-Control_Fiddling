@@ -8,6 +8,12 @@ class ServerTransport
 private:
     pClientNode node;
 public:
+    // generic protocol functions for use in the main handler
+    virtual int send_ok() = 0;
+    virtual int send_err() = 0;
+    virtual int listen(int master_socket) = 0;
+    virtual int read(char **buff) = 0;
+
     virtual int download_file(char *ptr, int is_manager, char *extra) = 0;
     virtual int get_loot(char *loot) = 0;
     virtual int upload_file(char *ptr, int is_module) = 0;

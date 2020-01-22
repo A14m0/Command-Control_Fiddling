@@ -4,10 +4,8 @@
 
 typedef struct clientDat{
     char *id;
-    ssh_session session;
-    int trans_id;
-    ssh_channel chan;
     int type;
+    pthread_t thread;
 } ClientDat, *pClientDat;
 
 typedef struct _clientNode {

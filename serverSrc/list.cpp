@@ -20,8 +20,6 @@ int List::remove_node(pClientNode node){
         (node->nxt)->prev = node->prev;
     }
     
-    ssh_channel_close(node->data->chan);
-    if(node->data->chan) ssh_channel_free(node->data->chan);
     if (!node->data)
     {
         if (node->data->id)

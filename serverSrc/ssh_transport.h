@@ -6,16 +6,37 @@
 #include "b64.h"
 #include "agents.h"
 
+#ifndef KEYS_FOLDER
+#ifdef _WIN32
+#define KEYS_FOLDER
+#else
+#define KEYS_FOLDER "/etc/ssh/"
+#endif
+#endif
+
+
 class Ssh_Transport: public ServerTransport
 {
 private:
     class Log *logger;
     class List *list;
     pClientNode node;
+    ssh_bind sshbind;
+    ssh_session session;
+    ssh_channel channel;
+
+    pClientNode authenticate();
 public:
     Ssh_Transport(class Log *logger, class List *list, pClientNode node);
     //Ssh_Transport(class Log *logger, class List *list, _clientNode *node);
     ~Ssh_Transport();
+
+    // generic protocol handlers
+    int send_ok() override;
+    int send_err() override;
+    int listen(int socket) override;
+    int read(char **buff) override;
+
     int determine_handler() override;
     int upload_file(char *ptr, int is_module) override;
     int download_file(char *ptr, int is_manager, char *extra) override;
