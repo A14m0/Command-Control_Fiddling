@@ -34,10 +34,14 @@ Check out this method for handling custom methods over multiple processes and fd
 https://github.com/curesec/tools/tree/master/aesshell
 
 
-Server gets a connection from client to start shell listener. 
-The server then enters the specific handler and chooses a random high port and adds a structure to 
-a global data list. The manager can then querry the available ports to connect to and connects to 
-the one that has been selected. the server just forwards the plaintext information between the two 
-different connections. Could maybe specify a shell in the reverse-shell request options so you could 
-load a meterpreter over ssh? Check if it is possible to spawn a terminal app with a specific file 
-descriptors
+
+How the remote shell will work:
+When the client sees that it has to do a remote shell, it will send the server a request to set up a remote shell.
+The server adds the client's structure to a list of available terminal sessions and the client waits until it gets the ok
+When the manager connects through its general checkin, it will check to see if there are any available terminal sessions
+When the manager sees a terminal session, it will send a request telling the server that it wants to interact with some index of the list
+The server then goes into a special handler loop that will take input from one end and send it to another. 
+For this could use a modified version of the PTY thing that the client is already doing. 
+From here the server will keep looping through and passing off the data until it gets a signal from one of the sessions to tear down connections
+It will then signal both of them to exit and disconnect the PTY bridge between them.
+Clients can then keep going through their designated list of things to do and managers can keep their checkin loops going

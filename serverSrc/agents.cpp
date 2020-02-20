@@ -78,7 +78,7 @@ char *AgentInformationHandler::get_tasking(char *agent_id){
     sprintf(file, "%s/agents/%s/agent.mfst", getcwd(cwd_buf, sizeof(cwd_buf)),agent_id);
     printf("Opening file %s\n", file);
     
-    fd = fopen(file, "r");
+    fd = fopen(file, "rb");
     if(fd == NULL) return NULL;
     
     fseek(fd, 0L, SEEK_END);

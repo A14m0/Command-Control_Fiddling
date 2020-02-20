@@ -6,6 +6,12 @@
 #include "log.h"
 #include "authenticate.h"
 
+typedef struct _agent_tasking{
+    int operation;
+    char *opts;
+} AgentTasking, *pAgentTasking;
+
+
 class AgentInformationHandler
 {
 private:
