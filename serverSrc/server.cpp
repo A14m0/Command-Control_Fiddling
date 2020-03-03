@@ -176,12 +176,9 @@ void print_clientDat(pClientDat str){
 Server::Server(){
     this->sessions = new std::vector<ConnectionInstance *>(5);
     this->logger = new Log();
-    this->list = new List();
-
-    //this->transport = new Ssh_Transport();
 }
 
-int Server::bind_port(int port){
+/*int Server::bind_port(int port){
     int type = 0;
     int opt = 0;
 
@@ -206,9 +203,17 @@ int Server::bind_port(int port){
         break;
     }
     
+}*/
+
+void Server::add_instance(ConnectionInstance *instance){
+    this->sessions->push_back(instance);
 }
 
-int Server::transport_listen(int index){
+class Log *Server::get_log(){
+    return this->logger;
+}
+
+int Server::listen_instance(int index){
     pthread_t thread;
     class ConnectionInstance **array = this->sessions->data();
     class ConnectionInstance *instance = array[index];
@@ -245,17 +250,13 @@ int main(int argc, char **argv){
     //sigaction(SIGTERM, &sigTermHandler, NULL);
     
     // initialize variables
-    int quitting = 0;
-    class ConnectionInstance *instance = new ConnectionInstance();
-    class Log *logger = instance->get_logger();
-    class List *list = instance->get_list();
-    class ServerTransport *server;
-    int rc = 0;
-    int ctr = 0;
-    int opt = 1;
-    int master_socket;
-    pthread_t thread;
-    
+    Server *server = new Server();
+    ConnectionInstance *instance = new ConnectionInstance(server);
+    ServerTransport *def_transport = new Ssh_Transport(instance);
+
+    instance->set_transport(def_transport);
+    server->add_instance(instance);
+    server->listen_instance(1);
 /*   
 #ifdef HAVE_ARGP_H
     /*
@@ -277,11 +278,11 @@ int main(int argc, char **argv){
     }
         
         
-    for (size_t i = 0; i < ctr; i++){
-        if(pthread_join(thread_array[i], NULL)){
-            printf("Failed to join thread at index %lu\n", i);
-        }
-    }
+    //for (size_t i = 0; i < ctr; i++){
+      //  if(pthread_join(thread_array[i], NULL)){
+        //    printf("Failed to join thread at index %lu\n", i);
+    //    }
+    //}
 
     
     printf("Server: Terminated successfully\n");

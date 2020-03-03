@@ -5,6 +5,7 @@
 #include "log.h"
 #include "b64.h"
 #include "agents.h"
+#include "connection.h"
 
 #ifndef KEYS_FOLDER
 #ifdef _WIN32
@@ -18,16 +19,16 @@
 class Ssh_Transport: public ServerTransport
 {
 private:
+    class ConnectionInstance *instance;
     class Log *logger;
-    class List *list;
-    pClientNode node;
+    pClientDat data;
     ssh_bind sshbind;
     ssh_session session;
     ssh_channel channel;
 
-    pClientNode authenticate();
+    pClientDat authenticate();
 public:
-    Ssh_Transport(class Log *logger, class List *list, pClientNode node);
+    Ssh_Transport(class ConnectionInstance* instance);
     //Ssh_Transport(class Log *logger, class List *list, _clientNode *node);
     ~Ssh_Transport();
 
@@ -36,6 +37,7 @@ public:
     int send_err() override;
     int listen(int socket) override;
     int read(char **buff) override;
+    pClientDat get_data() override;
 
     int determine_handler() override;
     int upload_file(char *ptr, int is_module) override;
@@ -45,5 +47,4 @@ public:
     int handle(void *sess) override;
     void make_agent(char *dat_ptr, char *d_ptr) override;
     int init_reverse_shell() override;
-    pClientNode get_node() override;
 };

@@ -2,7 +2,7 @@ CPPC=g++
 CC=gcc
 
 CFLAGSSERV=-lssh -lpthread -lcrypto 
-CFILESSERV=serverSrc/server.cpp serverSrc/misc.cpp serverSrc/agents.cpp serverSrc/list.cpp serverSrc/authenticate.cpp serverSrc/b64.cpp serverSrc/log.cpp serverSrc/ssh_transport.cpp serverSrc/connection.cpp
+CFILESSERV= serverSrc/misc.cpp serverSrc/agents.cpp serverSrc/authenticate.cpp serverSrc/b64.cpp serverSrc/log.cpp serverSrc/ssh_transport.cpp serverSrc/connection.cpp serverSrc/server.cpp
 
 CFLAGSCLI=-lssh -lcurl
 CFILESCLI=clientSrc/client.c clientSrc/agent.c clientSrc/b64.c clientSrc/beacon.c clientSrc/shell.c

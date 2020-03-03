@@ -23,7 +23,7 @@ public:
     //virtual int handle_auth() = 0;
     virtual int handle(void *sess) = 0;
 
-    virtual pClientNode get_node() = 0;
+    virtual pClientDat get_data() = 0;
     virtual void make_agent(char *dat_ptr, char *d_ptr) = 0;
 };
 

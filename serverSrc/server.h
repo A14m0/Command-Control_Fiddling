@@ -12,15 +12,16 @@
 
 class Server {
 private:
-    std::vector<ConnectionInstance *> *sessions;
+    std::vector<class ConnectionInstance *> *sessions;
     class Log *logger;
-    class List *list;
     class ServerTransport *transport;
     int master_socket;
 public:
     Server();
     ~Server();
 
-    int bind_port(int port);
-    int transport_listen(int index);
+    void add_instance(class ConnectionInstance *instance);
+    int bind_instance(int index);
+    int listen_instance(int index);
+    class Log * get_log();
 };

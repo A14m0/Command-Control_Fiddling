@@ -3,22 +3,22 @@
 #include "transport.h"
 #include "ssh_transport.h"
 #include "log.h"
-#include "list.h"
+//#include "list.h"
 #include "authenticate.h"
 #include "agents.h"
 #include "common.h"
-
-
+#include "server.h"
 
 
 class ConnectionInstance
 {
 private:
     class Log *logger;
-    class List *list;
     class ServerTransport *transport;
+    class Server *server;
+    pClientDat data;
 public:
-    ConnectionInstance();
+    ConnectionInstance(class Server *server);
     ~ConnectionInstance();
 
     // set functions
@@ -26,8 +26,8 @@ public:
 
     // get functions
     class Log *get_logger();
-    class List *get_list();
     class ServerTransport *get_transport();
+    pClientDat get_data();
 
     // fetch functions
     void get_info(char *ptr);

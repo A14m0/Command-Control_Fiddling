@@ -1,15 +1,15 @@
 #include "connection.h"
 
 /*constructor for the connection instance*/
-ConnectionInstance::ConnectionInstance(){
+ConnectionInstance::ConnectionInstance(class Server *server){
     int ret;
     char* last;
 	char result[4096];
     char dir[4096];
     unsigned long index;
     struct stat st = {0};
-    this->logger = new Log();
-    this->list = new List();
+    this->logger = server->get_log();
+    this->server = server;
     
     memset(result, 0, sizeof(result));
 	memset(dir, 0, sizeof(dir));
@@ -63,8 +63,6 @@ void ConnectionInstance::get_info(char *ptr){
 
 /*Handler for manager connections and flow*/
 void ConnectionInstance::manager_handler(){
-    pClientNode node = this->transport->get_node();
-    
     int operation;
     int rc = 0;
     int quitting = 0;
@@ -103,12 +101,12 @@ void ConnectionInstance::manager_handler(){
         operation = atoi(tmpbf);
         ptr += 3;
 
-        sprintf(logbuff, "Manager %s: Operation caught: %d\n", node->data->id, operation);
+        sprintf(logbuff, "Manager %s: Operation caught: %d\n", data->id, operation);
         this->logger->log(logbuff);
 
         // TODO: FIX THIS?
         if(*ptr == '\0'){
-            sprintf(logbuff, "Manager %s: Caught illegal operation option: NULL\n", node->data->id);
+            sprintf(logbuff, "Manager %s: Caught illegal operation option: NULL\n", data->id);
             this->logger->log(logbuff);
             this->transport->send_err();
             quitting = 1;
@@ -119,7 +117,6 @@ void ConnectionInstance::manager_handler(){
         switch (operation)
         {
         case MANAG_EXIT:
-            this->list->remove_node(node);
             quitting = 1;
             break;
 
@@ -227,7 +224,7 @@ void ConnectionInstance::manager_handler(){
             break;
 
         default:
-            sprintf(logbuff, "Manager %s: Unknown operation value '%d'\n", node->data->id, operation); 
+            sprintf(logbuff, "Manager %s: Unknown operation value '%d'\n", data->id, operation); 
             this->logger->log(logbuff);
             this->transport->send_err();
             break;
@@ -258,8 +255,7 @@ void ConnectionInstance::agent_handler(){
     char filename[2048];
     char resp[2048];
     char logbuff[BUFSIZ];
-    pClientNode node = transport->get_node();
-            
+    
     // enters main handler loop
     while (!quitting)
     {
@@ -292,13 +288,13 @@ void ConnectionInstance::agent_handler(){
                 NULL
         */
 
-        sprintf(logbuff, "Client %s: Operation caught: %d\n", node->data->id, operation);
+        sprintf(logbuff, "Client %s: Operation caught: %d\n", data->id, operation);
         this->logger->log(logbuff);
 
         // checks if illegal options 
         // TODO: FIX THIS???
         if(*ptr == '\0'){
-            sprintf(logbuff, "Client %s: Caught illegal operation option: NULL\n", node->data->id);
+            sprintf(logbuff, "Client %s: Caught illegal operation option: NULL\n", data->id);
             this->logger->log(logbuff);
             this->transport->send_err();
             quitting = 1;
@@ -309,13 +305,12 @@ void ConnectionInstance::agent_handler(){
         switch (operation)
         {
         case AGENT_EXIT:
-            printf("Client %s: Client exiting...\n", node->data->id); 
-            this->list->remove_node(node);
+            printf("Client %s: Client exiting...\n", data->id); 
             quitting = 1;
             break;
 
         case AGENT_DOWN_FILE:
-            sprintf(buff, "agents/%s/tasking/%s", node->data->id, ptr);
+            sprintf(buff, "agents/%s/tasking/%s", data->id, ptr);
             transport->upload_file(buff, 0);
             break;
 
@@ -329,12 +324,12 @@ void ConnectionInstance::agent_handler(){
             break;
 
         case AGENT_EXEC_MODULE:
-            sprintf(buff, "agents/%s/tasking/%s", node->data->id, ptr);
+            sprintf(buff, "agents/%s/tasking/%s", data->id, ptr);
             transport->upload_file(buff, 1);
             break;
 
         default:
-            sprintf(logbuff, "Client %s: Unknown operation value '%d'\n", node->data->id, operation); 
+            sprintf(logbuff, "Client %s: Unknown operation value '%d'\n", data->id, operation); 
             this->logger->log(logbuff);
             this->transport->send_err();
             break;
@@ -377,11 +372,10 @@ class Log *ConnectionInstance::get_logger(){
     return this->logger;
 }
 
-/*returns the list used by the instance*/
-class List *ConnectionInstance::get_list(){
-    return this->list;
-}
-
 class ServerTransport *ConnectionInstance::get_transport(){
     return this->transport;
+}
+
+pClientDat ConnectionInstance::get_data(){
+    return this->data;
 }
