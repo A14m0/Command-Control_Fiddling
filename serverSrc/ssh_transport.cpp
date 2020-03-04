@@ -159,11 +159,11 @@ int Ssh_Transport::upload_file(char *ptr, int is_module){
     this->logger->log(logbuff);
     
     // get filesize 
-    sprintf(buff, "%s/%s", getcwd(directory, sizeof(directory)), ptr);
+    snprintf(buff,8000, "%s/%s", getcwd(directory, sizeof(directory)), ptr);
     size = misc_get_file(buff, &file_data);
         
     if(size < 0){
-        sprintf(logbuff,"Client %s: filename '%s' does not exist\n", this->data->id, buff); 
+        snprintf(logbuff,8000,"Client %s: filename '%s' does not exist\n", this->data->id, buff); 
         this->logger->log(logbuff);
     
         rc = ssh_channel_write(this->channel, "er", 3);
@@ -261,7 +261,7 @@ int Ssh_Transport::download_file(char *ptr, int is_manager, char *extra){
         return 1;
     }
     printf("%lu\n", size);
-    int tmpint = 0;
+    size_t tmpint = 0;
     while (tmpint < size)
     {
         rc = ssh_channel_read(this->channel, (void *)data_ptr+strlen(data_ptr), size-tmpint, 0);
@@ -402,7 +402,7 @@ int Ssh_Transport::get_loot(char *loot){
                 }
 
                 if(file == NULL){
-                    sprintf(logbuff, "Manager %s: Could not read loot file %s\n", this->data->id, buff);
+                    snprintf(logbuff, 8000, "Manager %s: Could not read loot file %s\n", this->data->id, buff);
                     this->logger->log(logbuff);
                     perror("");
                     return 2;
@@ -702,10 +702,7 @@ int Ssh_Transport::init_reverse_shell(){
 }
 
 int Ssh_Transport::listen(int master_socket){
-    ssh_session session;
-    ssh_bind sshbind;
     int r;
-    int quitting = 0;
     
     this->sshbind=ssh_bind_new();
     this->session=ssh_new();

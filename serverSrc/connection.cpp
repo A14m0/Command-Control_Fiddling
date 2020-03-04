@@ -20,7 +20,6 @@ void ConnectionInstance::get_info(char *ptr){
 /*Handler for manager connections and flow*/
 void ConnectionInstance::manager_handler(){
     int operation;
-    int rc = 0;
     int quitting = 0;
     int count = 0;
     char *ptr = NULL;
@@ -39,7 +38,6 @@ void ConnectionInstance::manager_handler(){
         // reset variables for loop
         ptr = resp;
         operation = -1;
-        rc = 0;
         dat_ptr = NULL;
 
         
@@ -202,7 +200,6 @@ void ConnectionInstance::reverse_shell(){}
 void ConnectionInstance::agent_handler(){    
     // initialize variables
     int operation = 0;
-    int rc = 0;
     int quitting = 0;
     char *ptr = NULL;
     char tmpbf[3] = {0,0,0};
@@ -218,7 +215,6 @@ void ConnectionInstance::agent_handler(){
         // reset buffers and variables on repeat
         ptr = resp;
         operation = -1;
-        rc = 0;
         memset((void*)buff, 0, 2048);
         memset((void*)tmpbuffer, 0, 8);
         memset((void*)filename, 0, 2048);
@@ -317,6 +313,7 @@ void *ConnectionInstance::handle_connection(void *input){
         // failed to handle the parsing :)
         printf("Woops got an unknown type: %d\n", handler);
     }
+    return NULL;
 }
 
 /*Sets the transport for the connection instance*/

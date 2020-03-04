@@ -1,7 +1,6 @@
 #include "shell.h"
 
 int shellUnix(int sock){
-    pid_t procId;
     int rc = 0;
     printf("Starting shell init\n");
     char *args[] = {"/bin/bash", "-i", NULL};
@@ -146,7 +145,6 @@ int shellUnix(int sock){
 
 int init_shell(char *addr, int port){
     int sock;
-    int rc;
     struct sockaddr_in serv_addr;
     char buff[4096];
     char recvbuff[4096];
@@ -179,6 +177,6 @@ int init_shell(char *addr, int port){
 
 
     // creates child process
-    rc = shellUnix(sock);
+    shellUnix(sock);
     return 0;
 }

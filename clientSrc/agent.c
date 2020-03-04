@@ -466,8 +466,8 @@ int download_file(ssh_channel chan, char *filename){
 
     size_e = b64_decoded_size(data_ptr);
 
-    enc_ptr = malloc(size_e);
-    if(!b64_decode(data_ptr, (unsigned char*)enc_ptr, size_e)){
+	enc_ptr = malloc(size_e);
+	if(!b64_decode(data_ptr, (unsigned char*)enc_ptr, size_e)){
         printf("Failed to decode data\n");
         free(data_ptr);
         free(enc_ptr);
@@ -485,8 +485,7 @@ int download_file(ssh_channel chan, char *filename){
     memset(buff, 0, sizeof(buff));
     memset(tmpbuffer, 0, sizeof(tmpbuffer));
     sprintf(buff, "%s/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), filename);
-    printf("%s\n", buff);
-    file = fopen(buff, "wb");
+	file = fopen(buff, "wb");
     if(file == NULL){
         perror("");
         return 1;

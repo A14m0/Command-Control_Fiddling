@@ -274,7 +274,7 @@ int Server::listen_instance(int index){
         printf("instance is still nullptr\n");
         return 1;
     }
-    int rc = instance->get_transport()->listen(this->master_socket);
+    instance->get_transport()->listen(this->master_socket);
     instance->set_thread(thread);
     // pass connection to handler thread
     if(pthread_create(&thread, NULL, instance->handle_connection, instance)){
@@ -317,10 +317,7 @@ int main(int argc, char **argv){
     server->listen_instance(0);
 /*   
 #ifdef HAVE_ARGP_H
-    /*
-     * Parse our arguments; every option seen by parse_opt will
-     * be reflected in arguments.
-     *
+    
     argp_parse (&argp, argc, argv, 0, 0, sshbind);
 #else
     (void) argc;
