@@ -17,12 +17,14 @@ private:
     class ServerTransport *transport;
     class Server *server;
     pClientDat data;
+    pthread_t thread;
 public:
     ConnectionInstance(class Server *server);
     ~ConnectionInstance();
 
     // set functions
     void set_transport(class ServerTransport *transport);
+    void set_thread(pthread_t thread);
 
     // get functions
     class Log *get_logger();

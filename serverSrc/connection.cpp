@@ -2,53 +2,9 @@
 
 /*constructor for the connection instance*/
 ConnectionInstance::ConnectionInstance(class Server *server){
-    int ret;
-    char* last;
-	char result[4096];
-    char dir[4096];
-    unsigned long index;
-    struct stat st = {0};
     this->logger = server->get_log();
     this->server = server;
-    
-    memset(result, 0, sizeof(result));
-	memset(dir, 0, sizeof(dir));
-	
-    // seed random number generator
-    srand(time(NULL));
-
-	// gets current file path, so data will be written to correct folder regardless of where execution is called
-	readlink( "/proc/self/exe", result, 4096);
-
-	last = strrchr(result, '/');
-	index = last - result;
-	strncpy(dir, result, index);
-	
-	ret = chdir(dir);
-	if(ret < 0){
-		perror("Failed to change directory");
-		exit(-1);
-	}
-
-
-    umask(0);
-
-    // initialize base directories
-    if (stat("agents", &st) == -1) {
-        mkdir("agents", 0755);
-        printf("Server: initialized directory 'agents'\n");
-    }
-
-    if (stat("out", &st) == -1) {
-        mkdir("out", 0755);
-        printf("Server: initialized directory 'out'\n");
-    }
-
-    if (stat(DATA_FILE, &st) == -1) {
-        int fd2 = open(DATA_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH);
-        printf("Server: initialized agent authentication file\n");
-        close(fd2);
-    }
+    this->data = (pClientDat)malloc(sizeof(clientDat));
 }
 
 /*Neato destructor*/
@@ -94,7 +50,7 @@ void ConnectionInstance::manager_handler(){
         memset(logbuff, 0, sizeof(logbuff));
         
         // get operation request
-        this->transport->read((char **)&resp);
+        this->transport->read((char **)&resp, sizeof(resp));
         
         // parse it
         strncat(tmpbf,resp,2);
@@ -253,7 +209,7 @@ void ConnectionInstance::agent_handler(){
     char tmpbuffer[8];
     char buff[2048];
     char filename[2048];
-    char resp[2048];
+    char *resp = (char *)malloc(2048);
     char logbuff[BUFSIZ];
     
     // enters main handler loop
@@ -266,11 +222,11 @@ void ConnectionInstance::agent_handler(){
         memset((void*)buff, 0, 2048);
         memset((void*)tmpbuffer, 0, 8);
         memset((void*)filename, 0, 2048);
-        memset((void*)resp, 0, sizeof(resp));
+        memset((void*)resp, 0, 2048);
         memset((void*)logbuff, 0, sizeof(logbuff));
-
+        
         // gets the agent's requested tasking operation
-        this->transport->read((char**)&resp);
+        this->transport->read(&resp, 2048);
         
         // parses operation into buffers
         //printf("Requested tasking: %s\n", resp);
@@ -335,6 +291,7 @@ void ConnectionInstance::agent_handler(){
             break;
         }
     }
+    free(resp);
 }
 
 
@@ -373,9 +330,13 @@ class Log *ConnectionInstance::get_logger(){
 }
 
 class ServerTransport *ConnectionInstance::get_transport(){
-    return this->transport;
+    return transport;
 }
 
 pClientDat ConnectionInstance::get_data(){
     return this->data;
+}
+
+void ConnectionInstance::set_thread(pthread_t thread){
+    this->thread = thread;
 }

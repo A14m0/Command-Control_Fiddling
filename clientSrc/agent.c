@@ -432,8 +432,10 @@ int download_file(ssh_channel chan, char *filename){
 
 	memset(buff, 0, sizeof(buff));
 	sprintf(buff, "10|%s", filename);
+	printf("Sending message...\n");
 
-    rc = ssh_channel_write(chan, buff, strlen(buff));
+	rc = ssh_channel_write(chan, buff, strlen(buff));
+	printf("Wrote to channel\n");
     if(rc == SSH_ERROR){
         printf("Caught channel error: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
         return 1;

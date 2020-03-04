@@ -563,12 +563,13 @@ int Ssh_Transport::get_info(char *ptr){
 
 }
 
-
+// TODO: REMOVE THIS... ITS DEAD
 /*Handler for generic connection. Determines if it is manager or agent*/
-int Ssh_Transport::handle(void* sess){
+/*int Ssh_Transport::handle(void* sess){
     pClientNode node = (pClientNode) sess;
-    pClientDat pass = data;
-    
+    this->data = node->data;
+    printf("Pointer to local data struct: %p\n", this->data);
+    printf("It did a thing...\n");
     ssh_message message;
     int rc = 0;
     int msgType = REQ_NONE;
@@ -586,7 +587,7 @@ int Ssh_Transport::handle(void* sess){
         if(message){
             switch(ssh_message_type(message)){
                 case SSH_REQUEST_CHANNEL_OPEN:
-					sprintf(logbuff, "Client %s: Got request for opening channel\n", pass->id); 
+					sprintf(logbuff, "Client %s: Got request for opening channel\n", this->data->id); 
                     this->logger->log(logbuff);
                     if(ssh_message_subtype(message)==SSH_CHANNEL_SESSION){
                         this->channel=ssh_message_channel_request_open_reply_accept(message);
@@ -600,10 +601,10 @@ int Ssh_Transport::handle(void* sess){
     } while(message && !this->channel);
     
 	if(!this->channel){
-        sprintf(logbuff, "Client %s: Channel error : %s\n", pass->id, ssh_get_error(this->session));
+        sprintf(logbuff, "Client %s: Channel error : %s\n", this->data->id, ssh_get_error(this->session));
         this->logger->log(logbuff);
         ssh_finalize();
-        free(pass);
+        free(this->data);
         return 1;
     }
     
@@ -611,7 +612,7 @@ int Ssh_Transport::handle(void* sess){
         message=ssh_message_get(this->session);
         if(message && ssh_message_type(message)==SSH_REQUEST_CHANNEL &&
            ssh_message_subtype(message)==SSH_CHANNEL_REQUEST_SHELL){
-				printf("Client %s: Got tasking request\n", pass->id);
+				printf("Client %s: Got tasking request\n", this->data->id);
                 msgType = REQ_TASKING;
                 ssh_message_channel_request_reply_success(message);
                 break;
@@ -628,7 +629,7 @@ int Ssh_Transport::handle(void* sess){
         if(tmp_buffer[0] == '0'){
             ssh_channel_write(this->channel, "ok", 2);
         
-            sprintf(logbuff, "Manager %s: Caught manager connection\n", pass->id);
+            sprintf(logbuff, "Manager %s: Caught manager connection\n", this->data->id);
             this->logger->log(logbuff);
 
             return MANAG_TYPE;
@@ -636,31 +637,31 @@ int Ssh_Transport::handle(void* sess){
             // Check if ID exists
             memset(buf, 0, sizeof(buf));
             strcat(buf, "agents/");
-            int exists = misc_directory_exists(strcat(buf, pass->id));
+            int exists = misc_directory_exists(strcat(buf, this->data->id));
         
             if(!exists){
-                AgentInformationHandler::init(pass->id);
-                sprintf(logbuff, "Client %s: Initialized agent\n", pass->id);
+                AgentInformationHandler::init(data->id);
+                sprintf(logbuff, "Client %s: Initialized agent\n", this->data->id);
                 this->logger->log(logbuff);
             }
             rc = ssh_channel_write(this->channel, "ok", 3);
             if(rc == SSH_ERROR){
-                sprintf(logbuff, "Client %s: caught ssh error: %s", pass->id, ssh_get_error(ssh_channel_get_session(this->channel)));
+                sprintf(logbuff, "Client %s: caught ssh error: %s", this->data->id, ssh_get_error(ssh_channel_get_session(this->channel)));
                 this->logger->log(logbuff);
                 break;
             }
 
             rc = ssh_channel_read(this->channel, beacon, sizeof(beacon), 0);
             if(rc == SSH_ERROR){
-                sprintf(logbuff, "Client %s: caught ssh error: %s", pass->id, ssh_get_error(ssh_channel_get_session(this->channel)));
+                sprintf(logbuff, "Client %s: caught ssh error: %s", this->data->id, ssh_get_error(ssh_channel_get_session(this->channel)));
                 this->logger->log(logbuff);
                 break;
             }
-            AgentInformationHandler::write_beacon(pass->id, beacon);
+            AgentInformationHandler::write_beacon(this->data->id, beacon);
 
-            tasking = AgentInformationHandler::get_tasking(pass->id);
+            tasking = AgentInformationHandler::get_tasking(this->data->id);
             if(!tasking){
-                sprintf(logbuff, "Client %s: caught ssh error\n", pass->id);
+                sprintf(logbuff, "Client %s: caught ssh error\n", this->data->id);
                 this->logger->log(logbuff);
                 perror("Reason");
                 break;
@@ -669,7 +670,7 @@ int Ssh_Transport::handle(void* sess){
             // Write tasking
             rc = ssh_channel_write(this->channel, tasking, strlen(tasking));
             if(rc == SSH_ERROR){
-                sprintf(logbuff, "Client %s: Failed to write to channel: %s", pass->id, ssh_get_error(ssh_channel_get_session(this->channel)));
+                sprintf(logbuff, "Client %s: Failed to write to channel: %s", this->data->id, ssh_get_error(ssh_channel_get_session(this->channel)));
                 this->logger->log(logbuff);
                 break;
             }
@@ -679,7 +680,7 @@ int Ssh_Transport::handle(void* sess){
         
         break;
     default:
-        sprintf(logbuff, "Client %s: got unknown message type: %d\n", pass->id, msgType);
+        sprintf(logbuff, "Client %s: got unknown message type: %d\n", this->data->id, msgType);
         this->logger->log(logbuff);
         break;
     }
@@ -687,10 +688,10 @@ int Ssh_Transport::handle(void* sess){
     printf("Closing channels...\n");
     ssh_message_free(message);
     ssh_finalize();
-    free(pass);
+    free(this->data);
     
     return 0;
-}
+}*/
 
 void Ssh_Transport::make_agent(char *dat_ptr, char *d_ptr){
     AgentInformationHandler::compile(dat_ptr, d_ptr);
@@ -733,10 +734,10 @@ int Ssh_Transport::listen(int master_socket){
         return 1;
     }
 
-    this->data = this->authenticate();
-    if (!this->data)
+    int rc = this->authenticate();
+    if (rc != 0)
     {
-        this->logger->log("Node Failed creation\n");
+        this->logger->log("Data Failed creation\n");
         return 1;
     }
     return 0;
@@ -744,7 +745,7 @@ int Ssh_Transport::listen(int master_socket){
 }
 
 
-pClientDat Ssh_Transport::authenticate(){
+int Ssh_Transport::authenticate(){
     // initialize variables
     int auth=0;
     char *name = NULL;
@@ -789,19 +790,18 @@ pClientDat Ssh_Transport::authenticate(){
 	if(auth != 1){
         printf("Server: Terminating connection\n");
         ssh_disconnect(this->session);
-        return nullptr;
+        return 1;
     } else {
-        pClientDat pass = (pClientDat)malloc(sizeof(clientDat));
-        pass->id = name;
+        this->data->id = name;
         
-        return pass;
+        return 0;
     }
-    return nullptr;
+    return 1;
 }
 
-int Ssh_Transport::read(char **buff){
+int Ssh_Transport::read(char **buff, int length){
     int rc = 0;
-    rc = ssh_channel_read(this->channel, &buff, sizeof(&buff), 0);
+    rc = ssh_channel_read(this->channel, *buff, length, 0);
     if (rc == SSH_ERROR)
     {
         char logbuff[BUFSIZ];

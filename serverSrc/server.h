@@ -4,7 +4,7 @@
 #include "transport.h"
 #include "ssh_transport.h"
 #include "log.h"
-#include "list.h"
+//#include "list.h"
 #include "authenticate.h"
 #include "agents.h"
 #include "common.h"
