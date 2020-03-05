@@ -174,7 +174,7 @@ void ConnectionInstance::manager_handler(){
             break;
 
         case MANAG_CONN_RVSH:
-            this->transport->init_reverse_shell();
+            this->transport->init_reverse_shell(ptr);
             break;
 
         default:
@@ -193,7 +193,10 @@ void ConnectionInstance::get_ports(char *ptr){
 }
 
 /*Place holder*/
-void ConnectionInstance::reverse_shell(){}
+void ConnectionInstance::reverse_shell(){
+    printf("Waiting for shell handling...\n");
+    while(this->shell_finished) sleep(1);
+}
 /*Handles reverse shell connections and forwarding*/
 
 /*Handler for agent connections and flow*/
@@ -272,6 +275,7 @@ void ConnectionInstance::agent_handler(){
 
         case AGENT_REV_SHELL:
             printf("Agent reverse shell caught\n");
+            this->server->get_shell_queue()->push(this);
             this->reverse_shell();
             break;
 
@@ -288,6 +292,10 @@ void ConnectionInstance::agent_handler(){
         }
     }
     free(resp);
+}
+
+void ConnectionInstance::shell_finish(){
+    this->shell_finished = 1;
 }
 
 
@@ -327,7 +335,7 @@ class Log *ConnectionInstance::get_logger(){
 }
 
 class ServerTransport *ConnectionInstance::get_transport(){
-    return transport;
+    return this->transport;
 }
 
 pClientDat ConnectionInstance::get_data(){
@@ -336,4 +344,8 @@ pClientDat ConnectionInstance::get_data(){
 
 void ConnectionInstance::set_thread(pthread_t thread){
     this->thread = thread;
+}
+
+class Server *ConnectionInstance::get_server(){
+    return this->server;
 }

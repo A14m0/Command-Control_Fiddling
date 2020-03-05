@@ -1,3 +1,5 @@
+#pragma once
+
 #define _XOPEN_SOURCE 600
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,6 +21,6 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <string.h>
+#include "agent.h"
 
-int shell_unix();
-int init_shell(char *addr, int port);
+int shell_unix(ssh_channel chan);

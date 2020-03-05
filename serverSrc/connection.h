@@ -16,6 +16,7 @@ private:
     class Log *logger;
     class ServerTransport *transport;
     class Server *server;
+    int shell_finished = 0;
     pClientDat data;
     pthread_t thread;
 public:
@@ -25,10 +26,12 @@ public:
     // set functions
     void set_transport(class ServerTransport *transport);
     void set_thread(pthread_t thread);
+    void shell_finish();
 
     // get functions
     class Log *get_logger();
     class ServerTransport *get_transport();
+    class Server *get_server();
     pClientDat get_data();
 
     // fetch functions

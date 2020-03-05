@@ -175,6 +175,7 @@ void print_clientDat(pClientDat str){
 
 Server::Server(){
     this->sessions = new std::vector<ConnectionInstance *>(0);
+    this->shell_queue = new std::queue<ConnectionInstance *>();
     this->logger = new Log();
 
     int ret;
@@ -286,6 +287,10 @@ int Server::listen_instance(int index){
     return 0;
 }
 
+std::queue<ConnectionInstance *> *Server::get_shell_queue(){
+    return this->shell_queue;
+}
+
 
 /*Funny enough, this is the main function*/
 int main(int argc, char **argv){
@@ -309,12 +314,17 @@ int main(int argc, char **argv){
     
     // initialize variables
     Server *server = new Server();
-    ConnectionInstance *instance = new ConnectionInstance(server);
-    ServerTransport *def_transport = new Ssh_Transport(instance);
+    
+    // debug main loop
+    for (int i = 0; i < 2; i++){
+        ConnectionInstance *instance = new ConnectionInstance(server);
+        ServerTransport *def_transport = new Ssh_Transport(instance);
 
-    instance->set_transport(def_transport);
-    server->add_instance(instance);
-    server->listen_instance(0);
+        instance->set_transport(def_transport);
+        server->add_instance(instance);
+        server->listen_instance(i);
+    }
+    
 /*   
 #ifdef HAVE_ARGP_H
     

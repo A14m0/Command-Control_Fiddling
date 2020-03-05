@@ -1,3 +1,12 @@
+Problems:
+    1. Manager connection fails (sends 0 to the server, which it shouldnt...)
+    2. Server fails to rebind to the address (share universal socket with ConnectionInstances?)
+    3. God knows what else
+
+
+
+
+
 Network communications need to be modified in the server in order to modularize it to incorporate 
 multiple different kinds of transports. The Server class should only do the network comms over
 the designated transport!!!!!!
@@ -34,14 +43,3 @@ Check out this method for handling custom methods over multiple processes and fd
 https://github.com/curesec/tools/tree/master/aesshell
 
 
-
-How the remote shell will work:
-When the client sees that it has to do a remote shell, it will send the server a request to set up a remote shell.
-The server adds the client's structure to a list of available terminal sessions and the client waits until it gets the ok
-When the manager connects through its general checkin, it will check to see if there are any available terminal sessions
-When the manager sees a terminal session, it will send a request telling the server that it wants to interact with some index of the list
-The server then goes into a special handler loop that will take input from one end and send it to another. 
-For this could use a modified version of the PTY thing that the client is already doing. 
-From here the server will keep looping through and passing off the data until it gets a signal from one of the sessions to tear down connections
-It will then signal both of them to exit and disconnect the PTY bridge between them.
-Clients can then keep going through their designated list of things to do and managers can keep their checkin loops going

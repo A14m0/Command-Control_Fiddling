@@ -1,6 +1,9 @@
+#pragma once
+
 #include <libssh/libssh.h>
 #include <curl/curl.h>
 #include "examples_common.h"
+#include "shell.h"
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>

