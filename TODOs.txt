@@ -1,7 +1,6 @@
 Problems:
-    1. Manager connection fails (sends 0 to the server, which it shouldnt...)
-    2. Server fails to rebind to the address (share universal socket with ConnectionInstances?)
-    3. God knows what else
+    1. Server fails to rebind to the address (share universal socket with ConnectionInstances?)
+    2. God knows what else
 
 
 

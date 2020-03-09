@@ -12,11 +12,6 @@ ConnectionInstance::~ConnectionInstance(){
     return;
 }
 
-/*Not implemented yet because why not?*/
-void ConnectionInstance::get_info(char *ptr){
-    return;
-}
-
 /*Handler for manager connections and flow*/
 void ConnectionInstance::manager_handler(){
     int operation;
@@ -28,7 +23,7 @@ void ConnectionInstance::manager_handler(){
     char tmpbf[3] = {0,0,0};
     char tmpbuffer[8];
     char filename[2048];
-    char resp[2048];
+    char *resp = (char *)malloc(2048);
     char buff[BUFSIZ];
     char logbuff[BUFSIZ];
             
@@ -41,14 +36,15 @@ void ConnectionInstance::manager_handler(){
         dat_ptr = NULL;
 
         
-        memset(buff, 0, sizeof(buff));
-        memset(tmpbuffer, 0, sizeof(tmpbuffer));
-        memset(filename, 0, sizeof(filename));
-        memset(resp, 0, sizeof(resp));
-        memset(logbuff, 0, sizeof(logbuff));
+        memset((void*)buff, 0, sizeof(buff));
+        memset((void*)tmpbuffer, 0, sizeof(tmpbuffer));
+        memset((void*)filename, 0, sizeof(filename));
+        memset((void*)resp, 0, 2048);
+        memset((void*)logbuff, 0, sizeof(logbuff));
+        memset((void*)tmpbf, 0, sizeof(tmpbf));
         
         // get operation request
-        this->transport->read((char **)&resp, sizeof(resp));
+        this->transport->read(&resp, 2048);
         
         // parse it
         strncat(tmpbf,resp,2);
@@ -59,13 +55,13 @@ void ConnectionInstance::manager_handler(){
         this->logger->log(logbuff);
 
         // TODO: FIX THIS?
-        if(*ptr == '\0'){
-            sprintf(logbuff, "Manager %s: Caught illegal operation option: NULL\n", data->id);
-            this->logger->log(logbuff);
-            this->transport->send_err();
-            quitting = 1;
-            continue;
-        }
+        //if(*ptr == '\0'){
+        //    sprintf(logbuff, "Manager %s: Caught illegal operation option: NULL\n", data->id);
+        //    this->logger->log(logbuff);
+        //    this->transport->send_err();
+        //    quitting = 1;
+        //    continue;
+        //}
 
         // main switch
         switch (operation)
@@ -166,7 +162,7 @@ void ConnectionInstance::manager_handler(){
             break;
 
         case MANAG_GET_INFO:
-            this->get_info(ptr);
+            this->transport->get_info(ptr);
             break;
 
         case MANAG_REQ_PORTS:
@@ -184,6 +180,7 @@ void ConnectionInstance::manager_handler(){
             break;
         }
     }
+    free(resp);
     
 }
 
@@ -218,9 +215,9 @@ void ConnectionInstance::agent_handler(){
         // reset buffers and variables on repeat
         ptr = resp;
         operation = -1;
-        memset((void*)buff, 0, 2048);
-        memset((void*)tmpbuffer, 0, 8);
-        memset((void*)filename, 0, 2048);
+        memset((void*)buff, 0, sizeof(buff));
+        memset((void*)tmpbuffer, 0, sizeof(tmpbuffer));
+        memset((void*)filename, 0, sizeof(filename));
         memset((void*)resp, 0, 2048);
         memset((void*)logbuff, 0, sizeof(logbuff));
         
