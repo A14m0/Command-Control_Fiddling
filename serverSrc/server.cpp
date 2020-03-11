@@ -184,6 +184,17 @@ Server::Server(){
     char dir[4096];
     unsigned long index;
     struct stat st = {0};
+    int type = 0;
+    int opt = 0;
+
+    if( (this->master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
+        perror("Server: Socket Failure");      
+    }
+
+    if(setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 ){   
+        perror("Server: Setsockopt Failure");
+    }
+
     
 
 
@@ -227,33 +238,6 @@ Server::Server(){
     }
 }
 
-/*int Server::bind_port(int port){
-    int type = 0;
-    int opt = 0;
-
-    if( (this->master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
-        perror("Server: Socket Failure");   
-        return 1;   
-    }
-
-    if(setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 ){   
-        perror("Server: Setsockopt Failure");   
-        return 1;   
-    }
-
-
-    switch (type)
-    {
-    case 0:
-        this->transport = new Ssh_Transport(logger, list, nullptr);
-        break;
-    
-    default:
-        break;
-    }
-    
-}*/
-
 void Server::add_instance(ConnectionInstance *instance){
     if (instance == nullptr){
         printf("Nullptr instance caught\n");
@@ -275,7 +259,23 @@ int Server::listen_instance(int index){
         printf("instance is still nullptr\n");
         return 1;
     }
-    instance->get_transport()->listen(this->master_socket);
+
+    // to keep a reference to the thread in memory
+    instance->set_thread(thread);
+    // pass connection to handler thread
+    if(pthread_create(&thread, NULL, instance->handle_connection, instance)){
+        printf("Error creating thread\n");
+        delete instance;
+        return 1;
+    }
+    
+    return 0;
+}
+
+int Server::listen_instance(class ConnectionInstance *instance){
+    pthread_t thread;
+    
+    //instance->get_transport()->listen(this->master_socket);
     instance->set_thread(thread);
     // pass connection to handler thread
     if(pthread_create(&thread, NULL, instance->handle_connection, instance)){
@@ -315,15 +315,13 @@ int main(int argc, char **argv){
     // initialize variables
     Server *server = new Server();
     
-    // debug main loop
-    for (int i = 0; i < 2; i++){
-        ConnectionInstance *instance = new ConnectionInstance(server);
-        ServerTransport *def_transport = new Ssh_Transport(instance);
+    // initialize the controller socket
+    ConnectionInstance *instance = new ConnectionInstance(server);
+    ServerTransport *def_transport = new Ssh_Transport(instance);
 
-        instance->set_transport(def_transport);
-        server->add_instance(instance);
-        server->listen_instance(i);
-    }
+    instance->set_transport(def_transport);
+    server->add_instance(instance);
+    server->listen_instance(0);
     
 /*   
 #ifdef HAVE_ARGP_H

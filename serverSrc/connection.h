@@ -44,7 +44,8 @@ public:
     void manager_handler();
     void agent_handler();
     
-    // file functions
+    // misc functions
     void reverse_shell();
+    void setup_transport(char *ptr);
 };
 

@@ -7,11 +7,12 @@ class ServerTransport
 {
 private:
     pClientNode node;
+    int port;
 public:
     // generic protocol functions for use in the main handler
     virtual int send_ok() = 0;
     virtual int send_err() = 0;
-    virtual int listen(int master_socket) = 0;
+    virtual int listen() = 0;
     virtual int read(char **buff, int length) = 0;
     virtual int write(char *buff, int length) = 0;
 
@@ -26,5 +27,6 @@ public:
 
     virtual pClientDat get_data() = 0;
     virtual void make_agent(char *dat_ptr, char *d_ptr) = 0;
+    virtual void set_port(int portno) = 0;
 };
 

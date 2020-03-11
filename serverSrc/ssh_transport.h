@@ -25,6 +25,7 @@ private:
     ssh_bind sshbind;
     ssh_session session;
     ssh_channel channel;
+    int port;
 
     int authenticate();
 public:
@@ -35,7 +36,7 @@ public:
     // generic protocol handlers
     int send_ok() override;
     int send_err() override;
-    int listen(int socket) override;
+    int listen() override;
     int read(char **buff, int length) override;
     int write(char *buff, int length) override;
     pClientDat get_data() override;
@@ -48,4 +49,5 @@ public:
     //int handle(void *sess) override;
     void make_agent(char *dat_ptr, char *d_ptr) override;
     int init_reverse_shell(char *id) override;
+    void set_port(int portno) override;
 };

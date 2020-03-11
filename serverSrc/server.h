@@ -23,6 +23,7 @@ public:
     void add_instance(class ConnectionInstance *instance);
     int bind_instance(int index);
     int listen_instance(int index);
+    int listen_instance(class ConnectionInstance *instance);
     std::queue<class ConnectionInstance *> *get_shell_queue();
     class Log * get_log();
 };
