@@ -1,0 +1,31 @@
+New approach to modular-ness:
+
+Each transport will be separately compiled into a .so file
+Each .so file will have 2 things:
+    1. An identifier integer, marking it as a transport or module
+    2. A main entrypoint function that will initialize everything they need
+The above applies to all .so files
+
+Transports will implement the following functions:
+    1. int entrypoint()
+
+    // Primitives
+    2. int send_ok()
+    3. int send_err()
+    4. int listen()
+    5. int read(char **buff, int length)
+    6. int write(char *buff, int length)
+    
+    // Functionality
+    7. int download_file(char *ptr, int is_manager, char *extra)
+    8. int get_loot(char *loot)
+    9. int upload_file(char *ptr, int is_module)
+    10. int get_info(char *ptr)
+    11. int init_reverse_shell(char *id)
+    12. int determine_handler()
+    13. int init_reverse_shell()
+
+    // Optional
+    14. int make_agent(char *ip, char *port)
+
+Modules will be able to be executed independently and their only exported function will be the main entrypoint
