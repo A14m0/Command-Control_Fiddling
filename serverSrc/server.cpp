@@ -295,10 +295,16 @@ ptransport_t init_transport(void *handle){
     ptransport_t transport = (ptransport_t) malloc(sizeof(transport_t));
     memset(transport, 0, sizeof(transport_t));
 
-    transport->send_ok = (int (*)())dlsym(handle, "send_ok");
+    /*transport->send_ok = (int (*)())dlsym(handle, "send_ok");
     if(!transport->send_ok){
         printf("Failed to find function send_ok\n");
         return nullptr;
+    }*/
+
+    int (*test)();
+    test = (int (*)())dlsym(handle, "send_ok");
+    if(test == NULL){
+        printf("so we did the big woopsie\n");
     }
 
     transport->send_err = (int (*)())dlsym(handle, "send_err");
@@ -420,8 +426,11 @@ int main(int argc, char **argv){
             break;
         case TRANSPORT:
             printf("Detected transport type\n");
-            transport = init_transport(handle);
-            if(!transport) return 1;
+            transport = (ptransport_t)dlsym(handle, "transport_api");
+            if(!transport) {
+                printf("Failed to find transport api\n"); 
+                return 1;
+            }
             instance = new ConnectionInstance(server);
             instance->set_transport(transport);
             server->add_instance(instance);

