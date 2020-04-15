@@ -1,7 +1,8 @@
 #pragma once
 
+
+#include <dlfcn.h>
 #include "transport.h"
-#include "ssh_transport.h"
 #include "log.h"
 //#include "list.h"
 #include "authenticate.h"
@@ -14,7 +15,7 @@ private:
     std::vector<class ConnectionInstance *> *sessions;
     std::queue<class ConnectionInstance *> *shell_queue;
     class Log *logger;
-    class ServerTransport *transport;
+    ptransport_t transport;
     int master_socket;
 public:
     Server();

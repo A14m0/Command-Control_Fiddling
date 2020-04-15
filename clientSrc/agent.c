@@ -278,7 +278,7 @@ int func_loop(ssh_session session)
 	parse_tasking(tasking, channel);
 	
 	  // close connections
-	rc = ssh_channel_write(channel, "0", 2);
+	rc = ssh_channel_write(channel, "00|", 4);
 	if (rc == SSH_ERROR){
 		printf("Caught ssh error: %s\n", ssh_get_error(channel));
 		ssh_channel_close(channel);

@@ -2,6 +2,9 @@
 
 #include "common.h"
 
+#define MODULE 69
+#define TRANSPORT 99
+
 typedef struct clientDat{
     char *id;
     int type;

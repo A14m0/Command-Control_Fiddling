@@ -48,9 +48,12 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.actionRegister_Client_Creds.triggered.connect(self.reg_client)
         self.actionOpen_Terminal.triggered.connect(self.open_term)
         self.actionChange_C2_Server.triggered.connect(self.connect_to_c2)
+        self.actionStart_Backend.triggered.connect(self.start_backend)
         self.AgentList.currentItemChanged.connect(self.update_info_labels)
         self.InterfaceTable.setModel(self.interfaceModel)
         self.InterfaceTable.show()
+        
+        
         self.BackendStatus.setText("OK")
 
         self.winList = []
@@ -126,6 +129,11 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
             os.system("urxvt")
         else:
             os.system("cmd.exe")
+
+    def start_backend(self):
+        diag = dialogues.ServerBackendDialogue(self.session)
+        diag.show()
+        diag.exec()
         
     def push_file(self):
         """Dialogue to push a file to server"""

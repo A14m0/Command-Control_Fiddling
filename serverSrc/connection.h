@@ -1,7 +1,6 @@
 #pragma once
 
 #include "transport.h"
-#include "ssh_transport.h"
 #include "log.h"
 //#include "list.h"
 #include "authenticate.h"
@@ -14,7 +13,7 @@ class ConnectionInstance
 {
 private:
     class Log *logger;
-    class ServerTransport *transport;
+    ptransport_t transport;
     class Server *server;
     int shell_finished = 0;
     pClientDat data;
@@ -24,13 +23,13 @@ public:
     ~ConnectionInstance();
 
     // set functions
-    void set_transport(class ServerTransport *transport);
+    void set_transport(ptransport_t transport);
     void set_thread(pthread_t thread);
     void shell_finish();
 
     // get functions
     class Log *get_logger();
-    class ServerTransport *get_transport();
+    ptransport_t get_transport();
     class Server *get_server();
     pClientDat get_data();
 
@@ -46,6 +45,7 @@ public:
     
     // misc functions
     void reverse_shell();
+    void send_transports();
     void setup_transport(char *ptr);
 };
 

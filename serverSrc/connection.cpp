@@ -159,6 +159,10 @@ void ConnectionInstance::manager_handler(){
             this->transport->init_reverse_shell(ptr);
             break;
 
+        case MANAG_GET_TRANSPORTS:
+            this->send_transports();
+            break;
+
         case MANAG_START_TRANSPORT:
             this->setup_transport(ptr);
             break;
@@ -176,6 +180,14 @@ void ConnectionInstance::manager_handler(){
 /*Returns all available ports for accessing reverse shells*/
 void ConnectionInstance::get_ports(char *ptr){
 
+}
+
+void ConnectionInstance::send_transports(){
+    // TODO: Fix this to make it dynamic (but dont know how to store transport info dynamically)
+    char *tmp = (char*)malloc(100);
+    this->transport->write("18", 3);
+    this->transport->read(&tmp, 3);
+    this->transport->write("SSH Transport:51\n",18);
 }
 
 /*Place holder*/
@@ -262,6 +274,7 @@ void ConnectionInstance::agent_handler(){
         default:
             this->logger->log("Client %s: Unknown Operation Identifier: '%d'\n", this->data->id, operation);
             this->transport->send_err();
+            quitting = 1;
             break;
         }
     }
@@ -307,9 +320,9 @@ void ConnectionInstance::setup_transport(char *num){
     switch (transport_type)
     {
     case TRANSPORT_SSH:
-        transport = new Ssh_Transport(instance);
-        this->server->add_instance(instance);
-        this->server->listen_instance(instance);
+        //transport = new Ssh_Transport(instance);
+        //this->server->add_instance(instance);
+        //this->server->listen_instance(instance);
         break;
     
     default:
@@ -319,7 +332,7 @@ void ConnectionInstance::setup_transport(char *num){
 }
 
 /*Sets the transport for the connection instance*/
-void ConnectionInstance::set_transport(class ServerTransport *transport){
+void ConnectionInstance::set_transport(ptransport_t transport){
     this->transport = transport;
 }
 
@@ -328,7 +341,7 @@ class Log *ConnectionInstance::get_logger(){
     return this->logger;
 }
 
-class ServerTransport *ConnectionInstance::get_transport(){
+ptransport_t ConnectionInstance::get_transport(){
     return this->transport;
 }
 

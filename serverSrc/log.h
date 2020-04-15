@@ -11,5 +11,5 @@ private:
 public:
     Log(/* args */);
     ~Log();
-    int log(char *format, char *id, ...);
+    int log(const char *format, char *id, ...);
 };

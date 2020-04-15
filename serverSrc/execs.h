@@ -31,7 +31,8 @@
 #define MANAG_REG_AGENT 29 // created
 #define MANAG_REQ_PORTS 30 // 
 #define MANAG_CONN_RVSH 31 //
-#define MANAG_START_TRANSPORT 32 //
+#define MANAG_GET_TRANSPORTS 32 //
+#define MANAG_START_TRANSPORT 33 //
 #define MANAG_EXIT 0 // done
 
 // Transport types

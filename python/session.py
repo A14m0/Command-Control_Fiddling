@@ -250,6 +250,28 @@ class Session():
         self.channel.sendall('29|%s:%s' % (name, password))
         return 0
 
+    def get_transports(self):
+        print("[ ] Getting available backends from server...")
+        self.channel.sendall('32|')
+        datsz = int(self.channel.recv(128).decode().strip('\x00'))
+        self.channel.send('ok')
+        data = self.channel.recv(datsz).decode().split("\n")
+        ret = []
+        for entry in data:
+            print(entry)
+            if ":" in entry:
+                entry = entry.split(":")
+                print(entry)
+                id_str = entry[0]
+                id_num = int(entry[1])
+                ret.append(misc.Transport(id_str, id_num))
+        return ret
+
+    def start_transport(self, transport_id, port):
+        print("[ ] Starting backend with ID %d" % transport_id)
+        self.channel.sendall("33|%d:%d" % (transport_id, port))
+        return 0
+
     def clean_exit(self):
         if self.channel != 0:
             self.channel.sendall("00")

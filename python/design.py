@@ -3,7 +3,7 @@
 
 # Form implementation generated from reading ui file './python/ui/agent_command_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -44,7 +44,7 @@ class Ui_CommandDialogue(object):
 
 # Form implementation generated from reading ui file './python/ui/agent_compile_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -92,7 +92,7 @@ class Ui_AgentCompile(object):
 
 # Form implementation generated from reading ui file './python/ui/agent_download_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -133,7 +133,7 @@ class Ui_AgentDownload(object):
 
 # Form implementation generated from reading ui file './python/ui/agent_registration_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -181,7 +181,7 @@ class Ui_AgentRegister(object):
 
 # Form implementation generated from reading ui file './python/ui/main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -299,9 +299,6 @@ class Ui_MainWindow(object):
         self.ProcOwner.setText("")
         self.ProcOwner.setTextFormat(QtCore.Qt.RichText)
         self.ProcOwner.setObjectName("ProcOwner")
-        self.InterfaceTable = QtWidgets.QTableView(self.scrollAreaWidgetContents_2)
-        self.InterfaceTable.setGeometry(QtCore.QRect(10, 130, 431, 231))
-        self.InterfaceTable.setObjectName("InterfaceTable")
         self.InterfacesLabel = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
         self.InterfacesLabel.setGeometry(QtCore.QRect(10, 100, 111, 25))
         font = QtGui.QFont()
@@ -310,6 +307,9 @@ class Ui_MainWindow(object):
         self.InterfacesLabel.setFont(font)
         self.InterfacesLabel.setTextFormat(QtCore.Qt.RichText)
         self.InterfacesLabel.setObjectName("InterfacesLabel")
+        self.InterfaceTable = QtWidgets.QTableView(self.scrollAreaWidgetContents_2)
+        self.InterfaceTable.setGeometry(QtCore.QRect(10, 120, 431, 241))
+        self.InterfaceTable.setObjectName("InterfaceTable")
         self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
         self.BackendStatus = QtWidgets.QLabel(self.centralwidget)
         self.BackendStatus.setGeometry(QtCore.QRect(450, 530, 331, 20))
@@ -339,8 +339,11 @@ class Ui_MainWindow(object):
         self.actionOpen_Terminal.setObjectName("actionOpen_Terminal")
         self.actionChange_C2_Server = QtWidgets.QAction(MainWindow)
         self.actionChange_C2_Server.setObjectName("actionChange_C2_Server")
+        self.actionStart_Backend = QtWidgets.QAction(MainWindow)
+        self.actionStart_Backend.setObjectName("actionStart_Backend")
         self.menuAgents_Available.addAction(self.actionCompile_Client)
         self.menuAgents_Available.addAction(self.actionRegister_Client_Creds)
+        self.menuAgents_Available.addAction(self.actionStart_Backend)
         self.menuAgents_Available.addSeparator()
         self.menuAgents_Available.addAction(self.actionChange_C2_Server)
         self.menuLocal.addAction(self.actionOpen_Terminal)
@@ -370,11 +373,12 @@ class Ui_MainWindow(object):
         self.actionRegister_Client_Creds.setText(_translate("MainWindow", "Register Client Creds"))
         self.actionOpen_Terminal.setText(_translate("MainWindow", "Open Terminal"))
         self.actionChange_C2_Server.setText(_translate("MainWindow", "Change C2 Server"))
+        self.actionStart_Backend.setText(_translate("MainWindow", "Start Backend"))
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file './python/ui/manager_connection_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -417,9 +421,61 @@ class Ui_ManagerServerConnect(object):
         self.PortLabel.setText(_translate("ManagerServerConnect", "Server Port (defualt 22)"))
 # -*- coding: utf-8 -*-
 
+# Form implementation generated from reading ui file './python/ui/server_backend_dialogue.ui'
+#
+# Created by: PyQt5 UI code generator 5.14.2
+#
+# WARNING! All changes made in this file will be lost!
+
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+
+class Ui_server_backend_dialog(object):
+    def setupUi(self, server_backend_dialog):
+        server_backend_dialog.setObjectName("server_backend_dialog")
+        server_backend_dialog.resize(640, 480)
+        self.buttonBox = QtWidgets.QDialogButtonBox(server_backend_dialog)
+        self.buttonBox.setGeometry(QtCore.QRect(10, 440, 621, 32))
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.avail_backends_label = QtWidgets.QLabel(server_backend_dialog)
+        self.avail_backends_label.setGeometry(QtCore.QRect(20, 20, 441, 20))
+        self.avail_backends_label.setObjectName("avail_backends_label")
+        self.port_label = QtWidgets.QLabel(server_backend_dialog)
+        self.port_label.setGeometry(QtCore.QRect(30, 360, 81, 20))
+        self.port_label.setObjectName("port_label")
+        self.port_edit = QtWidgets.QLineEdit(server_backend_dialog)
+        self.port_edit.setGeometry(QtCore.QRect(120, 360, 113, 32))
+        self.port_edit.setObjectName("port_edit")
+        self.scrollArea = QtWidgets.QScrollArea(server_backend_dialog)
+        self.scrollArea.setGeometry(QtCore.QRect(20, 50, 601, 291))
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 597, 287))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.avail_backends_list = QtWidgets.QListWidget(self.scrollAreaWidgetContents)
+        self.avail_backends_list.setGeometry(QtCore.QRect(0, 0, 601, 291))
+        self.avail_backends_list.setObjectName("avail_backends_list")
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+
+        self.retranslateUi(server_backend_dialog)
+        self.buttonBox.accepted.connect(server_backend_dialog.accept)
+        self.buttonBox.rejected.connect(server_backend_dialog.reject)
+        QtCore.QMetaObject.connectSlotsByName(server_backend_dialog)
+
+    def retranslateUi(self, server_backend_dialog):
+        _translate = QtCore.QCoreApplication.translate
+        server_backend_dialog.setWindowTitle(_translate("server_backend_dialog", "Dialog"))
+        self.avail_backends_label.setText(_translate("server_backend_dialog", "Available Backends"))
+        self.port_label.setText(_translate("server_backend_dialog", "Port to use: "))
+# -*- coding: utf-8 -*-
+
 # Form implementation generated from reading ui file './python/ui/terminal_dialogue.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 

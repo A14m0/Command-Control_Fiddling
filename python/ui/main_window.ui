@@ -287,16 +287,6 @@
        <enum>Qt::RichText</enum>
       </property>
      </widget>
-     <widget class="QTableView" name="InterfaceTable">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>130</y>
-        <width>431</width>
-        <height>231</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QLabel" name="InterfacesLabel">
       <property name="geometry">
        <rect>
@@ -317,6 +307,16 @@
       </property>
       <property name="textFormat">
        <enum>Qt::RichText</enum>
+      </property>
+     </widget>
+     <widget class="QTableView" name="InterfaceTable">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>120</y>
+        <width>431</width>
+        <height>241</height>
+       </rect>
       </property>
      </widget>
     </widget>
@@ -356,6 +356,7 @@
     </property>
     <addaction name="actionCompile_Client"/>
     <addaction name="actionRegister_Client_Creds"/>
+    <addaction name="actionStart_Backend"/>
     <addaction name="separator"/>
     <addaction name="actionChange_C2_Server"/>
    </widget>
@@ -387,6 +388,11 @@
   <action name="actionChange_C2_Server">
    <property name="text">
     <string>Change C2 Server</string>
+   </property>
+  </action>
+  <action name="actionStart_Backend">
+   <property name="text">
+    <string>Start Backend</string>
    </property>
   </action>
  </widget>

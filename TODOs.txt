@@ -1,6 +1,7 @@
 Problems:
-    1. Server fails to rebind to the address (share universal socket with ConnectionInstances?)
-    2. God knows what else
+    1. Make Logger class multithread acceptable (stack variables not correctly passed to instance)
+    2. Server fails to rebind to the address (share universal socket with ConnectionInstances?)
+    3. God knows what else
 
 -> Maybe make public server struct/object that contains all of the active binds, 
    so when there are multiple connections needing the same port, it can just check
@@ -37,6 +38,17 @@ ________________________________________________________________________________
             https://kb.vmware.com/s/article/1009458
             https://www.cyberbit.com/blog/endpoint-security/anti-vm-and-anti-sandbox-explained/
 
+
+
+
+
+
+
+void *handle = dlopen("libmyFunction.so", <flags>);
+    if (!handle) return; // error: cannot locate the library!
+
+    int (*func)() = (int (*)())dlsym(handle, "myFunction");
+    
 
 
 

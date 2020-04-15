@@ -116,3 +116,31 @@ class AgentCommandDialogue(QtWidgets.QDialog, design.Ui_CommandDialogue):
             self.session.send_command(self.agent_id, self.Input.text())
             reply = QtWidgets.QMessageBox.information(self, "Success!", "Successfully tasked agent with command execution. Check the loot directory occasionally for output")
             
+
+class ServerBackendDialogue(QtWidgets.QDialog, design.Ui_server_backend_dialog):
+    def __init__(self, session, parent=None):
+        QtWidgets.QDialog.__init__(self, parent)
+        self.setupUi(self)
+        self.color = paletteColors.Colors()
+        self.session = session
+        self.setPalette(self.color.pltActive)
+        self.transports = self.session.get_transports()
+        
+        for entry in self.transports:
+            item = QtWidgets.QListWidgetItem()
+            item.setText(entry.id_str)
+            item.setData(QtCore.Qt.UserRole, entry)
+            self.avail_backends_list.addItem(item)
+
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).clicked.connect(self.start_backend)
+
+    def start_backend(self):
+        if not self.avail_backends_list.currentItem():
+            reply = QtWidgets.QMessageBox.information(self, "No Backend Selected", "Select a backend from the list before continuing")
+            
+        elif self.port_edit.text() == "":
+            reply = QtWidgets.QMessageBox.information(self, "No Port Specified", "Please identify a port to use before continuing")
+        else:
+            backend_id = self.avail_backends_list.currentItem().data(QtCore.Qt.UserRole).id_num
+            port = int(self.port_edit.text())
+            self.session.start_transport(backend_id, port)

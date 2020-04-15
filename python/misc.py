@@ -134,3 +134,8 @@ def getSavePath():
     filepath = obj.getSaveFileName(None, "Save file", "", "All Files (*)")
 
     return filepath
+
+class Transport():
+    def __init__(self, id_str, id_num):
+        self.id_str = id_str
+        self.id_num = id_num

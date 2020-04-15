@@ -1,9 +1,8 @@
 #include "log.h"
-extern FILE *log_file;
 
 Log::Log(){
     this->logfile = fopen("log.txt", "a");
-    if (!this->logfile)
+    if (this->logfile == nullptr)
     {
         printf("Log file failed to open!\n");
         perror("Reason");
@@ -12,7 +11,7 @@ Log::Log(){
     pthread_mutex_init(&(this->session_lock), NULL);
 }
 
-int Log::log(char *frmt_str, char *id, ...){
+int Log::log(const char *frmt_str, char *id, ...){
     pthread_mutex_lock(&(this->session_lock));
     char logbuff[2048];
     memset(logbuff, 0, sizeof(logbuff));
