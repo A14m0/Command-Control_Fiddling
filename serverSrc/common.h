@@ -3,8 +3,6 @@
 #include <assert.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <libssh/libssh.h>
-#include <libssh/server.h>
 #include <netinet/in.h>
 #include <openssl/sha.h>
 #include <pthread.h>

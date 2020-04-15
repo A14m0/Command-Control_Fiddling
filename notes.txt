@@ -24,9 +24,8 @@ Transports will implement the following functions:
     11. int get_info(char *ptr)
     12. int init_reverse_shell(char *id)
     13. int determine_handler()
-    14. int init_reverse_shell()
 
     // Optional
-    15. int make_agent(char *ip, char *port)
+    14. int make_agent(char *ip, char *port)
 
 Modules will be able to be executed independently and their only exported function will be the main entrypoint

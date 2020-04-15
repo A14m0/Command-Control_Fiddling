@@ -13,7 +13,7 @@ CFLAGSREL = -s
 CFLAGSDBG = -ggdb -Wall
 
 CFLAGSSO = -c -fpic -static -lssh -lcrypto
-CFILESSO = serverSrc/ssh_transport/ssh_transport.cpp serverSrc/authenticate.cpp serverSrc/list.cpp serverSrc/log.cpp serverSrc/b64.cpp serverSrc/agents.cpp serverSrc/connection.cpp
+CFILESSO = serverSrc/ssh_transport/ssh_transport.cpp serverSrc/b64.cpp serverSrc/authenticate.cpp serverSrc/misc.cpp serverSrc/agents.cpp
 
 OBJECT_FILES = $(CFILESSO:%.cpp=$(ODIR)/%.o)
 

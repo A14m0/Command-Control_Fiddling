@@ -262,8 +262,8 @@ void ConnectionInstance::agent_handler(){
 
         case AGENT_REV_SHELL:
             this->logger->log("Client %s: Agent reverse shell caught\n", this->data->id);
-            this->server->get_shell_queue()->push(this);
-            this->reverse_shell();
+            //this->server->get_shell_queue()->push(this);
+            //this->reverse_shell();
             break;
 
         case AGENT_EXEC_MODULE:
