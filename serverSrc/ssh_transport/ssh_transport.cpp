@@ -17,7 +17,6 @@ transport_t transport_api = {
 int init(pClientDat dat)
 {
     data = dat;
-    port = 22;
 }
 
 int end()

@@ -1,25 +1,41 @@
-CPPC=g++
-CC=gcc
+CPPC = g++
+CC = gcc
 
-CFLAGSSERV=-lssh -lpthread -lcrypto -ldl
-CFILESSERV= serverSrc/misc.cpp serverSrc/agents.cpp serverSrc/authenticate.cpp serverSrc/b64.cpp serverSrc/log.cpp serverSrc/connection.cpp serverSrc/server.cpp
+ODIR = serverSrc/build
 
-CFLAGSCLI=-lssh -lcurl
-CFILESCLI=clientSrc/client.c clientSrc/agent.c clientSrc/b64.c clientSrc/beacon.c clientSrc/shell.c
+CFLAGSSERV = -lssh -lpthread -lcrypto -ldl
+CFILESSERV = serverSrc/misc.cpp serverSrc/agents.cpp serverSrc/authenticate.cpp serverSrc/b64.cpp serverSrc/log.cpp serverSrc/connection.cpp serverSrc/server.cpp
 
-CFLAGSREL=-s
-CFLAGSDBG=-ggdb -Wall
+CFLAGSCLI = -lssh -lcurl
+CFILESCLI = clientSrc/client.c clientSrc/agent.c clientSrc/b64.c clientSrc/beacon.c clientSrc/shell.c
 
-hellomake: 
+CFLAGSREL = -s
+CFLAGSDBG = -ggdb -Wall
+
+CFLAGSSO = -c -fpic -static -lssh -lcrypto
+CFILESSO = serverSrc/ssh_transport/ssh_transport.cpp serverSrc/authenticate.cpp serverSrc/list.cpp serverSrc/log.cpp serverSrc/b64.cpp serverSrc/agents.cpp serverSrc/connection.cpp
+
+OBJECT_FILES = $(CFILESSO:%.cpp=$(ODIR)/%.o)
+
+build: $(OBJECT_FILES)
 	$(CPPC) -o serverSrc/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
 	$(CC) -o clientSrc/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSREL)
-	$(CPPC) -o serverSrc/ssh_transport/ssh_transport.o -c -fpic serverSrc/ssh_transport/ssh_transport.cpp
-	$(CPPC) -shared -o serverSrc/shared/ssh_transport.so serverSrc/ssh_transport/ssh_transport.o
+
+	$(CPPC) -shared -o serverSrc/shared/ssh_transport.so $(OBJECT_FILES)
 	/bin/bash ./python/update_uis.sh
 
-debug:
+debug: $(OBJECT_FILES)
 	$(CPPC) -o serverSrc/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSDBG)
 	$(CC) -o clientSrc/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSDBG)
-	$(CPPC) -o serverSrc/ssh_transport/ssh_transport.o -c -fpic serverSrc/ssh_transport/ssh_transport.cpp
-	$(CPPC) -shared -o serverSrc/shared/ssh_transport.so serverSrc/ssh_transport/ssh_transport.o
-	/bin/bash ./python/update_uis.sh
+	$(CPPC) -shared -o serverSrc/shared/ssh_transport.so $(OBJECT_FILES)
+	@/bin/bash ./python/update_uis.sh
+
+clean: 
+	rm -r $(ODIR)
+
+.PHONY: build debug clean
+
+$(OBJECT_FILES): $(ODIR)/%.o: %.cpp
+	@echo "Compiling $<"
+	@mkdir -p $(@D)
+	@$(CPPC) $(CFLAGSSO) -o $@ $<

@@ -29,3 +29,8 @@ Transports will implement the following functions:
     14. int make_agent(char *ip, char *port)
 
 Modules will be able to be executed independently and their only exported function will be the main entrypoint
+
+
+So... I think to fix the whole "unknown symbol" thing, you need to make sure
+that you basically dont compile it with any functions from the main code base?
+IDK

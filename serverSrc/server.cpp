@@ -291,103 +291,6 @@ std::queue<ConnectionInstance *> *Server::get_shell_queue(){
     return this->shell_queue;
 }
 
-ptransport_t init_transport(void *handle){
-    ptransport_t transport = (ptransport_t) malloc(sizeof(transport_t));
-    memset(transport, 0, sizeof(transport_t));
-
-    /*transport->send_ok = (int (*)())dlsym(handle, "send_ok");
-    if(!transport->send_ok){
-        printf("Failed to find function send_ok\n");
-        return nullptr;
-    }*/
-
-    int (*test)();
-    test = (int (*)())dlsym(handle, "send_ok");
-    if(test == NULL){
-        printf("so we did the big woopsie\n");
-    }
-
-    transport->send_err = (int (*)())dlsym(handle, "send_err");
-    if(!transport->send_err){
-        printf("Failed to find function send_err\n");
-        return nullptr;
-    }
-
-    transport->listen = (int (*)())dlsym(handle, "listen");
-    if(!transport->listen){
-        printf("Failed to find function listen\n");
-        return nullptr;
-    }
-
-    transport->read = (int (*)(char **,int))dlsym(handle, "read");
-    if(!transport->read){
-        printf("Failed to find function read\n");
-        return nullptr;
-    }
-
-    transport->write = (int (*)(char*,int))dlsym(handle, "write");
-    if(!transport->write){
-        printf("Failed to find function write\n");
-        return nullptr;
-    }
-
-    transport->download_file = (int (*)(char *,int,char*))dlsym(handle, "download_file");
-    if(!transport->download_file){
-        printf("Failed to find function download_file\n");
-        return nullptr;
-    }
-
-    transport->get_loot = (int (*)(char*))dlsym(handle, "get_loot");
-    if(!transport->get_loot){
-        printf("Failed to find function get_loot\n");
-        return nullptr;
-    }
-
-    transport->upload_file = (int (*)(char*,int))dlsym(handle, "upload_file");
-    if(!transport->upload_file){
-        printf("Failed to find function upload_file\n");
-        return nullptr;
-    }
-
-    transport->get_info = (int (*)(char*))dlsym(handle, "get_info");
-    if(!transport->get_info){
-        printf("Failed to find function get_info\n");
-        return nullptr;
-    }
-
-    transport->init_reverse_shell = (int (*)(char *))dlsym(handle, "init_reverse_shell");
-    if(!transport->init_reverse_shell){
-        printf("Failed to find function init_reverse_shell\n");
-        return nullptr;
-    }
-
-    transport->determine_handler = (int (*)())dlsym(handle, "determine_handler");
-    if(!transport->determine_handler){
-        printf("Failed to find function determine_handler\n");
-        return nullptr;
-    }
-
-    transport->make_agent = (int (*)(char*,char*))dlsym(handle, "make_agent");
-    if(!transport->make_agent){
-        printf("Failed to find optional function make_agent. Ignoring\n");
-    }
-
-    transport->init = (int (*)(pClientDat))dlsym(handle, "init");
-    if(!transport->make_agent){
-        printf("Failed to find function init\n");
-        return nullptr;
-    }
-
-    transport->end = (int (*)())dlsym(handle, "end");
-    if(!transport->make_agent){
-        printf("Failed to find function end\n");
-        return nullptr;
-    }
-
-    return transport;
-}
-
-
 /*Funny enough, this is the main function*/
 int main(int argc, char **argv){
     // TODO: UPDATE SIGHANDLERS TO MODERN STUFF
@@ -412,6 +315,8 @@ int main(int argc, char **argv){
     ptransport_t transport;
     class ConnectionInstance *instance;
     void (*entrypoint)();
+    pClientDat init_data = (pClientDat)malloc(sizeof(ClientDat));
+    memset(init_data, 0, sizeof(ClientDat));
 
     switch(type){
         case MODULE:
@@ -431,6 +336,7 @@ int main(int argc, char **argv){
                 printf("Failed to find transport api\n"); 
                 return 1;
             }
+            transport->init(init_data);
             instance = new ConnectionInstance(server);
             instance->set_transport(transport);
             server->add_instance(instance);
