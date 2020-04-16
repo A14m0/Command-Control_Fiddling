@@ -4,7 +4,7 @@
 ConnectionInstance::ConnectionInstance(class Server *server){
     this->logger = server->get_log();
     this->server = server;
-    this->data = (pClientDat)malloc(sizeof(clientDat));
+    this->data = nullptr;
 }
 
 /*Neato destructor*/
@@ -334,6 +334,7 @@ void ConnectionInstance::setup_transport(char *num){
 /*Sets the transport for the connection instance*/
 void ConnectionInstance::set_transport(ptransport_t transport){
     this->transport = transport;
+    this->data = transport->get_data();
 }
 
 /*returns the logger used by the instance*/

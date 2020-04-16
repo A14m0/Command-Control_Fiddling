@@ -12,4 +12,6 @@ public:
     Log(/* args */);
     ~Log();
     int log(const char *format, char *id, ...);
+    int open_log();
+    int close_log();
 };

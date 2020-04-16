@@ -22,5 +22,6 @@ typedef struct _transport {
     int (*end)();
 
     int (*make_agent)(char *dat_ptr, char *d_ptr);
+    pClientDat (*get_data)();
 } transport_t, *ptransport_t;
 

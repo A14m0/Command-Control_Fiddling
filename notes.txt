@@ -16,16 +16,17 @@ Transports will implement the following functions:
     5. int listen()
     6. int read(char **buff, int length)
     7. int write(char *buff, int length)
+    8. pClientDat get_data()
     
     // Functionality
-    8. int download_file(char *ptr, int is_manager, char *extra)
-    9. int get_loot(char *loot)
-    10. int upload_file(char *ptr, int is_module)
-    11. int get_info(char *ptr)
-    12. int init_reverse_shell(char *id)
-    13. int determine_handler()
+    9. int download_file(char *ptr, int is_manager, char *extra)
+    10. int get_loot(char *loot)
+    11. int upload_file(char *ptr, int is_module)
+    12. int get_info(char *ptr)
+    13. int init_reverse_shell(char *id)
+    14. int determine_handler()
 
     // Optional
-    14. int make_agent(char *ip, char *port)
+    15. int make_agent(char *ip, char *port)
 
 Modules will be able to be executed independently and their only exported function will be the main entrypoint

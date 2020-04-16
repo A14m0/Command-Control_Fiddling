@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>791</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Control Console</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QScrollArea" name="AgentSelect">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>331</width>
+      <height>551</height>
+     </rect>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>327</width>
+       <height>547</height>
+      </rect>
+     </property>
+     <widget class="QListWidget" name="AgentList">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>311</width>
+        <height>531</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>510</y>
+      <width>451</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="Terminal">
+     <item>
+      <widget class="Line" name="line_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="gridLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>390</y>
+      <width>451</width>
+      <height>116</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QPushButton" name="PushFile">
+       <property name="text">
+        <string>Push File</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="PullFile">
+       <property name="text">
+        <string>Pull File</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="GetLoot">
+       <property name="text">
+        <string>Get Loot</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QPushButton" name="PushModule">
+       <property name="text">
+        <string>Push Module</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="ExecComm">
+       <property name="text">
+        <string>Execute Command</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QPushButton" name="RevSh">
+       <property name="text">
+        <string>Reverse Shell</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="Line" name="line">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>370</y>
+      <width>451</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="BackendStatusLabel">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>530</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Backend status: </string>
+    </property>
+   </widget>
+   <widget class="QScrollArea" name="scrollArea">
+    <property name="geometry">
+     <rect>
+      <x>339</x>
+      <y>3</y>
+      <width>451</width>
+      <height>371</height>
+     </rect>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents_2">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>447</width>
+       <height>367</height>
+      </rect>
+     </property>
+     <widget class="QLabel" name="HostnameLabel">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>81</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Hostname: </string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="ConnectionTimeLabel">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>121</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Connection Time: </string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::RichText</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="ProcOwnerLabel">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>111</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Process Owner: </string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::RichText</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="Hostname">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>10</y>
+        <width>381</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="ConnectionTime">
+      <property name="geometry">
+       <rect>
+        <x>135</x>
+        <y>40</y>
+        <width>331</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::RichText</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="ProcOwner">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>70</y>
+        <width>341</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::RichText</enum>
+      </property>
+     </widget>
+     <widget class="QTableView" name="InterfaceTable">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>431</width>
+        <height>231</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="InterfacesLabel">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>111</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Interfaces:</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::RichText</enum>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="BackendStatus">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>530</y>
+      <width>331</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>791</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuAgents_Available">
+    <property name="title">
+     <string>Server</string>
+    </property>
+    <addaction name="actionCompile_Client"/>
+    <addaction name="actionRegister_Client_Creds"/>
+    <addaction name="separator"/>
+    <addaction name="actionChange_C2_Server"/>
+   </widget>
+   <widget class="QMenu" name="menuLocal">
+    <property name="title">
+     <string>Local</string>
+    </property>
+    <addaction name="actionOpen_Terminal"/>
+   </widget>
+   <addaction name="menuAgents_Available"/>
+   <addaction name="menuLocal"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionCompile_Client">
+   <property name="text">
+    <string>Compile Client</string>
+   </property>
+  </action>
+  <action name="actionRegister_Client_Creds">
+   <property name="text">
+    <string>Register Client Creds</string>
+   </property>
+  </action>
+  <action name="actionOpen_Terminal">
+   <property name="text">
+    <string>Open Terminal</string>
+   </property>
+  </action>
+  <action name="actionChange_C2_Server">
+   <property name="text">
+    <string>Change C2 Server</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

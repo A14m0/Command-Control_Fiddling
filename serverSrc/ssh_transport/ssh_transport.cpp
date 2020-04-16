@@ -11,7 +11,8 @@ pClientDat data;
 transport_t transport_api = {
     send_ok, send_err, listen, read, write,
     download_file, get_loot, upload_file, get_info,
-    init_reverse_shell, determine_handler, init, end
+    init_reverse_shell, determine_handler, init, end, nullptr, 
+    get_data
 };
 
 int init(pClientDat dat)
@@ -757,4 +758,8 @@ int send_ok(){
 
 void set_port(int portno){
     port = portno;
+}
+
+pClientDat get_data(){
+    return data;
 }
