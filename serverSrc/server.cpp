@@ -135,8 +135,8 @@ int main(int argc, char **argv){
     // initialize variables
     Server *server = new Server();
 
-    // Example load .so transport
-    void *handle = dlopen("./shared/ssh_transport.so", RTLD_LAZY);
+    // Example load .so module
+    void *handle = dlopen("./shared/example_module.so", RTLD_LAZY);
     if(!handle) {
         printf("failed to load .so file\n");    
         return -1;
