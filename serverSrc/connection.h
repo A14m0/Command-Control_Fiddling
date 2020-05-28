@@ -47,5 +47,6 @@ public:
     void reverse_shell();
     void send_transports();
     void setup_transport(char *ptr);
+    int send_info(char *ptr);
 };
 

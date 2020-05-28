@@ -93,7 +93,7 @@ int Server::listen_instance(int index){
     
     class ConnectionInstance *instance = this->sessions->at(index);
     if(instance == nullptr){
-        printf("instance is still nullptr\n");
+        printf("Instance is nullptr\n");
         return 1;
     }
 
@@ -134,15 +134,15 @@ int main(int argc, char **argv){
 
     // initialize variables
     Server *server = new Server();
-
+    
     // Example load .so module
-    void *handle = dlopen("./shared/example_module.so", RTLD_LAZY);
+    void *handle = dlopen("./shared/ssh_transport.so", RTLD_NOW);
     if(!handle) {
         printf("failed to load .so file\n");    
         return -1;
     }
     
-    int type = *(int *)dlsym(handle, "type");
+    const int type = *(const int *)dlsym(handle, "type");
     if(!type) {
         printf("Failed to find type symbol!\n");
         return 1;

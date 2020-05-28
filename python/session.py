@@ -66,10 +66,10 @@ class Session():
 
         # Initiate the connection
         self.channel.sendall("0")
-        out = self.channel.recv(5)
+        out = self.clean(self.channel.recv(5))
         self.channel.sendall("20|all")
         while out != "fi":
-            out = self.channel.recv(8196).decode()
+            out = self.clean(self.channel.recv(8196)).decode(errors="replace")
             if out != "fi":
                 out = out.split("\n")
                 if len(out) < 5:
@@ -108,7 +108,7 @@ class Session():
         self.agents = []
         self.channel.sendall("20|all")
         while out != "fi":
-            out = self.channel.recv(8196).decode()
+            out = self.clean(self.channel.recv(8196)).decode(errors="replace")
             if out != "fi":
                 out = out.split("\n")
                 if len(out) < 5:
@@ -135,22 +135,22 @@ class Session():
             return 1
 
         self.channel.sendall("22|"+agent_id)
-        num = int(self.channel.recv(8192).decode())
+        num = int(self.clean(self.channel.recv(8192)).decode(errors="replace"))
         self.channel.send("rd")    
         for i in range(num):
             cnt = 0
             data = b''
             
-            name = self.channel.recv(256).strip(b'\x00')#.decode()
+            name = self.clean(self.channel.recv(256))
             print(name)
-            name = name.decode()
+            name = name.decode(errors="replace")
             if name == 'fi':
                 print("received last file successfully")
                 break
             
             self.channel.sendall("ok")
             
-            size = int(self.channel.recv(8192).decode())
+            size = int(self.channel.recv(8192).decode(errors="replace"))
             
             self.channel.sendall("ok")
             
@@ -232,9 +232,8 @@ class Session():
         print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
         self.channel.sendall("28|%s:%s" % (ip, port))
         fileData = b""
-        data = self.channel.recv(128).decode()
-        print(data)
-        size = int(data.strip('\x00'))
+        data = self.clean(self.channel.recv(128)).decode(errors="replace")
+        size = int(data)
         #size = int(self.channel.recv(128).decode())
         self.channel.send("ok")
         fileData = self.channel.recv(size)
@@ -253,20 +252,28 @@ class Session():
     def get_transports(self):
         print("[ ] Getting available backends from server...")
         self.channel.sendall('32|')
-        datsz = int(self.channel.recv(128).decode().strip('\x00'))
+        datsz = int(self.clean(self.channel.recv(128)).decode(errors="replace"))
         self.channel.send('ok')
-        data = self.channel.recv(datsz).decode().split("\n")
+        data = self.clean(self.channel.recv(datsz)).decode(errors="replace").split("\n")
         ret = []
         for entry in data:
-            print(entry)
-            if ":" in entry:
-                entry = entry.split(":")
+            if ':' in entry:
+                dat = entry.split(":")
                 print(entry)
-                id_str = entry[0]
-                id_num = int(entry[1])
-                ret.append(misc.Transport(id_str, id_num))
+                ret.append(misc.Transport(dat[0], int(dat[1])))
         return ret
 
+    def clean(self, data):
+        print("inside the cleaning func :)")
+        print(data)
+
+        for i in range(len(data)): 
+            
+            if data[i] == 0:
+                print("returning modified bytes")
+                return data[:i]
+        return data    
+        
     def start_transport(self, transport_id, port):
         print("[ ] Starting backend with ID %d" % transport_id)
         self.channel.sendall("33|%d:%d" % (transport_id, port))

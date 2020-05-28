@@ -43,4 +43,5 @@ void make_agent(char *dat_ptr, char *d_ptr);
 int init_reverse_shell(char *id);
 
 pClientDat get_data();
-    
+char* get_name();    
+int get_id();

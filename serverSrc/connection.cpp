@@ -44,6 +44,7 @@ void ConnectionInstance::manager_handler(){
         memset((void*)tmpbf, 0, sizeof(tmpbf));
         
         // get operation request
+        printf("Waiting for read\n");
         this->transport->read(&resp, 2048);
         
         // parse it
@@ -148,7 +149,7 @@ void ConnectionInstance::manager_handler(){
             break;
 
         case MANAG_GET_INFO:
-            this->transport->get_info(ptr);
+            this->send_info(ptr);
             break;
 
         case MANAG_REQ_PORTS:
@@ -177,17 +178,107 @@ void ConnectionInstance::manager_handler(){
     
 }
 
+int ConnectionInstance::send_info(char *ptr){
+    int size = 0;
+    int rc = 0;
+    char buff[BUFSIZ];
+    char name[BUFSIZ];
+    char logbuff[BUFSIZ];
+    char *dat = NULL;
+    char tmpbf[3];
+    DIR *dir;
+    FILE *file;
+    struct dirent *ent;
+
+    memset(buff, 0, sizeof(buff));
+    memset(name, 0, sizeof(name));
+    memset(logbuff, 0, sizeof(logbuff));
+    if ((dir = opendir ("agents/")) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL) {
+            if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..") || !strcmp(ent->d_name, "agents.dat")){
+                continue;
+            } else {
+                memset(buff, 0, sizeof(buff));
+                memset(name, 0, sizeof(name));
+                sprintf(buff, "/agents/%s/info.txt", ent->d_name);
+                getcwd(name, sizeof(name));
+                strcat(name, buff);
+                file = fopen(name, "r");
+                memset(buff, 0, sizeof(buff));
+                if(file == NULL){
+                    printf("Manager %s: Could not get info on agent %s\n", data->id, ent->d_name);
+                    perror("");
+                } else {
+                    // get file size
+                    fseek(file, 0L, SEEK_END);
+                    size = ftell(file);
+                    printf("Size: %d\n", size);
+
+                    // Allocate file memory 
+                    dat = (char *)malloc(size);
+                    memset(dat, 0, size);
+                    rewind(file);
+                    fread(dat, 1, size, file);
+                    
+                    rc = this->transport->write(dat, strlen(dat));
+                    free(dat);
+                    if(rc == 1){
+                        printf("Manager %s: failed to write data\n", data->id);
+                        return 1;
+                    }
+                    
+                    rc = this->transport->write(tmpbf, 3);
+                    if(rc == 1){
+                        printf("Manager %s: failed to write data\n", data->id);
+                        return 1;
+                    }
+                }
+            }
+        }
+        rc = this->transport->write("fi", 2);
+        if(rc == 1){
+            printf("Manager %s: failed to write data\n", data->id);
+            return 1;
+        }
+        closedir (dir);
+    } else {
+        /* could not open directory */
+        printf("Manager %s: Failed to open directory\n", data->id);
+            
+        perror ("");
+        return 2;
+    }
+    return 0;
+
+
+}
+
 /*Returns all available ports for accessing reverse shells*/
 void ConnectionInstance::get_ports(char *ptr){
 
 }
 
 void ConnectionInstance::send_transports(){
+    printf("Sending transports\n");
+
     // TODO: Fix this to make it dynamic (but dont know how to store transport info dynamically)
-    char *tmp = (char*)malloc(100);
-    this->transport->write("18", 3);
+    char *tmp = (char*)malloc(256);
+    char *sz = (char*)malloc(5);
+    memset(tmp, 0, 256);
+    memset(sz, 0, 5);
+    const char *name = this->transport->get_name();
+    sprintf(tmp, "%s:%d", this->transport->get_name(), this->transport->get_id());
+    sprintf(sz, "%d", strlen(tmp));
+    
+    this->transport->write(sz, 5);
+    memset(sz, 0, 5);
+    this->transport->read(&sz, 3);
+    
+    this->transport->write(tmp, strlen(tmp));
     this->transport->read(&tmp, 3);
-    this->transport->write("SSH Transport:51\n",18);
+    free(tmp);
+    free(sz);
 }
 
 /*Place holder*/
@@ -313,22 +404,102 @@ void *ConnectionInstance::handle_connection(void *input){
     return NULL;
 }
 
-void ConnectionInstance::setup_transport(char *num){
+void ConnectionInstance::setup_transport(char *inf){
     class ServerTransport *transport;
     class ConnectionInstance *instance = new ConnectionInstance(this->server);
-    int transport_type = atoi(num);
-    switch (transport_type)
-    {
-    case TRANSPORT_SSH:
-        //transport = new Ssh_Transport(instance);
-        //this->server->add_instance(instance);
-        //this->server->listen_instance(instance);
-        break;
-    
-    default:
-        this->logger->log("Manager %s: Failed to identify transport ID %d\n", this->data->id, transport_type);
-        break;
+
+    char *port_num = NULL;
+
+    int strl = strlen(inf);
+    for(int i = 0; i < strl; i++){
+        if (inf[i] == ':'){
+            inf[i] = '\0';
+            port_num = inf + i;
+            break;
+        }
+
     }
+
+    int port = atoi(port_num);
+    int id = atoi(inf);
+
+    // for file in "shared/" load it, and check type. if type, check id. if id, break
+    char buff[BUFSIZ];
+    char path[PATH_MAX];
+    sprintf(buff, "%s/shared", getcwd(path, sizeof(path)));
+    DIR *dir;
+    struct dirent *ent;
+
+    int found = false;
+             
+    if((dir = opendir(buff)) != NULL){
+        while((ent =readdir(dir)) != NULL){
+            if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
+                continue;
+            } else {
+                void *handle = dlopen("./shared/ssh_transport.so", RTLD_NOW);
+                if(!handle) {
+                    printf("failed to load .so file\n");    
+                    return;
+                }
+
+                int id_sym = *(int *)dlsym(handle, "id");
+
+                if(id_sym == id){
+                    found = true;
+                    const int type = *(const int *)dlsym(handle, "type");
+                    if(!type) {
+                        printf("Failed to find type symbol!\n");
+                        break;
+                    }
+                    else printf("Detected type of object: %d\n", type);
+                    
+                    ptransport_t transport;
+                    class ConnectionInstance *instance;
+                    void (*entrypoint)();
+                    pClientDat init_data = (pClientDat)malloc(sizeof(ClientDat));
+                    memset(init_data, 0, sizeof(ClientDat));
+
+                    switch(type){
+                        case MODULE:
+                            printf("Detected module type\n");
+                            
+                            entrypoint = (void (*)())dlsym(handle, "entrypoint");
+                            if (!entrypoint){
+                                printf("Failed to locate the module's entrypoint function");
+                                break;
+                            }
+                            (*entrypoint)();
+                            break;
+                        case TRANSPORT:
+                            printf("Detected transport type\n");
+                            transport = (ptransport_t)dlsym(handle, "transport_api");
+                            if(!transport) {
+                                printf("Failed to find transport API structure\n"); 
+                                break;
+                            }
+                            transport->init(init_data);
+                            instance = new ConnectionInstance(server);
+                            instance->set_transport(transport);
+                            this->server->add_instance(instance);
+                            this->server->listen_instance(0);
+                            break;
+                
+                        default:
+                            printf("Unknown type: %d\n", type);
+                            break;
+                    }
+                    
+                }
+                else dlclose(handle);
+                
+
+            }
+        }
+    }
+
+    closedir(dir);
+    
 }
 
 /*Sets the transport for the connection instance*/

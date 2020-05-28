@@ -14,6 +14,7 @@ class Server {
 private:
     std::vector<class ConnectionInstance *> *sessions;
     std::queue<class ConnectionInstance *> *shell_queue;
+    
     class Log *logger;
     ptransport_t transport;
     int master_socket;
