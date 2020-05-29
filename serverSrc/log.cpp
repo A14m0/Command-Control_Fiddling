@@ -8,7 +8,20 @@ Log::Log(){
         perror("Reason");
         exit(1);
     }
+    this->session_lock = *(pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
     pthread_mutex_init(&(this->session_lock), NULL);
+    printf("Address of lock: %p\n", &this->session_lock);
+}
+
+Log::Log(pthread_mutex_t lock){
+    this->logfile = fopen("log.txt", "a");
+    if (this->logfile == nullptr)
+    {
+        printf("Log file failed to open!\n");
+        perror("Reason");
+        exit(1);
+    }
+    this->session_lock = lock;
 }
 
 int Log::log(const char *frmt_str, char *id, ...){
@@ -24,6 +37,8 @@ int Log::log(const char *frmt_str, char *id, ...){
         }
     }
 
+    printf("Logger is waiting for mutex lock\n");
+    printf("Mutex address: %p\n", &this->session_lock);
     pthread_mutex_lock(&(this->session_lock));
     
     
@@ -40,6 +55,7 @@ int Log::log(const char *frmt_str, char *id, ...){
     fwrite(logbuff, 1, strlen(logbuff), this->logfile);
     printf("%s", logbuff);
     pthread_mutex_unlock(&(this->session_lock));
+    printf("Logger released lock\n");
     this->close_log();
     return 0;
 }
@@ -58,6 +74,10 @@ int Log::open_log(){
 int Log::close_log(){
     fclose(this->logfile);
     return 0;
+}
+
+pthread_mutex_t Log::get_mutex(){
+    return this->session_lock;
 }
 
 Log::~Log(){
