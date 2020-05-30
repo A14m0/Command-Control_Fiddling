@@ -3,14 +3,13 @@
 
 #include <dlfcn.h>
 #include "transport.h"
-#include "log.h"
-//#include "list.h"
 #include "authenticate.h"
 #include "agents.h"
 #include "common.h"
 #include "connection.h"
 
-class Server {
+class Server : Common 
+{
 private:
     std::vector<class ConnectionInstance *> *sessions;
     std::queue<class ConnectionInstance *> *shell_queue;

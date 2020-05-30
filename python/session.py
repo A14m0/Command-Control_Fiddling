@@ -69,7 +69,7 @@ class Session():
         out = self.clean(self.channel.recv(5))
         self.channel.sendall("20|all")
         while out != "fi":
-            out = self.clean(self.channel.recv(8196)).decode(errors="replace")
+            out = self.clean(self.channel.recv(8196))[0].decode(errors="replace")
             if out != "fi":
                 out = out.split("\n")
                 if len(out) < 5:
@@ -108,17 +108,22 @@ class Session():
         self.agents = []
         self.channel.sendall("20|all")
         while out != "fi":
-            out = self.clean(self.channel.recv(8196)).decode(errors="replace")
-            if out != "fi":
-                out = out.split("\n")
-                if len(out) < 5:
-                    print("Out was too short of a fuckin list")
-                    continue
+            out = self.clean(self.channel.recv(8196))
+            for entry in out:
+                print("Entry: " + entry)
+                entry = entry.decode(errors="replace")
+                if entry != "fi":
+                    entry = entry.split("\n")
+                    if len(entry) < 5:
+                        print("Out was too short of a fuckin list")
+                        continue
 
-                interfaces = self.parse_interfaces(out[1])
-                appnd = AgentStruct(out[0],out[2],out[3],interfaces,out[4])
-                self.agents.append(appnd)
-                self.channel.sendall('0')
+                    interfaces = self.parse_interfaces(entry[1])
+                    appnd = AgentStruct(entry[0],entry[2],entry[3],interfaces,entry[4])
+                    self.agents.append(appnd)
+                    self.channel.sendall('0')
+                else:
+                    break
         
         print("[+] Successfully gathered agent information")
         return 0
@@ -135,13 +140,13 @@ class Session():
             return 1
 
         self.channel.sendall("22|"+agent_id)
-        num = int(self.clean(self.channel.recv(8192)).decode(errors="replace"))
+        num = int(self.clean(self.channel.recv(8192))[0].decode(errors="replace"))
         self.channel.send("rd")    
         for i in range(num):
             cnt = 0
             data = b''
             
-            name = self.clean(self.channel.recv(256))
+            name = self.clean(self.channel.recv(256))[0]
             print(name)
             name = name.decode(errors="replace")
             if name == 'fi':
@@ -232,7 +237,7 @@ class Session():
         print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
         self.channel.sendall("28|%s:%s" % (ip, port))
         fileData = b""
-        data = self.clean(self.channel.recv(128)).decode(errors="replace")
+        data = self.clean(self.channel.recv(128))[0].decode(errors="replace")
         size = int(data)
         #size = int(self.channel.recv(128).decode())
         self.channel.send("ok")
@@ -252,27 +257,39 @@ class Session():
     def get_transports(self):
         print("[ ] Getting available backends from server...")
         self.channel.sendall('32|')
-        datsz = int(self.clean(self.channel.recv(128)).decode(errors="replace"))
-        self.channel.send('ok')
-        data = self.clean(self.channel.recv(datsz)).decode(errors="replace").split("\n")
+        datsz = int(self.clean(self.channel.recv(128)[0].decode(errors="replace")))
+        
+        lst = self.clean(self.channel.recv(datsz))
         ret = []
-        for entry in data:
-            if ':' in entry:
-                dat = entry.split(":")
-                print(entry)
-                ret.append(misc.Transport(dat[0], int(dat[1])))
+
+        for agent in lst:
+            agent = agent.decode(errors="replace").split("\n")
+            
+            self.channel.send('ok')
+            for entry in agent:
+                if ':' in entry:
+                    dat = entry.split(":")
+                    print(entry)
+                    ret.append(misc.Transport(dat[0], int(dat[1])))
         return ret
 
     def clean(self, data):
         print("inside the cleaning func :)")
-        print(data)
+        data = data.split(b"\x00")
+        ret = []
+        
+        for i in range(len(data)):
+            if data[i] != b"":
+                ret.append(data[i])
+        
 
-        for i in range(len(data)): 
+        """for i in range(len(data)): 
             
             if data[i] == 0:
                 print("returning modified bytes")
-                return data[:i]
-        return data    
+                return data[:i]"""
+        print(ret)
+        return ret    
         
     def start_transport(self, transport_id, port):
         print("[ ] Starting backend with ID %d" % transport_id)

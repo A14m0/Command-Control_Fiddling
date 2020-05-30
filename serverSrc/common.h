@@ -17,3 +17,17 @@
 #include <unistd.h>
 #include <vector>
 #include <queue>
+
+#include <stdarg.h>
+#include "log.h"
+
+class Common
+{
+private:
+    class Log *logger;
+public:
+    Common(/* args */);
+    ~Common();
+
+    int log(const char *format, char *id, ...);
+};

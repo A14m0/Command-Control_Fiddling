@@ -1,8 +1,6 @@
 #pragma once
 
 #include "transport.h"
-#include "log.h"
-//#include "list.h"
 #include "authenticate.h"
 #include "agents.h"
 #include "common.h"
@@ -10,7 +8,7 @@
 #include "b64.h"
 
 
-class ConnectionInstance
+class ConnectionInstance : Common
 {
 private:
     class Log *logger;
@@ -50,6 +48,5 @@ public:
     void setup_transport(char *ptr);
     int send_info(char *ptr);
     int download_file(char *ptr, int is_manager, char *extra);
-    void reload_logger();
 };
 

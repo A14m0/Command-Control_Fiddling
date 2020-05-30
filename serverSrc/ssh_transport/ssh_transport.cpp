@@ -122,7 +122,7 @@ int determine_handler(){
                 perror("Reason");
                 break;
             }
-            printf("Tasking being sent: %s\n", tasking);
+            
             // Write tasking
             rc = ssh_channel_write(channel, tasking, strlen(tasking));
             if(rc == SSH_ERROR){
@@ -566,7 +566,6 @@ int read(char **buff, int length){
 }
 
 int write(char *buff, int length){
-    printf("writing %s to channel...\n", buff);
     int rc = 0;
     rc = ssh_channel_write(channel, buff, length);
     if(rc == SSH_ERROR){
