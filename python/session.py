@@ -103,12 +103,14 @@ class Session():
 
 
     def update(self):
-        out = ""
+        quitting = False
         tmp = self.agents
         self.agents = []
         self.channel.sendall("20|all")
-        while out != "fi":
+        while not quitting:
             out = self.clean(self.channel.recv(8196))
+            if out == []:
+                continue
             for entry in out:
                 print("Entry: " + entry)
                 entry = entry.decode(errors="replace")
@@ -123,6 +125,7 @@ class Session():
                     self.agents.append(appnd)
                     self.channel.sendall('0')
                 else:
+                    quitting = True
                     break
         
         print("[+] Successfully gathered agent information")
@@ -146,7 +149,12 @@ class Session():
             cnt = 0
             data = b''
             
-            name = self.clean(self.channel.recv(256))[0]
+            name = self.clean(self.channel.recv(256))
+            if name == []:
+                pass
+            else:
+                name = name[0]
+                
             print(name)
             name = name.decode(errors="replace")
             if name == 'fi':

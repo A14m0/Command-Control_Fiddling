@@ -11,11 +11,17 @@ Common::~Common(){
 
 int Common::log(const char *format, char *id, ...){
     char *logbuff = (char*)malloc(2048);
-    memset(logbuff, 0, sizeof(logbuff));
+    char frmt[2048];
+    memset(logbuff, 0, 2048);
+    memset(frmt, 0, 2048);
     va_list args;
 
+    sprintf(frmt, "[%s] ", id);
+    strcat(frmt, format);
+
+    
     va_start(args, id);
-    snprintf(logbuff, sizeof(logbuff), format, id, args);
+    vsnprintf(logbuff, 2048, frmt, args);
     va_end(args);
 
     this->logger->log(logbuff);

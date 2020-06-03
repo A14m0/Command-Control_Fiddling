@@ -8,10 +8,10 @@
 #include "common.h"
 #include "connection.h"
 
-class Server : Common 
+class Server : public Common 
 {
 private:
-    std::vector<class ConnectionInstance *> *sessions;
+    std::vector<pthread_t> *sessions;
     std::queue<class ConnectionInstance *> *shell_queue;
     
     class Log *logger;
@@ -21,10 +21,8 @@ public:
     Server();
     ~Server();
 
-    void add_instance(class ConnectionInstance *instance);
-    int bind_instance(int index);
-    int listen_instance(int index);
-    int listen_instance(class ConnectionInstance *instance);
+    int listen_instance(ptransport_t transport);
     std::queue<class ConnectionInstance *> *get_shell_queue();
-    class Log * get_log();
 };
+
+void *init_instance(void *args);

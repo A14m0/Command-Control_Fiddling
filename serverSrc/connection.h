@@ -8,17 +8,15 @@
 #include "b64.h"
 
 
-class ConnectionInstance : Common
+class ConnectionInstance : public Common
 {
 private:
-    class Log *logger;
     ptransport_t transport;
-    class Server *server;
     int shell_finished = 0;
     pClientDat data;
     pthread_t thread;
 public:
-    ConnectionInstance(class Server *server);
+    ConnectionInstance();
     ~ConnectionInstance();
 
     // set functions
@@ -27,9 +25,7 @@ public:
     void shell_finish();
 
     // get functions
-    class Log *get_logger();
     ptransport_t get_transport();
-    class Server *get_server();
     pClientDat get_data();
 
     // fetch functions
@@ -37,7 +33,7 @@ public:
     void get_ports(char *ptr);
     
     // handler functions
-    static void *handle_connection(void *input);
+    int handle_connection();
     void authenticate(void *sess);
     void manager_handler();
     void agent_handler();

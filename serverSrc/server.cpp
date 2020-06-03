@@ -1,8 +1,7 @@
 #include "server.h"
 
 /*Global variables and data structures*/
-pthread_t thread_array[MAX_CONN];
-
+Server *server;
 
 /*handy little print function for debugging pClientDat structures*/
 void print_clientDat(pClientDat str){
@@ -11,7 +10,7 @@ void print_clientDat(pClientDat str){
 }
 
 Server::Server(){
-    this->sessions = new std::vector<ConnectionInstance *>(0);
+    this->sessions = new std::vector<pthread_t>(0);
     this->shell_queue = new std::queue<ConnectionInstance *>();
     this->logger = new Log();
 
@@ -21,7 +20,6 @@ Server::Server(){
     char dir[4096];
     unsigned long index;
     struct stat st = {0};
-    int type = 0;
     int opt = 0;
 
     if( (this->master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
@@ -75,53 +73,32 @@ Server::Server(){
     }
 }
 
-void Server::add_instance(ConnectionInstance *instance){
-    if (instance == nullptr){
-        printf("Nullptr instance caught\n");
-    } else {
-        this->sessions->push_back(instance);
-    }
-    
-}
-
-class Log *Server::get_log(){
-    return this->logger;
-}
-
-int Server::listen_instance(int index){
+int Server::listen_instance(ptransport_t transport){
     pthread_t thread;
-    
-    class ConnectionInstance *instance = this->sessions->at(index);
-    if(instance == nullptr){
-        printf("Instance is nullptr\n");
-        return 1;
-    }
-
-    // to keep a reference to the thread in memory
-    instance->set_thread(thread);
     // pass connection to handler thread
-    if(pthread_create(&thread, NULL, instance->handle_connection, instance)){
+
+    this->sessions->push_back(thread);
+    void *args[3] = {transport, &thread};
+    if(pthread_create(&thread, NULL, init_instance, (void*)args)){
         printf("Error creating thread\n");
-        delete instance;
         return 1;
     }
     
     return 0;
 }
 
-int Server::listen_instance(class ConnectionInstance *instance){
-    pthread_t thread;
-    
-    //instance->get_transport()->listen(this->master_socket);
-    instance->set_thread(thread);
-    // pass connection to handler thread
-    if(pthread_create(&thread, NULL, instance->handle_connection, instance)){
-        printf("Error creating thread\n");
-        delete instance;
-        return 1;
-    }
-    
-    return 0;
+void *init_instance(void *args){
+    void **passed_args = (void **)args;
+    ptransport_t transport = (ptransport_t)passed_args[0];
+    pthread_t thread = (pthread_t)passed_args[1];
+
+    class ConnectionInstance *instance;
+    pClientDat init_data = (pClientDat)malloc(sizeof(ClientDat));
+    memset(init_data, 0, sizeof(ClientDat));
+    transport->init(init_data);
+    instance = new ConnectionInstance();
+    instance->set_transport(transport);
+    instance->handle_connection();
 }
 
 std::queue<ConnectionInstance *> *Server::get_shell_queue(){
@@ -134,6 +111,10 @@ int main(int argc, char **argv){
 
     // initialize variables
     Server *server = new Server();
+
+    //server->log("HERES A PROBLEM: %d\n", "Server", 1);
+
+    //return 0;
     
     // Example load .so module
     void *handle = dlopen("./shared/ssh_transport.so", RTLD_NOW);
@@ -150,11 +131,8 @@ int main(int argc, char **argv){
     else printf("Detected type of object: %d\n", type);
 
     ptransport_t transport;
-    class ConnectionInstance *instance;
     void (*entrypoint)();
-    pClientDat init_data = (pClientDat)malloc(sizeof(ClientDat));
-    memset(init_data, 0, sizeof(ClientDat));
-
+    
     switch(type){
         case MODULE:
             printf("Detected module type\n");
@@ -173,11 +151,8 @@ int main(int argc, char **argv){
                 printf("Failed to find transport api\n"); 
                 return 1;
             }
-            transport->init(init_data);
-            instance = new ConnectionInstance(server);
-            instance->set_transport(transport);
-            server->add_instance(instance);
-            server->listen_instance(0);
+    
+            server->listen_instance(transport);
             break;
 
         default:

@@ -20,7 +20,7 @@ int Log::log(char *buff){
     {
         rc = this->open_log();
         if(rc){
-            printf("Log File failed to open!!! WTF???\n%s\n");
+            printf("Log File failed to open!!! WTF???\n");
             return 1;
         }
     }
