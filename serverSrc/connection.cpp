@@ -500,6 +500,7 @@ int ConnectionInstance::handle_connection(){
 }
 
 void ConnectionInstance::setup_transport(char *inf){
+    printf("Setting up transports\n");
     class ServerTransport *transport;
     class ConnectionInstance *instance = new ConnectionInstance();
 
@@ -551,6 +552,8 @@ void ConnectionInstance::setup_transport(char *inf){
                     
                     ptransport_t transport;
                     void (*entrypoint)();
+                    pthread_t thread;
+                    void *args[3] = {transport, &thread};
                     
                     switch(type){
                         case MODULE:
@@ -570,7 +573,12 @@ void ConnectionInstance::setup_transport(char *inf){
                                 printf("Failed to find transport API structure\n"); 
                                 break;
                             }
-                            server->listen_instance(transport);
+                            transport->set_port(port);
+                            
+                            if(pthread_create(&thread, NULL, init_instance, (void*)args)){
+                                this->log("Error creating thread\n", this->data->id);
+                                break;
+                            }
                             break;
                 
                         default:

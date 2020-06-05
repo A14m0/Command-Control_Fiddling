@@ -23,5 +23,6 @@ typedef struct _transport {
     pClientDat (*get_data)();
     char* (*get_name)();
     int (*get_id)();
+    void (*set_port)(int portno);
 } transport_t, *ptransport_t;
 

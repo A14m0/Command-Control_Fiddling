@@ -45,3 +45,4 @@ int init_reverse_shell(char *id);
 pClientDat get_data();
 char* get_name();    
 int get_id();
+void set_port(int portno);
