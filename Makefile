@@ -3,7 +3,7 @@ CC = gcc
 
 ODIR = serverSrc/build
 
-CFLAGSSERV = -lssh -lpthread -lcrypto -ldl
+CFLAGSSERV = -lssh -lpthread -lcrypto -ldl -fpermissive
 CFILESSERV = serverSrc/misc.cpp serverSrc/agents.cpp serverSrc/authenticate.cpp serverSrc/b64.cpp serverSrc/log.cpp serverSrc/connection.cpp serverSrc/server.cpp serverSrc/common.cpp
 
 CFLAGSCLI = -lssh -lcurl

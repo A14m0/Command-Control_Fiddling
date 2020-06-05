@@ -12,6 +12,7 @@ class Server : public Common
 {
 private:
     std::vector<pthread_t> *sessions;
+    std::vector<ptransport_t *> *api_handles;
     std::queue<class ConnectionInstance *> *shell_queue;
     
     class Log *logger;
@@ -23,6 +24,9 @@ public:
 
     int listen_instance(ptransport_t transport);
     std::queue<class ConnectionInstance *> *get_shell_queue();
+    std::vector<ptransport_t *> *get_api_handles();
+
+    void add_transport_api(ptransport_t* transport);
 };
 
 void *init_instance(void *args);

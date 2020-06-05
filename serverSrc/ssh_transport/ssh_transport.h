@@ -22,27 +22,28 @@
 
 
     
-int authenticate();
-int init(pClientDat dat);
-int end();
+int authenticate(void** instance_struct);
+int init(void* dat);
+int end(void* instance_struct);
 
 // generic protocol handlers
-int send_ok();
-int send_err();
-int listen();
-int read(char **buff, int length);
-int write(char *buff, int length);
+int send_ok(void* instance_struct);
+int send_err(void* instance_struct);
+int listen(void* instance_struct);
+int read(void* instance_struct, char **buff, int length);
+int write(void* instance_struct, char *buff, int length);
     
-int determine_handler();
-int upload_file(char *ptr, int is_module);
-int download_file(char *ptr, int is_manager, char *extra);
-int get_loot(char *loot);
-int get_info(char *ptr);
+int determine_handler(void* instance_struct);
+int upload_file(void* instance_struct, char *ptr, int is_module);
+int download_file(void* instance_struct, char *ptr, int is_manager, char *extra);
+int get_loot(void* instance_struct, char *loot);
+int get_info(void* instance_struct, char *ptr);
 
-void make_agent(char *dat_ptr, char *d_ptr);
-int init_reverse_shell(char *id);
+void make_agent(void* instance_struct, char *dat_ptr, char *d_ptr);
+int init_reverse_shell(void* instance_struct, char *id);
 
-pClientDat get_data();
-char* get_name();    
-int get_id();
-void set_port(int portno);
+char* get_name(void* instance_struct);    
+int get_id(void* instance_struct);
+void set_port(void* instance_struct, int portno);
+int get_dat_siz();
+char* get_agent_name(void* instance_struct);

@@ -5,24 +5,25 @@
 
 typedef struct _transport {
     // generic protocol functions for use in the main handler
-    int (*send_ok)();
-    int (*send_err)();
-    int (*listen)();
-    int (*read)(char **buff, int length);
-    int (*write)(char *buff, int length);
+    int (*send_ok)(void* instance_struct);
+    int (*send_err)(void* instance_struct);
+    int (*listen)(void* instance_struct);
+    int (*read)(void* instance_struct, char **buff, int length);
+    int (*write)(void* instance_struct, char *buff, int length);
 
-    int (*get_loot)(char *loot);
-    int (*upload_file)(char *ptr, int is_module);
-    int (*init_reverse_shell)(char *id);
-    int (*determine_handler)();
+    int (*get_loot)(void* instance_struct, char *loot);
+    int (*upload_file)(void* instance_struct, char *ptr, int is_module);
+    int (*init_reverse_shell)(void* instance_struct, char *id);
+    int (*determine_handler)(void* instance_struct);
     
-    int (*init)(pClientDat dat);
-    int (*end)();
+    int (*get_dat_siz)();
+    int (*init)(void* instance_struct);
+    int (*end)(void* instance_struct);
 
-    int (*make_agent)(char *dat_ptr, char *d_ptr);
-    pClientDat (*get_data)();
-    char* (*get_name)();
-    int (*get_id)();
-    void (*set_port)(int portno);
+    int (*make_agent)(void* instance_struct, char *dat_ptr, char *d_ptr);
+    char* (*get_name)(void* instance_struct);
+    int (*get_id)(void* instance_struct);
+    void (*set_port)(void* instance_struct, int portno);
+    char* (*get_agent_name)(void* insatnce_struct);
 } transport_t, *ptransport_t;
 

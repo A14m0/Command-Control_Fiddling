@@ -11,9 +11,10 @@
 class ConnectionInstance : public Common
 {
 private:
+    class Server *server;
     ptransport_t transport;
     int shell_finished = 0;
-    pClientDat data;
+    void* data;
     pthread_t thread;
 public:
     ConnectionInstance();
@@ -22,13 +23,13 @@ public:
     // set functions
     void set_transport(ptransport_t transport);
     void set_thread(pthread_t thread);
+    void set_data(void* data);
+    void set_server(class Server* server);
     void shell_finish();
 
     // get functions
     ptransport_t get_transport();
-    pClientDat get_data();
-
-    // fetch functions
+    void *get_data();
     void get_info(char *ptr);
     void get_ports(char *ptr);
     
