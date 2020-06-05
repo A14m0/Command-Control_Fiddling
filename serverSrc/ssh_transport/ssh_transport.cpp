@@ -89,7 +89,7 @@ int determine_handler(){
     case REQ_TASKING:
         ssh_channel_read(channel, tmp_buffer, 2, 0);
             
-        if(tmp_buffer[0] == '0'){
+        if(tmp_buffer[0] == '9'){
             ssh_channel_write(channel, "ok", 2);
             return MANAG_TYPE;
 
@@ -555,10 +555,7 @@ int read(char **buff, int length){
     rc = ssh_channel_read(channel, *buff, length, 0);
     if (rc == SSH_ERROR)
     {
-        char logbuff[BUFSIZ];
-        memset(logbuff, 0, sizeof(logbuff));
-        
-        printf("Manager %s: Failed to handle agent: %s\n", data->id, ssh_get_error(session));
+        printf("Failed to handle agent: %s\n", ssh_get_error(session));
         return 1;
     }
     return 0;
@@ -569,7 +566,7 @@ int write(char *buff, int length){
     int rc = 0;
     rc = ssh_channel_write(channel, buff, length);
     if(rc == SSH_ERROR){
-        printf("Manager %s: Failed to handle agent: %s\n", data->id, ssh_get_error(session));
+        printf("Failed to handle agent: %s\n", ssh_get_error(session));
         return 1;
     }
     return 0;
@@ -580,7 +577,7 @@ int send_err(){
     rc = ssh_channel_write(channel, "er", 3);
     if (rc == SSH_ERROR)
     {
-        printf("Manager %s: Failed to handle agent: %s\n", data->id, ssh_get_error(session));
+        printf("Failed to handle agent: %s\n", ssh_get_error(session));
         return 1;
     }
     return 0;
@@ -591,7 +588,7 @@ int send_ok(){
     rc = ssh_channel_write(channel, "ok", 3);
     if (rc == SSH_ERROR)
     {
-        printf("Manager %s: Failed to handle agent: %s\n", data->id, ssh_get_error(session));
+        printf("Failed to handle agent: %s\n", ssh_get_error(session));
         return 1;
     }
     return 0;

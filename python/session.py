@@ -7,6 +7,8 @@ import select
 import sys
 import pty
 import base64 as b64
+import pdb
+
 
 class AgentStruct():
     def __init__(self, id, connection_time, hostname, interfaces, process_owner):
@@ -56,6 +58,8 @@ class Session():
         return ret
 
     def init_connection(self):
+        #pdb.set_trace()
+
         self.ssh.connect(hostname=self.address, port=self.port, username=self.username, password=self.password, allow_agent=False)
 
         self.channel = self.ssh._transport.open_session()
@@ -64,22 +68,33 @@ class Session():
         stdin = self.channel.makefile('wb')
         stdout = self.channel.makefile('r')
 
-        # Initiate the connection
-        self.channel.sendall("0")
+        # identify as a manager
+        self.channel.sendall("9")
         out = self.clean(self.channel.recv(5))
+
+        # gets all info on current available agents
         self.channel.sendall("20|all")
         while out != "fi":
-            out = self.clean(self.channel.recv(8196))[0].decode(errors="replace")
-            if out != "fi":
-                out = out.split("\n")
-                if len(out) < 5:
-                    print("Out was too short of a fuckin list")
-                    continue
-
-                interfaces = self.parse_interfaces(out[1])
-                appnd = AgentStruct(out[0],out[2],out[3],interfaces,out[4])
-                self.agents.append(appnd)
-                self.channel.sendall('0')
+            out = self.clean(self.channel.recv(8196))
+            for agent in out:
+                print(agent)
+                agent = agent.decode(errors="replace")
+                if agent != "fi":
+                    agent = agent.split("\n")
+                    print(agent)
+                    if len(agent) < 5:
+                        print("Out was too short of a fuckin list")
+                    else:
+                        interfaces = self.parse_interfaces(agent[1])
+                        appnd = AgentStruct(agent[0],agent[2],agent[3],interfaces,agent[4])
+                        self.agents.append(appnd)
+                        print("Added agent successfully")
+                    self.channel.sendall('ok')
+                    print("Wrote ok to channel")
+                else:
+                    print("caught ending fi")
+                    out = "fi"
+                    break
         
         print("[+] Successfully gathered agent information")
 
@@ -297,6 +312,8 @@ class Session():
                 print("returning modified bytes")
                 return data[:i]"""
         print(ret)
+        if len(ret) == 0:
+            return None
         return ret    
         
     def start_transport(self, transport_id, port):

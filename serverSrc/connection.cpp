@@ -41,6 +41,10 @@ void ConnectionInstance::manager_handler() {
         
         // get operation request
         this->transport->read(&resp, 2048);
+        printf("response: %s\n", resp);
+
+        // note to self: looks like the response when it catches a 0 is actually "ok"...
+        // see if there is a clever way around it in the session class??
         
         // parse it
         strncat(tmpbf,resp,2);
@@ -179,7 +183,8 @@ int ConnectionInstance::send_info(char *ptr){
     char buff[BUFSIZ];
     char name[BUFSIZ];
     char *dat = NULL;
-    char tmpbf[3];
+    char *tmpbf = (char*)malloc(3);
+
     DIR *dir;
     FILE *file;
     struct dirent *ent;
@@ -213,17 +218,19 @@ int ConnectionInstance::send_info(char *ptr){
                     memset(dat, 0, size);
                     rewind(file);
                     fread(dat, 1, size, file);
+                    printf("File data: %s\n", dat);
                     
-                    rc = this->transport->write(dat, strlen(dat));
+                    rc = this->transport->write(dat, size);
                     free(dat);
                     if(rc == 1){
                         this->log("Failed to write data\n", data->id);
                         return 1;
                     }
                     
-                    rc = this->transport->write(tmpbf, 3);
+                    printf("Waiting for read...\n");
+                    rc = this->transport->read(&tmpbf, 3);
                     if(rc == 1){
-                        this->log("Failed to write data\n", data->id);
+                        this->log("Failed to read data\n", data->id);
                         return 1;
                     }
                 }
