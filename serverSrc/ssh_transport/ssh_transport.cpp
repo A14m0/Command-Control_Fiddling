@@ -329,6 +329,7 @@ int get_loot(void* instance_struct, char *loot){
                     size = ftell(file);
                     size_e = B64::enc_size(size);
                     rewind(file);
+                    // TODO: FIX TF OUT OF THIS
                     tmp_ptr = (char *)malloc(size);
                     memset(tmp_ptr, 0, size);
                     fread(tmp_ptr, 1, size, file);
@@ -546,6 +547,8 @@ int authenticate(void** instance_struct){
                     case SSH_AUTH_METHOD_PASSWORD:
                         if(Authenticate::doauth(ssh_message_auth_user(message), ssh_message_auth_password(message))){
                             auth=1;
+                            
+                            // TODO: FIX TF OUT OF THIS
                             name = (char*)malloc(strlen(ssh_message_auth_user(message)));
                             memset(name, 0, strlen(ssh_message_auth_user(message)));
                             sprintf(name, "%s", ssh_message_auth_user(message));

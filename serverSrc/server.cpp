@@ -120,9 +120,9 @@ void *init_instance(void *args){
 
     instance->get_transport()->set_port(data, port);
 
-    instance = new ConnectionInstance();
     instance->set_server(server);
     instance->set_data(data);
+    printf("Transport ptr: %p\n", instance->get_transport());
     instance->handle_connection();
 }
 
