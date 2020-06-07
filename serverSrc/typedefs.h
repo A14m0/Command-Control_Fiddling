@@ -6,7 +6,7 @@
 #define TRANSPORT 99
 
 typedef struct clientDat{
-    char *id;
+    char id[256];
     int type;
     pthread_t thread;
 } ClientDat, *pClientDat;

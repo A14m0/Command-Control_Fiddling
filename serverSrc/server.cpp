@@ -114,6 +114,8 @@ void *init_instance(void *args){
     int dat_sz = instance->get_transport()->get_dat_siz();
     void *data = malloc(dat_sz);
     memset(data, 0, dat_sz);
+
+    //instance->init_data(&data);
     instance->get_transport()->init(data);
 
     printf("Data ptr: %p\n", data);
