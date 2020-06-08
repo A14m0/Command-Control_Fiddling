@@ -74,14 +74,14 @@ Server::Server(){
     }
 }
 
-int Server::listen_instance(ptransport_t transport){
+int Server::listen_instance(ptransport_t transport, int port){
     pthread_t thread;
     // pass connection to handler thread
 
     this->sessions->push_back(thread);
     int *args = (int*)malloc(sizeof(int) * 3);
-    args[0] = transport->get_id(nullptr);
-    args[1] = 0;
+    args[0] = transport->get_id();
+    args[1] = port;
             
     if(pthread_create(&thread, NULL, init_instance, (void*)args)){
         printf("Error creating thread\n");
@@ -91,41 +91,140 @@ int Server::listen_instance(ptransport_t transport){
     return 0;
 }
 
+int Server::listen_instance(int transport_id, int port){
+    pthread_t thread;
+
+    this->sessions->push_back(thread);
+
+    int *args = (int*)malloc(sizeof(int) * 3);
+    args[0] = transport_id;
+    args[1] = port;
+            
+    if(pthread_create(&thread, NULL, init_instance, (void*)args)){
+        printf("Error creating thread\n");
+        return 1;
+    }
+}
+
 void *init_instance(void *args){
     int *passed_args = (int*)args;
     int transport_id = passed_args[0];
     int port = passed_args[1];
+    bool found = false;
+    bool is_module = false;
+    ptransport_t* api;
 
     class ConnectionInstance *instance = new ConnectionInstance();
-    printf("[init] Server address: %p\n", server);
+    // /printf("[Loader] Server address: %p\n", server);
     std::vector<ptransport_t*> *apis = server->get_api_handles();
 
     for(int i = 0; i < apis->size(); i++){
-        ptransport_t* api = apis->at(i);
-        int tmp_id = (*api)->get_id(nullptr);
+        api = apis->at(i);
+        int tmp_id = (*api)->get_id();
         if(tmp_id == transport_id){
-            printf("Found transport with correct ID\n");
+            printf("[Loader Found transport with correct ID\n");
             instance->set_transport(*api);
+            found = true;
             break;
         }
     }
+
+    // if we couldnt find the api currently loaded,
+    // look through all apis in the folder
+    if(!found){
+        char buff[BUFSIZ];
+        char path[PATH_MAX];
+        sprintf(buff, "%s/shared", getcwd(path, sizeof(path)));
+        DIR *dir;
+        struct dirent *ent;
+
+        if((dir = opendir(buff)) != NULL){
+            while((ent =readdir(dir)) != NULL){
+                if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
+                    continue;
+                } else {
+                    void *handle = dlopen(ent->d_name, RTLD_NOW);
+                    if(!handle) {
+                        continue;
+                    }
     
-    printf("Transport ptr: %p\n", instance->get_transport());
-    int dat_sz = instance->get_transport()->get_dat_siz();
-    void *data = malloc(dat_sz);
-    memset(data, 0, dat_sz);
+                    int id_sym = *(int *)dlsym(handle, "id");
+    
+                    if(id_sym == transport_id){
+                        found = true;
+                        const int type = *(const int *)dlsym(handle, "type");
+                        if(!type) {
+                            printf("[Loader] Failed to find type symbol!\n");
+                            break;
+                        }
+                        else printf("[Loader] Detected object type '%d'\n", type);
+                        
+                        api = new ptransport_t;
+                        void (*entrypoint)();
+                        pthread_t thread;
+                        
+                        switch(type){
+                            case MODULE:
+                                is_module = true;
+                                printf("[Loader] Detected module type\n");
+                                
+                                entrypoint = (void (*)())dlsym(handle, "entrypoint");
+                                if (!entrypoint){
+                                    printf("[Loader] Failed to locate the module's entrypoint function");
+                                    break;
+                                }
+                                (*entrypoint)();
+                                break;
+                            case TRANSPORT:
+                                printf("[Loader] Detected transport type\n");
+                                *api = (ptransport_t)dlsym(handle, "transport_api");
+                                if(!api) {
+                                    printf("[Loader] Failed to find transport API structure\n"); 
+                                    break;
+                                }
+                                server->add_transport_api(api);
+                                instance->set_transport(*api);
+                                break;
+                    
+                            default:
+                                printf("[Loader] Unknown type: %d\n", type);
+                                break;
+                        }
+                        
+                    }
+                    else dlclose(handle);
+                    
+    
+                }
+            }
+        }
+    
+        closedir(dir);
+    }
+    
+    if(!found){
+        printf("[Loader] Could not find transport with corresponding ID '%d'\n", transport_id);
+        return nullptr;
+    } else if (is_module){
+        printf("[Loader] module run\n");
+    } else {
+        int dat_sz = instance->get_transport()->get_dat_siz();
+        void *data = malloc(dat_sz);
+        memset(data, 0, dat_sz);
 
-    //instance->init_data(&data);
-    instance->get_transport()->init(data);
+        //instance->init_data(&data);
+        instance->get_transport()->init(data);
 
-    printf("Data ptr: %p\n", data);
+        printf("[Loader] Data ptr: %p\n", data);
 
-    instance->get_transport()->set_port(data, port);
+        instance->get_transport()->set_port(data, port);
 
-    instance->set_server(server);
-    instance->set_data(data);
-    printf("Transport ptr: %p\n", instance->get_transport());
-    instance->handle_connection();
+        instance->set_server(server);
+        instance->set_data(data);
+        printf("[Loader] Transport ptr: %p\n", instance->get_transport());
+        instance->handle_connection();
+    }
+    
 }
 
 std::queue<ConnectionInstance *> *Server::get_shell_queue(){
@@ -166,7 +265,6 @@ int main(int argc, char **argv){
     else printf("Detected type of object: %d\n", type);
 
     ptransport_t *transport = new ptransport_t;//(ptransport_t)malloc(sizeof(ptransport_t));
-    printf("Transport_t address: %p\n", transport);
     void (*entrypoint)();
     
     switch(type){
@@ -181,16 +279,14 @@ int main(int argc, char **argv){
             (*entrypoint)();
             break;
         case TRANSPORT:
-            printf("Detected transport type\n");
             *transport = (ptransport_t)dlsym(handle, "transport_api");
-            server->add_transport_api(transport);
-            printf("Transport ptr: %p\n", transport);
             if(!transport) {
                 printf("Failed to find transport api\n"); 
                 return 1;
             }
-    
-            server->listen_instance(*transport);
+            server->add_transport_api(transport);
+            
+            server->listen_instance((*transport)->get_id(), 0);
             break;
 
         default:

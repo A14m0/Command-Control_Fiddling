@@ -362,8 +362,8 @@ void ConnectionInstance::send_transports(){
     char *sz = (char*)malloc(5);
     memset(tmp, 0, 256);
     memset(sz, 0, 5);
-    const char *name = this->transport->get_name(this->data);
-    sprintf(tmp, "%s:%d", this->transport->get_name(this->data), this->transport->get_id(this->data));
+    const char *name = this->transport->get_name();
+    sprintf(tmp, "%s:%d", this->transport->get_name(), this->transport->get_id());
     sprintf(sz, "%ld", strlen(tmp));
     
     this->transport->write(this->data, sz, 5);
@@ -504,21 +504,21 @@ void ConnectionInstance::setup_transport(char *inf){
     class ServerTransport *transport;
     class ConnectionInstance *instance = new ConnectionInstance();
 
-    char *port_num = NULL;
+    //char *port_num = inf;
+    char tmpid[3] = {0,0,0};
 
-    int strl = strlen(inf);
-    for(int i = 0; i < strl; i++){
-        if (inf[i] == ':'){
-            inf[i] = '\0';
-            port_num = inf + i;
-            break;
-        }
+    strncat(tmpid, inf, 2);
+    inf +=3;
 
-    }
+    printf("id: %s, port_num: %s\n", tmpid, inf);
 
-    int port = atoi(port_num);
-    int id = atoi(inf);
+    int id = atoi(tmpid);
+    int port = atoi(inf);
+    
+    printf("Integer ID/ports: %d, %d\n", port, id);
 
+    server->listen_instance(id,port);
+/*
     // for file in "shared/" load it, and check type. if type, check id. if id, break
     char buff[BUFSIZ];
     char path[PATH_MAX];
@@ -527,6 +527,8 @@ void ConnectionInstance::setup_transport(char *inf){
     struct dirent *ent;
 
     int found = false;
+
+    std::vector<ptransport_t *> *a = server->get_api_handles();
              
     if((dir = opendir(buff)) != NULL){
         while((ent =readdir(dir)) != NULL){
@@ -593,7 +595,7 @@ void ConnectionInstance::setup_transport(char *inf){
         }
     }
 
-    closedir(dir);
+    closedir(dir);*/
     
 }
 

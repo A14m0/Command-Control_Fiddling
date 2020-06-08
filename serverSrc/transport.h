@@ -21,8 +21,8 @@ typedef struct _transport {
     int (*end)(void* instance_struct);
 
     int (*make_agent)(void* instance_struct, char *dat_ptr, char *d_ptr);
-    char* (*get_name)(void* instance_struct);
-    int (*get_id)(void* instance_struct);
+    char* (*get_name)();
+    int (*get_id)();
     void (*set_port)(void* instance_struct, int portno);
     char* (*get_agent_name)(void* insatnce_struct);
 } transport_t, *ptransport_t;

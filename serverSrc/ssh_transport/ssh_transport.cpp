@@ -36,11 +36,11 @@ int end(void* instance_struct)
     return 0;
 }
 
-char *get_name(void* instance_struct){
+char *get_name(){
     return name;
 }
 
-int get_id(void* instance_struct){
+int get_id(){
     return id;
 }
 

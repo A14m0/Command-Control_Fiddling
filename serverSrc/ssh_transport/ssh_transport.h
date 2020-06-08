@@ -42,8 +42,8 @@ int get_info(void* instance_struct, char *ptr);
 void make_agent(void* instance_struct, char *dat_ptr, char *d_ptr);
 int init_reverse_shell(void* instance_struct, char *id);
 
-char* get_name(void* instance_struct);    
-int get_id(void* instance_struct);
+char* get_name();    
+int get_id();
 void set_port(void* instance_struct, int portno);
 int get_dat_siz();
 char* get_agent_name(void* instance_struct);

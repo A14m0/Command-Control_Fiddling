@@ -22,7 +22,8 @@ public:
     Server();
     ~Server();
 
-    int listen_instance(ptransport_t transport);
+    int listen_instance(ptransport_t transport, int port);
+    int listen_instance(int transport_id, int port);
     std::queue<class ConnectionInstance *> *get_shell_queue();
     std::vector<ptransport_t *> *get_api_handles();
 
