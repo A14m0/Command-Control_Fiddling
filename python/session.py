@@ -127,8 +127,8 @@ class Session():
             if out == []:
                 continue
             for entry in out:
-                print("Entry: " + entry)
                 entry = entry.decode(errors="replace")
+                print("Entry: " + entry)
                 if entry != "fi":
                     entry = entry.split("\n")
                     if len(entry) < 5:
