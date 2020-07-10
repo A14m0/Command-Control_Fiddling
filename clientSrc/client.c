@@ -98,6 +98,11 @@ ssh_session connect_ssh(const char *host, const char *user){
     if (ssh_options_set(session, SSH_OPTIONS_HOST, host) < 0) {
         return NULL;
     }
+
+	// set target port
+	if (ssh_options_set(session, SSH_OPTIONS_PORT_STR, PORT)){
+		return NULL;
+	}
 	
 	// do the connection
     if(ssh_connect(session)){

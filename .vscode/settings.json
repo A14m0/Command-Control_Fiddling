@@ -1,5 +1,4 @@
 {
-    "python.pythonPath": "/usr/bin/python",
     "files.associations": {
         "array": "c",
         "hash_map": "c",

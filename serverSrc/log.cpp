@@ -30,7 +30,7 @@ int Log::log(char *buff){
     fwrite(buff, 1, strlen(buff), this->logfile);
     printf("%s", buff);
     pthread_mutex_unlock(&lock);
-    this->close_log();
+    
     return 0;
 }
 

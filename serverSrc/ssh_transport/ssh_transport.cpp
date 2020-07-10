@@ -518,7 +518,7 @@ int listen(void* instance_struct){
     int rc = authenticate(&instance_struct);
     if (rc != 0)
     {
-        printf("Initialization: Data Failed creation\n");
+        printf("Initialization: Failed to authenticate agent\n");
         return 1;
     }
     return 0;
