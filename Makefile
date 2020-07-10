@@ -1,6 +1,8 @@
 CPPC = g++
 CC = gcc
 
+
+EXECOUTDIR = out
 ODIR = serverSrc/build
 
 CFLAGSSERV = -lssh -lpthread -lcrypto -ldl -fpermissive
@@ -18,19 +20,25 @@ CFILESSO = serverSrc/ssh_transport/ssh_transport.cpp serverSrc/b64.cpp serverSrc
 OBJECT_FILES = $(CFILESSO:%.cpp=$(ODIR)/%.o)
 
 build: $(OBJECT_FILES)
-	$(CPPC) -o serverSrc/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
-	$(CC) -o clientSrc/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSREL)
+ifeq (,$(wildcard out))
+	@mkdir out
+endif
+	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
+	$(CC) -o $(EXECOUTDIR)/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSREL)
 
-	$(CPPC) -shared -o serverSrc/shared/ssh_transport.so $(OBJECT_FILES)
+	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
 	/bin/bash ./python/update_uis.sh
 
 debug: $(OBJECT_FILES)
-	$(CPPC) -o serverSrc/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSDBG)
-	$(CC) -o clientSrc/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSDBG)
-	$(CPPC) -shared -o serverSrc/shared/ssh_transport.so $(OBJECT_FILES)
+ifeq (,$(wildcard out))
+	@mkdir out
+endif
+	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSDBG)
+	$(CC) -o $(EXECOUTDIR)/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSDBG)
+	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
 	@/bin/bash ./python/update_uis.sh
 
-clean: 
+clean:
 	rm -r $(ODIR)
 
 .PHONY: build debug clean
