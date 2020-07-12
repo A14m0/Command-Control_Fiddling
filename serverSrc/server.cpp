@@ -12,6 +12,9 @@ void print_clientDat(pClientDat str){
 Server::Server(){
     this->sessions = new std::vector<pthread_t>(0);
     this->api_handles = new std::vector<ptransport_t*>(0);
+    this->module_handles = new std::vector<void (*)()>(0);
+    this->handle_ids = new std::vector<int>(0);
+    this->handle_names = new std::vector<char *>(0);
     this->shell_queue = new std::queue<ConnectionInstance *>();
     this->logger = new Log();
 
@@ -23,13 +26,13 @@ Server::Server(){
     struct stat st = {0};
     int opt = 0;
 
-    if( (this->master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
+    /*if( (this->master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0){   
         perror("Server: Socket Failure");      
     }
 
     if(setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 ){   
         perror("Server: Setsockopt Failure");
-    }
+    }*/
 
     
 
@@ -106,6 +109,132 @@ int Server::listen_instance(int transport_id, int port){
     }
 }
 
+std::queue<ConnectionInstance *> *Server::get_shell_queue(){
+    return this->shell_queue;
+}
+
+std::vector<ptransport_t*> *Server::get_api_handles(){
+    return this->api_handles;
+}
+
+std::vector<int> *Server::get_handle_ids(){
+    return this->handle_ids;
+}
+
+std::vector<char *> *Server::get_handle_names(){
+    return this->handle_names;
+}
+
+void Server::add_transport_api(ptransport_t *transport, char *name, int id){
+    this->api_handles->push_back(transport);
+    this->handle_names->push_back(name);
+    this->handle_ids->push_back(id);
+}
+
+void Server::add_module(void (*entrypoint)(), char *name, int id){
+    this->module_handles->push_back(entrypoint);
+    this->handle_names->push_back(name);
+    this->handle_ids->push_back(id);
+}
+
+void Server::reload_backends(){
+    DIR *dir;
+    FILE *file;
+    struct dirent *ent;
+    char *buff = (char*)malloc(2048);
+
+    this->api_handles->clear();
+    this->module_handles->clear();
+    this->handle_ids->clear();
+    this->handle_names->clear();
+
+    if ((dir = opendir ("shared/")) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL) {
+            if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
+                continue;
+            } else {
+
+                memset(buff, 0, 2048);
+
+                sprintf(buff, "shared/%s", ent->d_name);
+                
+                void *handle = dlopen(buff, RTLD_NOW);
+                if(!handle) {
+                    printf("Failed to load .so file: %s\n", dlerror());    
+                    continue;
+                }
+
+                Server::handle_instance(server, handle);
+                printf("Added api to server\n");
+            }
+        }
+    } else {
+        /* could not open directory */
+        printf("[Loader] Failed to open target directory 'shared/'\n");
+        perror ("");
+    }
+
+    closedir (dir);
+    return;
+}
+
+void *Server::handle_instance(class Server* server, void *handle){
+    const int type = *(const int *)dlsym(handle, "type");
+    if(!type) {
+        printf("[Loader] Failed to find type symbol\n");
+        return NULL;
+    }
+    else printf("[Loader] Detected object type '%d'\n", type);
+    
+    ptransport_t *api = new ptransport_t;
+    void (*entrypoint)();
+    int id;
+    char *name = (char*)malloc(1024);
+    memset(name, 0, 1024);
+
+    void *ret = NULL;
+    
+    switch(type){
+        case MODULE:
+            printf("[Loader] Detected module type\n");
+            
+            entrypoint = (void (*)())dlsym(handle, "entrypoint");
+            if (!entrypoint){
+                printf("[Loader] Failed to locate the module's entrypoint function");
+                break;
+            }
+            (*entrypoint)();
+            printf("Added module entrypoint\n");
+            break;
+        case TRANSPORT:
+            printf("[Loader] Detected transport type\n");
+            *api = (ptransport_t)dlsym(handle, "transport_api");
+            if(!api) {
+                printf("[Loader] Failed to find transport API structure\n"); 
+                break;
+            }
+            id = (int)dlsym(handle, "id");
+            if (!id){
+                printf("[Loader] Failed to locate the module's ID\n");
+                break;
+            }
+            name = (char*)dlsym(handle, "name");
+            if (!name){
+                printf("[Loader] Failed to locate the module's name\n");
+                break;
+            }
+            server->add_transport_api(api, name, id);
+            ret = api;
+            break;
+
+        default:
+            printf("[Loader] Unknown type: %d\n", type);
+            break;
+    }
+    return ret;
+}
+
 void *init_instance(void *args){
     int *passed_args = (int*)args;
     int transport_id = passed_args[0];
@@ -128,6 +257,8 @@ void *init_instance(void *args){
             break;
         }
     }
+
+    ptransport_t *new_api;
 
     // if we couldnt find the api currently loaded,
     // look through all apis in the folder
@@ -152,49 +283,11 @@ void *init_instance(void *args){
     
                     if(id_sym == transport_id){
                         found = true;
-                        const int type = *(const int *)dlsym(handle, "type");
-                        if(!type) {
-                            printf("[Loader] Failed to find type symbol!\n");
-                            break;
-                        }
-                        else printf("[Loader] Detected object type '%d'\n", type);
-                        
-                        api = new ptransport_t;
-                        void (*entrypoint)();
-                        pthread_t thread;
-                        
-                        switch(type){
-                            case MODULE:
-                                is_module = true;
-                                printf("[Loader] Detected module type\n");
-                                
-                                entrypoint = (void (*)())dlsym(handle, "entrypoint");
-                                if (!entrypoint){
-                                    printf("[Loader] Failed to locate the module's entrypoint function");
-                                    break;
-                                }
-                                (*entrypoint)();
-                                break;
-                            case TRANSPORT:
-                                printf("[Loader] Detected transport type\n");
-                                *api = (ptransport_t)dlsym(handle, "transport_api");
-                                if(!api) {
-                                    printf("[Loader] Failed to find transport API structure\n"); 
-                                    break;
-                                }
-                                server->add_transport_api(api);
-                                instance->set_transport(*api);
-                                break;
-                    
-                            default:
-                                printf("[Loader] Unknown type: %d\n", type);
-                                break;
-                        }
+                        new_api = (ptransport_t *)Server::handle_instance(server, handle);
+                        instance->set_transport(*new_api);
                         
                     }
                     else dlclose(handle);
-                    
-    
                 }
             }
         }
@@ -227,17 +320,11 @@ void *init_instance(void *args){
     
 }
 
-std::queue<ConnectionInstance *> *Server::get_shell_queue(){
-    return this->shell_queue;
-}
 
-std::vector<ptransport_t*> *Server::get_api_handles(){
-    return this->api_handles;
-}
 
-void Server::add_transport_api(ptransport_t *transport){
-    this->api_handles->push_back(transport);
-}
+
+
+
 
 /*Funny enough, this is the main function*/
 int main(int argc, char **argv){
@@ -257,44 +344,6 @@ int main(int argc, char **argv){
         return -1;
     }
     
-    const int type = *(const int *)dlsym(handle, "type");
-    if(!type) {
-        printf("Failed to find type symbol!\n");
-        return 1;
-    }
-    else printf("Detected type of object: %d\n", type);
-
-    ptransport_t *transport = new ptransport_t;//(ptransport_t)malloc(sizeof(ptransport_t));
-    void (*entrypoint)();
-    
-    switch(type){
-        case MODULE:
-            printf("Detected module type\n");
-            
-            entrypoint = (void (*)())dlsym(handle, "entrypoint");
-            if (!entrypoint){
-                printf("Failed to locate the module's entrypoint function");
-                return 1;
-            }
-            (*entrypoint)();
-            break;
-        case TRANSPORT:
-            *transport = (ptransport_t)dlsym(handle, "transport_api");
-            if(!transport) {
-                printf("Failed to find transport api\n"); 
-                return 1;
-            }
-            server->add_transport_api(transport);
-            
-            server->listen_instance((*transport)->get_id(), 0);
-            break;
-
-        default:
-            printf("Unknown type: %d\n", type);
-            return 1;
-
-    }
-    
     // initialize the controller socket
     //ConnectionInstance *instance = new ConnectionInstance(server);
     //ServerTransport *def_transport = new Ssh_Transport(instance);
@@ -303,7 +352,9 @@ int main(int argc, char **argv){
     //server->add_instance(instance);
     //server->listen_instance(0);
     
+    Server::handle_instance(server, handle);
 
+    server->listen_instance(55, 0);
     
     // accept connections
     // TODO: FIX THIS SO LOOP BIND WORKS LOL

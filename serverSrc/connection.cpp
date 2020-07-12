@@ -250,8 +250,6 @@ int ConnectionInstance::send_info(char *ptr){
         return 2;
     }
     return 0;
-
-
 }
 
 /*Downloads file from connected entity*/
@@ -356,24 +354,44 @@ void ConnectionInstance::get_ports(char *ptr){
 
 void ConnectionInstance::send_transports(){
     printf("Sending transports\n");
+    char *buff = (char*)malloc(2048);
 
-    // TODO: Fix this to make it dynamic (but dont know how to store transport info dynamically)
-    char *tmp = (char*)malloc(256);
-    char *sz = (char*)malloc(5);
-    memset(tmp, 0, 256);
-    memset(sz, 0, 5);
-    const char *name = this->transport->get_name();
-    sprintf(tmp, "%s:%d", this->transport->get_name(), this->transport->get_id());
-    sprintf(sz, "%ld", strlen(tmp));
+    server->reload_backends();
+    printf("Reloaded backends\n");
+
+    std::vector<int> *tmp_id_vec = server->get_handle_ids();
     
-    this->transport->write(this->data, sz, 5);
-    memset(sz, 0, 5);
-    this->transport->read(this->data, &sz, 3);
+    int i = 0;
+    char *sz = (char*)malloc(128);
     
-    this->transport->write(this->data, tmp, strlen(tmp));
-    this->transport->read(this->data, &tmp, 3);
-    free(tmp);
+    for(auto it = std::begin(*tmp_id_vec); it!= std::end(*tmp_id_vec); ++it){
+        memset(buff, 0, 2048);
+        memset(sz, 0, 128);
+
+        sprintf(buff, "%s:%d", server->get_handle_names()->at(i),tmp_id_vec->at(i));
+        sprintf(sz, "%ld", strlen(buff));
+    
+        this->transport->write(this->data, sz, 5);
+        memset(sz, 0, 5);
+        this->transport->read(this->data, &sz, 3);
+
+        this->transport->write(this->data, buff, strlen(buff));
+        this->transport->read(this->data, &buff, 3);
+        i++;
+    }
+
     free(sz);
+        
+    int rc = this->transport->write(this->data, "fi", 2);
+    if(rc == 1){
+        this->log("Failed to write data\n", this->transport->get_agent_name(this->data));
+        this->transport->read(this->data, &buff, 3);
+        return;
+    }
+    this->transport->read(this->data, &buff, 3);
+        
+    
+    return;
 }
 
 /*Place holder*/
