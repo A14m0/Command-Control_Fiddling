@@ -11,7 +11,6 @@ typedef struct _transport {
     int (*read)(void* instance_struct, char **buff, int length);
     int (*write)(void* instance_struct, char *buff, int length);
 
-    int (*get_loot)(void* instance_struct, char *loot);
     int (*upload_file)(void* instance_struct, char *ptr, int is_module);
     int (*init_reverse_shell)(void* instance_struct, char *id);
     int (*determine_handler)(void* instance_struct);

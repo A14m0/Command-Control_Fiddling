@@ -21,11 +21,12 @@ class BackendUpdater(QtCore.QThread):
         def work():
             print("Starting work func")
             QtCore.QThread.sleep(10)
-            ret = self.session.update()
-            if ret == 0:
-                self.update_sig_ok.emit()
-            else:
-                self.update_sig_er.emit()
+            if not self.session.is_working:
+                ret = self.session.update()
+                if ret == 0:
+                    self.update_sig_ok.emit()
+                else:
+                    self.update_sig_er.emit()
 
         timer = QtCore.QTimer()
         timer.timeout.connect(work)

@@ -35,12 +35,12 @@ and usage. In order to create your own modules and backends, there are a few
 things to know. Firstly is that all modules and network backends are compiled as
 Linux shared-object libraries. Depending on which kind of thing you are
 creating, you must define a few things. All valid modules contain a defined
-global integer variable named "type" (without the quotations) and a global
-character pointer variable named "id" (again, without the quotations). The "type"
+global integer variable named "type" (without the quotations), a global integer variable named "id", and a global
+character pointer variable named "name". The "type"
 variable identifies to the server if the shared-object is a network backend or a
-standalone module. Set this value to 69 if you are making a module, and to 99 if
+standalone module. Set this value to "69" if you are making a module, and to "99" if
 you are making a network backend. The "id" variable allows the server to uniquely
-identify modules, so be creative with this one :). There are some additional
+identify modules, so be creative with this one :), and the "name" variable is the string name of the module for use in the manager interface. There are some additional
 things you must define in order for the server to use your custom program.
 ### Modules
 Modules are single-shot programs that are executed on the server and run in a

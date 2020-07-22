@@ -36,8 +36,6 @@ int write(void* instance_struct, char *buff, int length);
 int determine_handler(void* instance_struct);
 int upload_file(void* instance_struct, char *ptr, int is_module);
 int download_file(void* instance_struct, char *ptr, int is_manager, char *extra);
-int get_loot(void* instance_struct, char *loot);
-int get_info(void* instance_struct, char *ptr);
 
 void make_agent(void* instance_struct, char *dat_ptr, char *d_ptr);
 int init_reverse_shell(void* instance_struct, char *id);

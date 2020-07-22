@@ -13,8 +13,9 @@ Server::Server(){
     this->sessions = new std::vector<pthread_t>(0);
     this->api_handles = new std::vector<ptransport_t*>(0);
     this->module_handles = new std::vector<void (*)()>(0);
+    this->shared_lib_handles = new std::vector<void *>(0);
     this->handle_ids = new std::vector<int>(0);
-    this->handle_names = new std::vector<char *>(0);
+    this->handle_names = new std::vector<const char *>(0);
     this->shell_queue = new std::queue<ConnectionInstance *>();
     this->logger = new Log();
 
@@ -121,17 +122,18 @@ std::vector<int> *Server::get_handle_ids(){
     return this->handle_ids;
 }
 
-std::vector<char *> *Server::get_handle_names(){
+std::vector<const char *> *Server::get_handle_names(){
     return this->handle_names;
 }
 
-void Server::add_transport_api(ptransport_t *transport, char *name, int id){
+void Server::add_transport_api(ptransport_t *transport, const char *name, int id){
     this->api_handles->push_back(transport);
+    printf("Name addr: %p\n", name);
     this->handle_names->push_back(name);
     this->handle_ids->push_back(id);
 }
 
-void Server::add_module(void (*entrypoint)(), char *name, int id){
+void Server::add_module(void (*entrypoint)(), const char *name, int id){
     this->module_handles->push_back(entrypoint);
     this->handle_names->push_back(name);
     this->handle_ids->push_back(id);
@@ -147,6 +149,11 @@ void Server::reload_backends(){
     this->module_handles->clear();
     this->handle_ids->clear();
     this->handle_names->clear();
+
+    for(void *handle : *(this->shared_lib_handles)){
+        dlclose(handle);
+    }
+    this->shared_lib_handles->clear();
 
     if ((dir = opendir ("shared/")) != NULL) {
         /* print all the files and directories within directory */
@@ -165,7 +172,7 @@ void Server::reload_backends(){
                     continue;
                 }
 
-                Server::handle_instance(server, handle);
+                Server::handle_instance(server, handle, true);
                 printf("Added api to server\n");
             }
         }
@@ -179,20 +186,32 @@ void Server::reload_backends(){
     return;
 }
 
-void *Server::handle_instance(class Server* server, void *handle){
+void *Server::handle_instance(class Server* server, void *handle, bool reload){
+
+    server->shared_lib_handles->push_back(handle);
+
     const int type = *(const int *)dlsym(handle, "type");
+    const int id = *(const int *)dlsym(handle, "id");
+    const char *name = *(const char **)dlsym(handle, "name");
     if(!type) {
         printf("[Loader] Failed to find type symbol\n");
         return NULL;
     }
     else printf("[Loader] Detected object type '%d'\n", type);
     
+    if (!id){
+        printf("[Loader] Failed to locate the module's ID\n");
+        return NULL;
+    }
+    if (!name){
+        printf("[Loader] Failed to locate the module's name\n");
+        return NULL;
+    }
+            
+
     ptransport_t *api = new ptransport_t;
     void (*entrypoint)();
-    int id;
-    char *name = (char*)malloc(1024);
-    memset(name, 0, 1024);
-
+    
     void *ret = NULL;
     
     switch(type){
@@ -204,24 +223,19 @@ void *Server::handle_instance(class Server* server, void *handle){
                 printf("[Loader] Failed to locate the module's entrypoint function");
                 break;
             }
-            (*entrypoint)();
+
+            server->module_handles->push_back(entrypoint);
             printf("Added module entrypoint\n");
+
+            if(!reload){
+                (*entrypoint)();
+            }
             break;
         case TRANSPORT:
             printf("[Loader] Detected transport type\n");
             *api = (ptransport_t)dlsym(handle, "transport_api");
             if(!api) {
                 printf("[Loader] Failed to find transport API structure\n"); 
-                break;
-            }
-            id = (int)dlsym(handle, "id");
-            if (!id){
-                printf("[Loader] Failed to locate the module's ID\n");
-                break;
-            }
-            name = (char*)dlsym(handle, "name");
-            if (!name){
-                printf("[Loader] Failed to locate the module's name\n");
                 break;
             }
             server->add_transport_api(api, name, id);
@@ -233,6 +247,20 @@ void *Server::handle_instance(class Server* server, void *handle){
             break;
     }
     return ret;
+}
+
+void Server::add_handle(void *handle){
+    this->shared_lib_handles->push_back(handle);
+}
+
+int get_id_from_handle(void *handle){
+    const int type = *(const int *)dlsym(handle, "type");
+    
+    return type;
+}
+
+char *get_name_from_handle(void *handle){
+    return nullptr;
 }
 
 void *init_instance(void *args){
@@ -283,7 +311,7 @@ void *init_instance(void *args){
     
                     if(id_sym == transport_id){
                         found = true;
-                        new_api = (ptransport_t *)Server::handle_instance(server, handle);
+                        new_api = (ptransport_t *)Server::handle_instance(server, handle, false);
                         instance->set_transport(*new_api);
                         
                     }
@@ -320,12 +348,6 @@ void *init_instance(void *args){
     
 }
 
-
-
-
-
-
-
 /*Funny enough, this is the main function*/
 int main(int argc, char **argv){
     // TODO: UPDATE SIGHANDLERS TO MODERN STUFF
@@ -338,11 +360,7 @@ int main(int argc, char **argv){
     //return 0;
     
     // Example load .so module
-    void *handle = dlopen("./shared/ssh_transport.so", RTLD_NOW);
-    if(!handle) {
-        printf("Failed to load .so file: %s\n", dlerror());    
-        return -1;
-    }
+    server->reload_backends();
     
     // initialize the controller socket
     //ConnectionInstance *instance = new ConnectionInstance(server);
@@ -352,8 +370,6 @@ int main(int argc, char **argv){
     //server->add_instance(instance);
     //server->listen_instance(0);
     
-    Server::handle_instance(server, handle);
-
     server->listen_instance(55, 0);
     
     // accept connections
@@ -366,3 +382,4 @@ int main(int argc, char **argv){
     printf("Server: Terminated successfully\n");
     return 0;
 }
+

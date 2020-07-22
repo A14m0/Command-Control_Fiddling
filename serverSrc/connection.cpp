@@ -42,9 +42,6 @@ void ConnectionInstance::manager_handler() {
         // get operation request
         this->transport->read(this->data, &resp, 2048);
         printf("response: %s\n", resp);
-
-        // note to self: looks like the response when it catches a 0 is actually "ok"...
-        // see if there is a clever way around it in the session class??
         
         // parse it
         strncat(tmpbf,resp,2);
@@ -61,7 +58,7 @@ void ConnectionInstance::manager_handler() {
             break;
 
         case MANAG_GET_LOOT:
-            transport->get_loot(this->data, ptr);
+            this->send_loot(ptr);
             break;
 
         case MANAG_UP_FILE:
@@ -356,13 +353,14 @@ void ConnectionInstance::send_transports(){
     printf("Sending transports\n");
     char *buff = (char*)malloc(2048);
 
-    server->reload_backends();
-    printf("Reloaded backends\n");
-
     std::vector<int> *tmp_id_vec = server->get_handle_ids();
     
     int i = 0;
     char *sz = (char*)malloc(128);
+
+    for (const char *name : *(server->get_handle_names())){
+        printf("Name: %p\n", name);
+    }
     
     for(auto it = std::begin(*tmp_id_vec); it!= std::end(*tmp_id_vec); ++it){
         memset(buff, 0, 2048);
@@ -370,6 +368,8 @@ void ConnectionInstance::send_transports(){
 
         sprintf(buff, "%s:%d", server->get_handle_names()->at(i),tmp_id_vec->at(i));
         sprintf(sz, "%ld", strlen(buff));
+
+        printf("Size: %s, String: %s\n", sz, buff);
     
         this->transport->write(this->data, sz, 5);
         memset(sz, 0, 5);
@@ -616,6 +616,158 @@ void ConnectionInstance::setup_transport(char *inf){
     closedir(dir);*/
     
 }
+
+int ConnectionInstance::send_loot(char *ptr){
+    
+    char buff[BUFSIZ];
+    char name[BUFSIZ];
+    char logbuff[BUFSIZ];
+    char tmpbf[3];
+    int count;
+    int ctr;
+    int rc;
+    int size;
+    int size_e;
+    char *tmp_ptr2;
+    DIR *dir;
+    FILE *file;
+    struct dirent *ent;
+    
+    memset(buff, 0, sizeof(buff));
+    memset(name, 0, sizeof(name));
+    memset(logbuff, 0, sizeof(logbuff));
+    
+    this->log("Sending loot\n", this->transport->get_agent_name(this->data));
+    
+    count = 0;
+    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), this->transport->get_agent_name(this->data));
+             
+    if((dir = opendir(buff)) != NULL){
+        while((ent =readdir(dir)) != NULL){
+            if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
+                continue;
+            } else {
+                count++;
+            }
+        }
+    }
+    closedir(dir);
+    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), this->transport->get_agent_name(this->data));
+    memset(name, 0, sizeof(name));
+    sprintf(name, "%d", count);
+    
+    rc = this->transport->write(this->data, name, strlen(name));
+    if(rc != 0){
+        this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
+        return 1;
+    }
+    
+    rc = this->transport->read(this->data, (char**)&tmpbf, 3);//rd
+    if(rc != 0){
+        this->log("Failed to read data from client\n", this->transport->get_agent_name(this->data));
+        return 1;
+    }
+
+    if(count == 0) return 0;
+    
+    if ((dir = opendir(buff)) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL) {
+            if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
+                continue;
+            } else {
+                memset(buff, 0, sizeof(buff));
+                sprintf(buff, "%s/agents/%s/loot/%s", getcwd(name, sizeof(name)), this->transport->get_agent_name(this->data), ent->d_name);
+                file = fopen(buff, "r");
+                
+                rc = this->transport->write(this->data, ent->d_name, strlen(ent->d_name));
+                if(rc != 0){
+                    this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
+                    return 1;
+                }
+
+                rc = this->transport->read(this->data, (char**)&tmpbf, 3); //ok
+                if(rc != 0){
+                    this->log("Failed to read data from client\n", this->transport->get_agent_name(this->data));
+                    return 1;
+                }
+
+                if(file == NULL){
+                    this->log("Failed to read loot file %s\n", this->transport->get_agent_name(this->data), buff);
+                    perror("");
+                    return 2;
+                } else {
+                    ctr++;
+                    memset(buff, 0, sizeof(buff));
+                    printf("File opened successfully\n");
+                    fseek(file, 0L, SEEK_END);
+                    size = ftell(file);
+                    size_e = B64::enc_size(size);
+                    rewind(file);
+                    // TODO: FIX TF OUT OF THIS
+                    char tmp_ptr[size];
+                    memset(tmp_ptr, 0, size);
+                    fread(tmp_ptr, 1, size, file);
+                    B64::encode((unsigned char*)tmp_ptr, size, &tmp_ptr2);
+                    
+                    memset(buff, 0, 256);
+                    sprintf(buff, "%d", size_e);
+                    
+                    rc = this->transport->write(this->data, buff, strlen(buff));
+                    if(rc != 0){
+                        this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
+                        return 1;
+                    }
+
+                    rc = this->transport->read(this->data, (char**)&tmpbf, 3);//ok
+                    if(rc != 0){
+                        this->log("Failed to read from client\n", this->transport->get_agent_name(this->data));
+                        return 1;
+                    }
+                    
+                    rc = this->transport->write(this->data, tmp_ptr2, strlen(tmp_ptr2));
+                    fclose(file);
+                    free(tmp_ptr2);
+
+                    if (ctr >= count)
+                    {
+                        printf("Finished writing loot to channel\n");
+                        
+                        rc = this->transport->write(this->data, "fi", 3);
+                        if(rc != 0){
+                            this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
+                            return 1;
+                        }
+                        closedir(dir);
+                        break;
+                    }                             
+                    
+                    rc = this->transport->write(this->data, "nx", 3);
+                    if(rc != 0){
+                        this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
+                        return 1;
+                    }
+                    printf("wrote next\n");
+                    
+                    rc = this->transport->read(this->data, (char**)&tmpbf, 3); //rd
+                    if(rc != 0){
+                        printf("Failed to read data from client\n", this->transport->get_agent_name(this->data));
+                        return 1;
+                    }
+                    printf("Read from channel\n");
+                }
+            }
+        }
+        
+    } else {
+        /* could not open directory */
+        perror ("");
+        return 2;
+    }
+    return 0;
+}
+
+
 
 /*Sets the transport for the connection instance*/
 void ConnectionInstance::set_transport(ptransport_t transport){

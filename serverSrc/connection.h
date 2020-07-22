@@ -44,6 +44,8 @@ public:
     void send_transports();
     void setup_transport(char *ptr);
     int send_info(char *ptr);
+    int upload_file(char *ptr);
+    int send_loot(char *ptr);
     int download_file(char *ptr, int is_manager, char *extra);
 };
 
