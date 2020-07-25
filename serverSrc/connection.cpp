@@ -74,7 +74,7 @@ void ConnectionInstance::manager_handler() {
 
             // splits the options to find path to target file 
             count = misc_index_of(ptr, ':', 0);
-            dat_ptr = misc_substring(ptr, count, strlen(ptr));
+            dat_ptr = misc_substring(ptr, count);
             
             // gets file from manager
             this->download_file(d_ptr, 1, dat_ptr);
@@ -98,7 +98,7 @@ void ConnectionInstance::manager_handler() {
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
-            dat_ptr = misc_substring(ptr, count, strlen(ptr));
+            dat_ptr = misc_substring(ptr, count);
             
             // gets file from Manager
             this->download_file(d_ptr, 1, dat_ptr);
@@ -129,7 +129,7 @@ void ConnectionInstance::manager_handler() {
             }
 
             count = misc_index_of(ptr, ':', 0);
-            dat_ptr = misc_substring(ptr, count, strlen(ptr));
+            dat_ptr = misc_substring(ptr, count);
             if(!AgentInformationHandler::task(AGENT_UP_FILE, dat_ptr, d_ptr)) {
                 // Tells server tasking was successfully assigned 
                 this->transport->send_ok(this->data);
@@ -148,7 +148,7 @@ void ConnectionInstance::manager_handler() {
                 return;
             }
             count = misc_index_of(ptr, ':', 0);
-            dat_ptr = misc_substring(ptr, count, strlen(ptr));
+            dat_ptr = misc_substring(ptr, count);
             
             if(!AgentInformationHandler::task(AGENT_EXEC_SC, dat_ptr, d_ptr)){
                // Tells server tasking was successfully assigned 
