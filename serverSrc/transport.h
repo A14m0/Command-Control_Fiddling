@@ -9,17 +9,16 @@ typedef struct _transport {
     int (*send_err)(void* instance_struct);
     int (*listen)(void* instance_struct);
     int (*read)(void* instance_struct, char **buff, int length);
-    int (*write)(void* instance_struct, char *buff, int length);
+    int (*write)(void* instance_struct, const char *buff, int length);
 
-    int (*upload_file)(void* instance_struct, char *ptr, int is_module);
-    int (*init_reverse_shell)(void* instance_struct, char *id);
+    int (*upload_file)(void* instance_struct, const char *ptr, int is_module);
+    int (*init_reverse_shell)(void* instance_struct);
     int (*determine_handler)(void* instance_struct);
     
     int (*get_dat_siz)();
     int (*init)(void* instance_struct);
     int (*end)(void* instance_struct);
 
-    int (*make_agent)(void* instance_struct, char *dat_ptr, char *d_ptr);
     char* (*get_name)();
     int (*get_id)();
     void (*set_port)(void* instance_struct, int portno);

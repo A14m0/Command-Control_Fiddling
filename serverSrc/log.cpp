@@ -1,18 +1,18 @@
 #include "log.h"
 
+// multithreaded lock for accessing file
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 Log::Log(){
-    this->logfile = fopen("log.txt", "a");
-    if (this->logfile == nullptr)
+    // open the log file 
+    if (this->open_log())
     {
-        printf("Log file failed to open!\n");
-        perror("Reason");
         exit(1);
     }
 }
 
 
+/* Logs data in `buff` to both stdout and the logfile*/
 int Log::log(char *buff){
     int rc = 0;
     
@@ -34,6 +34,7 @@ int Log::log(char *buff){
     return 0;
 }
 
+/* Opens the log file */
 int Log::open_log(){
     this->logfile = fopen("log.txt", "a");
     if (this->logfile == nullptr)
@@ -45,6 +46,7 @@ int Log::open_log(){
     return 0;
 }
 
+/* Close the log file*/
 int Log::close_log(){
     fclose(this->logfile);
     return 0;

@@ -1,6 +1,7 @@
 #include "b64.h"
 
-
+/* returns the size of the buffer 
+given the `inlen` of the raw buffer */
 size_t B64::enc_size(size_t inlen)
 {
 	size_t ret;
@@ -14,6 +15,8 @@ size_t B64::enc_size(size_t inlen)
 	return ret;
 }
 
+/* returns the size of the decoded buffer
+given the `in` string */
 size_t B64::dec_size(const char *in)
 {
 	size_t len;
@@ -37,6 +40,8 @@ size_t B64::dec_size(const char *in)
 	return ret;
 }
 
+/*Encodes the `in` buffer of size `len` 
+and writes encoded string to `buff`*/
 void B64::encode(const unsigned char *in, size_t len, char **buff)
 {
 	char   *out;
@@ -77,6 +82,7 @@ void B64::encode(const unsigned char *in, size_t len, char **buff)
 	return;
 }
 
+/* Checks if `c` is a valid character */
 int B64::isvalidchar(char c)
 {
 	if (c >= '0' && c <= '9')
@@ -90,6 +96,7 @@ int B64::isvalidchar(char c)
 	return 0;
 }
 
+/* Decodes `in` and writes to `out`, storing length in `outlen`*/
 int B64::decode(const char *in, unsigned char *out, size_t outlen)
 {
 	size_t len;

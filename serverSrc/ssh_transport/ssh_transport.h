@@ -31,14 +31,13 @@ int send_ok(void* instance_struct);
 int send_err(void* instance_struct);
 int listen(void* instance_struct);
 int read(void* instance_struct, char **buff, int length);
-int write(void* instance_struct, char *buff, int length);
+int write(void* instance_struct, const char *buff, int length);
     
 int determine_handler(void* instance_struct);
-int upload_file(void* instance_struct, char *ptr, int is_module);
+int upload_file(void* instance_struct, const char *ptr, int is_module);
 int download_file(void* instance_struct, char *ptr, int is_manager, char *extra);
 
-void make_agent(void* instance_struct, char *dat_ptr, char *d_ptr);
-int init_reverse_shell(void* instance_struct, char *id);
+int init_reverse_shell(void* instance_struct);
 
 char* get_name();    
 int get_id();

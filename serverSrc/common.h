@@ -1,5 +1,6 @@
 #pragma once
 
+// common used libraries
 #include <assert.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -29,5 +30,5 @@ public:
     Common(/* args */);
     ~Common();
 
-    int log(const char *format, char *id, ...);
+    int log(const char *format, const char *id, ...);
 };

