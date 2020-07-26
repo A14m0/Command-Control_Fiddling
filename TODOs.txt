@@ -1,74 +1,39 @@
-Problems:
-    1. Make Logger class multithread acceptable (stack variables not correctly passed to instance)
-    2. Replace all malloc calls in shared library with some alternative solution, as malloc calls seem to segfault
+Todos:
 
--> Maybe make public server struct/object that contains all of the active binds, 
-   so when there are multiple connections needing the same port, it can just check
-   there on failed bind and get access to that bind?
+1. Rework ConnectionInstance::send_loot to only loop once through directory
+2. Rework ConnectionInstance::send_loot to use built-in transport functionality
+3. Rethink case MANAG_GET_AGENT idea... Does the server really need to know how to compile a new agent?
 
-
-
-
-Network communications need to be modified in the server in order to modularize it to incorporate 
-multiple different kinds of transports. The Server class should only do the network comms over
-the designated transport!!!!!!
 _____________________________________________________________________________________________________
-
+Current Bugs: 
 
 1. Fix problems related to uncleared server buffers
     * Check out loot downloading
 
 2. Infinite looping happening when consecutive module executions
 
-3. Add argparsing onto client 
-    * Maybe homebrew in order to keep dependencies low?
+3. Fix catching of empty data file
 
-4. Cleanup out/ after agent compilation
 
-5. Allow for better catching of empty data file
+_____________________________________________________________________________________________________
+Feature Ideas:
 
-6. Obfuscate client hard-coded values
+1. Obfuscate client hard-coded values
     * Maybe a simple XOR encrypt-decrypt?
         ** Would be easy, but would include non-encrypted data
 
-7. Add anti-debugging things
+2. Add anti-debugging things
     * Test for sandboxing/VM (timed delay, VMWare asm instructions)
         ** Resources for this:
             https://kb.vmware.com/s/article/1009458
             https://www.cyberbit.com/blog/endpoint-security/anti-vm-and-anti-sandbox-explained/
 
+3. Add argparsing onto client 
+    * Maybe homebrew in order to keep dependencies low?
+
+
 _____________________________________________________________________________________________________
-
-1. Rework ConnectionInstance::send_loot to only loop once through directory
-2. Rework ConnectionInstance::send_loot to use built-in transport functionality
-3. Rethink case MANAG_GET_AGENT idea... Does the server really need to know how to compile a new agent?
-
-
-
-
-
-void *handle = dlopen("libmyFunction.so", <flags>);
-    if (!handle) return; // error: cannot locate the library!
-
-    int (*func)() = (int (*)())dlsym(handle, "myFunction");
-    
-
-
-
+Notes:
 
 Check out this method for handling custom methods over multiple processes and fds
 https://github.com/curesec/tools/tree/master/aesshell
-
-
-
-
-
-
-
-
-
-One idea for the log fix is to make the logger a separate thread and force all 
-of the classes used to inherit some generic logger_actor class or something,
-which would have a function that would format logged messages and send them
-to the log thread... seems really complicated but idk any better idea for
-getting around the stack differences for the time being...
