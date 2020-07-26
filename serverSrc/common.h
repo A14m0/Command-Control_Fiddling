@@ -20,6 +20,7 @@
 #include <queue>
 
 #include <stdarg.h>
+#include "transport.h"
 #include "log.h"
 
 class Common
@@ -30,5 +31,8 @@ public:
     Common(/* args */);
     ~Common();
 
+    void *api_data;
+
     int log(const char *format, const char *id, ...);
+    bool api_check(api_return ret);
 };

