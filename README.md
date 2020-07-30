@@ -44,7 +44,7 @@ identify modules, so be creative with this one :), and the "name" variable is th
 things you must define in order for the server to use your custom program.
 ### Modules
 Modules are single-shot programs that are executed on the server and run in a
-separate thread. In addition to the two previous global variables that are
+separate thread. In addition to the three previous global variables that are
 required in both modules and transports, you must define a void function named
 "entrypoint" (no quotes, I think you get the point). This will be the equivalent
 of the "main" function of a normal C/C++ program. Any other included functions
