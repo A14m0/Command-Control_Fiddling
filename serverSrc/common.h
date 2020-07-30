@@ -23,6 +23,7 @@
 #include "transport.h"
 #include "log.h"
 
+// common inherited functions for classes
 class Common
 {
 private:

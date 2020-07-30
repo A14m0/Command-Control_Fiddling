@@ -378,9 +378,11 @@ void *init_instance(void *args){
 
     } else {
         // initialize the transport's instance data
-        int dat_sz = instance->get_transport()->get_dat_siz();
-        void *data = malloc(dat_sz);
-        memset(data, 0, dat_sz);
+        if(!instance->api_check(instance->get_transport()->get_dat_siz())){
+            return nullptr;
+        }
+        void *data = malloc((int)instance->api_data);
+        memset(data, 0, (int)instance->api_data);
 
         //instance->init_data(&data);
         instance->get_transport()->init(data);

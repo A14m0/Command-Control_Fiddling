@@ -1,6 +1,7 @@
 #pragma once
 
 //#include "common.h"
+#include "pthread.h"
 
 #define MODULE 69
 #define TRANSPORT 99
