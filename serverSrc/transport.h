@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "pthread.h"
 #include "typedefs.h"
 
 // defines error codes that can be returned by transport functions
