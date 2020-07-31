@@ -33,10 +33,12 @@ class ConnectDialogue(QtWidgets.QDialog, design.Ui_ManagerServerConnect):
           #  return
         except ssh_exception.NoValidConnectionsError:
             QtWidgets.QMessageBox.information(self, "Connection Refused", "The server refused the SSH connection")
+            self.session.unlock()
             return
         except ssh_exception.SSHException:
             QtWidgets.QMessageBox.information(self, "Connection Failed", "Something happened. Check the console for more infromation")
             print(traceback.format_exc())
+            self.session.unlock()
             return
 
 

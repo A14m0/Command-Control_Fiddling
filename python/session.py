@@ -355,7 +355,9 @@ class Session():
     def start_transport(self, transport_id, port):
         self.lock()
         print("[ ] Starting backend with ID %d" % transport_id)
-        self.channel.sendall("33|%d:%d" % (transport_id, port))
+        comm = "00033|%d:%d" % (transport_id, port)
+        print("Sending: {}".format(comm))
+        self.channel.sendall(comm)
         self.unlock()
         return 0
 

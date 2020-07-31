@@ -175,7 +175,7 @@ void Server::reload_backends(){
 
                 // get module path
                 memset(buff, 0, 2048);
-                sprintf(buff, "shared/%s", ent->d_name);
+                sprintf(buff, "./shared/%s", ent->d_name);
                 
                 // open the module and handle the instance
                 void *handle = dlopen(buff, RTLD_NOW);
@@ -202,6 +202,12 @@ void Server::reload_backends(){
 /* Handles the use of a module handle */
 void *Server::handle_instance(class Server* server, void *handle, bool reload){
 
+    // check if the handle is not null
+    if(!handle) {
+        server->log("Broken handle found. Skipping...\n", "SERVER");
+        return nullptr;
+    }
+    
     // add handle to library handles
     server->shared_lib_handles->push_back(handle);
 

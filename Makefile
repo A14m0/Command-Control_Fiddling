@@ -19,7 +19,7 @@ CFILESSO = serverSrc/ssh_transport/ssh_transport.cpp serverSrc/b64.cpp serverSrc
 
 OBJECT_FILES = $(CFILESSO:%.cpp=$(ODIR)/%.o)
 
-build: $(OBJECT_FILES)
+release: $(OBJECT_FILES)
 ifeq (,$(wildcard out))
 	@mkdir out
 endif
@@ -41,7 +41,7 @@ endif
 clean:
 	rm -r $(ODIR)
 
-.PHONY: build debug clean
+.PHONY: debug release clean
 
 $(OBJECT_FILES): $(ODIR)/%.o: %.cpp
 	@echo "Compiling $<"

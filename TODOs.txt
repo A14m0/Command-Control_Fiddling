@@ -16,6 +16,10 @@ Current Bugs:
 
 3. Fix catching of empty data file
 
+4. Fix python session missing 3 chars at beginning of transport start operation
+
+5. Fix server not overwriting default agent manifest 
+
 
 _____________________________________________________________________________________________________
 Feature Ideas:
