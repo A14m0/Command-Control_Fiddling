@@ -312,24 +312,40 @@ class Session():
         self.lock()
         print("[ ] Getting available backends from server...")
         self.channel.sendall('32|')
-        datsz = int(self.clean(self.channel.recv(128))[0].decode(errors="replace"))
+        quitting = False
 
-        print("Data size: %d" % datsz)
-
-        self.channel.sendall("ok")
-        
-        lst = self.clean(self.channel.recv(datsz))
         ret = []
 
-        for agent in lst:
-            agent = agent.decode(errors="replace").split("\n")
+        while not quitting:
+            try:
+                datsz = int(self.clean(self.channel.recv(128))[0].decode(errors="replace"))
+                print("Data size: %d" % datsz)
+
+                self.channel.sendall("ok")
+
+                lst = self.clean(self.channel.recv(datsz))
+                
+
+                for agent in lst:
+                    agent = agent.decode(errors="replace").split("\n")
+
+                    self.channel.send('ok')
+                    for entry in agent:
+                        if ':' in entry:
+                            dat = entry.split(":")
+                            print(entry)
+                            print("Name: {}, ID: {}".format(dat[0], dat[1]))
+                            appnd = misc.Transport(dat[0], int(dat[1]))
+                            ret.append(appnd)
+                            print("Return size: {}, Append: {}".format(len(ret), appnd))
+                        else:
+                            print("[-] Caught bad format...")
             
-            self.channel.send('ok')
-            for entry in agent:
-                if ':' in entry:
-                    dat = entry.split(":")
-                    print(entry)
-                    ret.append(misc.Transport(dat[0], int(dat[1])))
+            except ValueError:
+                quitting = True
+                self.channel.sendall("ok")
+
+            
         self.unlock()
         return ret
 
@@ -355,7 +371,7 @@ class Session():
     def start_transport(self, transport_id, port):
         self.lock()
         print("[ ] Starting backend with ID %d" % transport_id)
-        comm = "00033|%d:%d" % (transport_id, port)
+        comm = "33|%d:%d" % (transport_id, port)
         print("Sending: {}".format(comm))
         self.channel.sendall(comm)
         self.unlock()

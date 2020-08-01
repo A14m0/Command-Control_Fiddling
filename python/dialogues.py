@@ -129,6 +129,7 @@ class ServerBackendDialogue(QtWidgets.QDialog, design.Ui_server_backend_dialog):
         self.transports = self.session.get_transports()
         
         for entry in self.transports:
+            print("Adding item")
             item = QtWidgets.QListWidgetItem()
             item.setText(entry.id_str)
             item.setData(QtCore.Qt.UserRole, entry)

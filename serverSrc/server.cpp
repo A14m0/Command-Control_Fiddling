@@ -249,7 +249,7 @@ void *Server::handle_instance(class Server* server, void *handle, bool reload){
                 break;
             }
 
-            server->module_handles->push_back(entrypoint);
+            server->add_module(entrypoint, name, id);
             printf("Added module entrypoint\n");
 
             // dont execute entrypoint if we are reloading backends
@@ -320,7 +320,7 @@ void *init_instance(void *args){
 
         // checks if its the backend we want 
         if(tmp_id == transport_id){
-            printf("[Loader Found transport with correct ID\n");
+            printf("[Loader] Found transport with correct ID\n");
 
             // Sets the transport 
             instance->set_transport(*api);
