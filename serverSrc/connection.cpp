@@ -433,22 +433,17 @@ int ConnectionInstance::get_ports(char *ptr){
 int ConnectionInstance::send_transports(){
     printf("Sending transports\n");
     char *buff = (char*)malloc(2048);
-    std::vector<int> *tmp_id_vec = server->get_handle_ids();
+    std::vector<ServerModule *> *mod_vec = server->get_modules();
     int i = 0;
     char *sz = (char*)malloc(128);
-
-    // prints all available handle names from server
-    for (const char *name : *(server->get_handle_names())){
-        printf("Name: %p\n", name);
-    }
     
     // loop over each handle and send info to server
-    for(auto it = std::begin(*tmp_id_vec); it!= std::end(*tmp_id_vec); ++it){
+    for(ServerModule *module : *mod_vec){
         memset(buff, 0, 2048);
         memset(sz, 0, 128);
 
         // formats id and transport name into desired format
-        sprintf(buff, "%s:%d", server->get_handle_names()->at(i),tmp_id_vec->at(i));
+        sprintf(buff, "%s:%d", module->get_name(), module->get_id());
 
         // gets data size
         sprintf(sz, "%ld", strlen(buff));
@@ -631,20 +626,14 @@ int ConnectionInstance::setup_transport(char *inf){
 
     // Gets the target transport ID and listening port
     //char *port_num = inf;
-    char tmpid[3] = {0,0,0};
-
-    strncat(tmpid, inf, 2);
-    inf +=3;
-
-    printf("id: %s, port_num: %s\n", tmpid, inf);
+    char *id_str = strtok(inf, ":");
+    char *port_str = strtok(NULL, ":");
 
     // convert strings to ints
-    int id = atoi(tmpid);
-    int port = atoi(inf);
+    int id = atoi(id_str);
+    int port = atoi(port_str);
     
-    printf("Integer ID/ports: %d, %d\n", port, id);
-
-    server->listen_instance(id,port);
+    server->listen_instance(server->get_module_from_id(id),port);
     return 0;
 }
 

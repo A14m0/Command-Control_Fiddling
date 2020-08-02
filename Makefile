@@ -6,7 +6,7 @@ EXECOUTDIR = out
 ODIR = serverSrc/build
 
 CFLAGSSERV = -lssh -lpthread -lcrypto -ldl -fpermissive
-CFILESSERV = serverSrc/misc.cpp serverSrc/agents.cpp serverSrc/authenticate.cpp serverSrc/b64.cpp serverSrc/log.cpp serverSrc/connection.cpp serverSrc/server.cpp serverSrc/common.cpp
+CFILESSERV = serverSrc/misc.cpp serverSrc/agents.cpp serverSrc/authenticate.cpp serverSrc/b64.cpp serverSrc/log.cpp serverSrc/connection.cpp serverSrc/server.cpp serverSrc/common.cpp serverSrc/server_module.cpp
 
 CFLAGSCLI = -lssh -lcurl
 CFILESCLI = clientSrc/client.c clientSrc/agent.c clientSrc/b64.c clientSrc/beacon.c clientSrc/shell.c

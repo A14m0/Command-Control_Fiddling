@@ -13,12 +13,7 @@ void print_clientDat(pClientDat str){
 Server::Server(){
 
     // initialize all of the vectors and queues needed 
-    this->sessions = new std::vector<pthread_t>(0);
-    this->api_handles = new std::vector<ptransport_t*>(0);
-    this->module_handles = new std::vector<void (*)()>(0);
-    this->shared_lib_handles = new std::vector<void *>(0);
-    this->handle_ids = new std::vector<int>(0);
-    this->handle_names = new std::vector<const char *>(0);
+    this->modules = new std::vector<class ServerModule *>(0);
     this->shell_queue = new std::queue<ConnectionInstance *>();
     this->logger = new Log();
 
@@ -72,13 +67,13 @@ Server::Server(){
 }
 
 /* Starts a new listening thread using the `transport` backend on `port`*/
-int Server::listen_instance(ptransport_t transport, int port){
+int Server::listen_instance(class ServerModule *module, int port){
     pthread_t thread;
     // pass connection to handler thread
 
-    this->sessions->push_back(thread);
+    module->set_thread(thread);
     int *args = (int*)malloc(sizeof(int) * 3);
-    args[0] = transport->get_id();
+    args[0] = module->get_id();
     args[1] = port;
             
     // create thread
@@ -90,58 +85,100 @@ int Server::listen_instance(ptransport_t transport, int port){
     return 0;
 }
 
-/* Starts a new listening thread using a transport with id `transport_id` on `port`*/
-int Server::listen_instance(int transport_id, int port){
-    pthread_t thread;
-
-    this->sessions->push_back(thread);
-
-    int *args = (int*)malloc(sizeof(int) * 3);
-    args[0] = transport_id;
-    args[1] = port;
-            
-    // create thread
-    if(pthread_create(&thread, NULL, init_instance, (void*)args)){
-        printf("Error creating thread\n");
-        return 1;
-    }
-
-    return 0;
-}
-
 /* Returns the queue of available remote shell sessions */
 std::queue<ConnectionInstance *> *Server::get_shell_queue(){
     return this->shell_queue;
 }
-
-/* Returns the vector of available transport apis */
-std::vector<ptransport_t*> *Server::get_api_handles(){
-    return this->api_handles;
+/* Returns vector of loaded modules */
+std::vector<ServerModule *> *Server::get_modules(){
+    return this->modules;
 }
 
-/* Returns the vector of available handle IDs*/
-std::vector<int> *Server::get_handle_ids(){
-    return this->handle_ids;
-}
+/* Adds a new module to the server */
 
-/* Returns the vector of available hanle names*/
-std::vector<const char *> *Server::get_handle_names(){
-    return this->handle_names;
-}
+void Server::add_module(void *handle){
 
-/* Adds `transport` as an available transport API*/
-void Server::add_transport_api(ptransport_t *transport, const char *name, int id){
-    this->api_handles->push_back(transport);
-    printf("Name addr: %p\n", name);
-    this->handle_names->push_back(name);
-    this->handle_ids->push_back(id);
-}
+    // check if the handle is not null
+    if(!handle) {
+        server->log("Broken handle found. Skipping...\n", "SERVER");
+        return;
+    }
+    
+    // get required global constants from the handle
+    const int type = *(const int *)dlsym(handle, "type");
+    const int id = *(const int *)dlsym(handle, "id");
+    const char *name = *(const char **)dlsym(handle, "name");
 
-/* Adds `entrypoint` to available modules */
-void Server::add_module(void (*entrypoint)(), const char *name, int id){
-    this->module_handles->push_back(entrypoint);
-    this->handle_names->push_back(name);
-    this->handle_ids->push_back(id);
+    // check if they worked
+    if(!type) {
+        printf("[Loader] Failed to find type symbol\n");
+        return;
+    }
+    else printf("[Loader] Detected object type '%d'\n", type);
+    
+    if (!id){
+        printf("[Loader] Failed to locate the module's ID\n");
+        return;
+    }
+    if (!name){
+        printf("[Loader] Failed to locate the module's name\n");
+        return;
+    }
+            
+
+    ptransport_t *api = new ptransport_t;
+    void (*entrypoint)();
+    void *ret = NULL;
+    void *data = NULL;
+    int ltype = -1;
+
+    class ServerModule *module;
+
+    // handle the different module types 
+    switch(type){
+        case MODULE:
+            printf("[Loader] Detected module type\n");
+            
+            // resolve entrypoint and add it to the available module_handles vector 
+            entrypoint = (void (*)())dlsym(handle, "entrypoint");
+            if (!entrypoint){
+                printf("[Loader] Failed to locate the module's entrypoint function");
+                break;
+            }
+
+            printf("Added module entrypoint\n");
+            ltype = MODULE;
+            
+            module = new ServerModule(name, id, type, handle, 
+                                      entrypoint, nullptr);
+
+            break;
+        case TRANSPORT:
+            printf("[Loader] Detected transport type\n");
+
+            // resolve transport API and add it to available transport APIs
+            *api = (ptransport_t)dlsym(handle, "transport_api");
+            if(!api) {
+                printf("[Loader] Failed to find transport API structure\n"); 
+                break;
+            }
+            ltype = TRANSPORT;
+            ret = api;
+            module = new ServerModule(name, id, type, handle, 
+                                      nullptr, api);
+            break;
+
+        default:
+            // unknown module type
+            printf("[Loader] Unknown type: %d\n", ltype);
+            break;
+    }
+
+
+     
+
+    this->modules->push_back(module);
+
 }
 
 /* Reloads all available modules */
@@ -151,16 +188,13 @@ void Server::reload_backends(){
     char *buff = (char*)malloc(2048);
 
     // clear the current vectors
-    this->api_handles->clear();
-    this->module_handles->clear();
-    this->handle_ids->clear();
-    this->handle_names->clear();
-
+    
     // close all currently open dl handles 
-    for(void *handle : *(this->shared_lib_handles)){
-        dlclose(handle);
+    for(ServerModule *module : *(this->modules)){
+        module->close_handle();
+        delete module;
     }
-    this->shared_lib_handles->clear();
+    this->modules->clear();
 
     // open modules directory 
     if ((dir = opendir ("shared/")) != NULL) {
@@ -184,8 +218,8 @@ void Server::reload_backends(){
                     continue;
                 }
 
-                Server::handle_instance(server, handle, true);
-                printf("Added api to server\n");
+                this->add_module(handle);
+                printf("Added module to server\n");
             }
         }
     } else {
@@ -199,103 +233,14 @@ void Server::reload_backends(){
     return;
 }
 
-/* Handles the use of a module handle */
-void *Server::handle_instance(class Server* server, void *handle, bool reload){
-
-    // check if the handle is not null
-    if(!handle) {
-        server->log("Broken handle found. Skipping...\n", "SERVER");
-        return nullptr;
+/* Returns the stored ServerModule with the ID `id` */
+class ServerModule *Server::get_module_from_id(int id){
+    for(ServerModule* module : *(this->get_modules())){
+        if(module->get_id() == id){
+            return module;
+        }
     }
-    
-    // add handle to library handles
-    server->shared_lib_handles->push_back(handle);
 
-    // get required global constants from the handle
-    const int type = *(const int *)dlsym(handle, "type");
-    const int id = *(const int *)dlsym(handle, "id");
-    const char *name = *(const char **)dlsym(handle, "name");
-
-    // check if they worked
-    if(!type) {
-        printf("[Loader] Failed to find type symbol\n");
-        return NULL;
-    }
-    else printf("[Loader] Detected object type '%d'\n", type);
-    
-    if (!id){
-        printf("[Loader] Failed to locate the module's ID\n");
-        return NULL;
-    }
-    if (!name){
-        printf("[Loader] Failed to locate the module's name\n");
-        return NULL;
-    }
-            
-
-    ptransport_t *api = new ptransport_t;
-    void (*entrypoint)();
-    void *ret = NULL;
-    
-    // handle the different module types 
-    switch(type){
-        case MODULE:
-            printf("[Loader] Detected module type\n");
-            
-            // resolve entrypoint and add it to the available module_handles vector 
-            entrypoint = (void (*)())dlsym(handle, "entrypoint");
-            if (!entrypoint){
-                printf("[Loader] Failed to locate the module's entrypoint function");
-                break;
-            }
-
-            server->add_module(entrypoint, name, id);
-            printf("Added module entrypoint\n");
-
-            // dont execute entrypoint if we are reloading backends
-            if(!reload){
-                (*entrypoint)();
-            }
-            break;
-        case TRANSPORT:
-            printf("[Loader] Detected transport type\n");
-
-            // resolve transport API and add it to available transport APIs
-            *api = (ptransport_t)dlsym(handle, "transport_api");
-            if(!api) {
-                printf("[Loader] Failed to find transport API structure\n"); 
-                break;
-            }
-            server->add_transport_api(api, name, id);
-            ret = api;
-            break;
-
-        default:
-            // unknown module type
-            printf("[Loader] Unknown type: %d\n", type);
-            break;
-    }
-    return ret;
-}
-
-/* Adds `handle` to available shared library handles*/
-void Server::add_handle(void *handle){
-    this->shared_lib_handles->push_back(handle);
-}
-
-/* Retrieves the module ID from `handle`*/
-int get_id_from_handle(void *handle){
-    const int type = *(const int *)dlsym(handle, "type");
-    
-    return type;
-}
-
-/* Retrieves the module name from `handle`*/
-char *get_name_from_handle(void *handle){
-
-    /*
-    UNIMPLEMNENTED
-    */
     return nullptr;
 }
 
@@ -311,67 +256,23 @@ void *init_instance(void *args){
     ptransport_t* api;
 
     class ConnectionInstance *instance = new ConnectionInstance();
-    std::vector<ptransport_t*> *apis = server->get_api_handles();
+    std::vector<ServerModule*> *modules = server->get_modules();
 
+    ServerModule *mod;
     // loop over all available transport API handles
-    for(size_t i = 0; i < apis->size(); i++){
-        api = apis->at(i);
-        int tmp_id = (*api)->get_id();
 
-        // checks if its the backend we want 
-        if(tmp_id == transport_id){
-            printf("[Loader] Found transport with correct ID\n");
-
-            // Sets the transport 
-            instance->set_transport(*api);
+    for(ServerModule *module : *modules){
+        if (module->get_id() == transport_id){
+            mod = module;
             found = true;
-            break;
-        }
-    }
-
-    ptransport_t *new_api;
-
-    // if we couldnt find the api currently loaded,
-    // look through all apis in the folder
-    if(!found){
-        char buff[BUFSIZ];
-        char path[PATH_MAX];
-        sprintf(buff, "%s/shared", getcwd(path, sizeof(path)));
-        DIR *dir;
-        struct dirent *ent;
-
-        if((dir = opendir(buff)) != NULL){
-            while((ent =readdir(dir)) != NULL){
-                // ignores current and parent dir entries 
-                if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
-                    continue;
-                } else {
-
-                    // attempt to open the handle
-                    void *handle = dlopen(ent->d_name, RTLD_NOW);
-                    if(!handle) {
-                        continue;
-                    }
-    
-                    // attempt to resolve the ID 
-                    int id_sym = *(int *)dlsym(handle, "id");
-    
-                    // check if its what we want
-                    if(id_sym == transport_id){
-                        found = true;
-                        new_api = (ptransport_t *)Server::handle_instance(server, handle, false);
-                        instance->set_transport(*new_api);
-                        
-                    }
-                    // otherwise close handle and continue
-                    else dlclose(handle);
-                }
+            if(module->get_type() == TRANSPORT){
+                instance->set_transport(*(module->get_transport()));
+            } else {
+                is_module = true;
             }
         }
-    
-        // close directory handle
-        closedir(dir);
     }
+
     
     // Check if we found the target API
     if(!found){
@@ -381,7 +282,7 @@ void *init_instance(void *args){
         // check if we loaded a module
     } else if (is_module){
         printf("[Loader] module run\n");
-
+        ((void (*)())mod->get_entrypoint())();
     } else {
         // initialize the transport's instance data
         if(!instance->api_check(instance->get_transport()->get_dat_siz())){
@@ -418,7 +319,7 @@ int main(int argc, char **argv){
     server->reload_backends();
         
     // listen on an SSH Transport instance on the default port 
-    server->listen_instance(55, 0);
+    server->listen_instance(server->get_module_from_id(55), 0);
     
     // Do nothing...
     while(1){
