@@ -128,10 +128,6 @@ void Server::add_module(void *handle){
 
     ptransport_t *api = new ptransport_t;
     void (*entrypoint)();
-    void *ret = NULL;
-    void *data = NULL;
-    int ltype = -1;
-
     class ServerModule *module;
 
     // handle the different module types 
@@ -146,10 +142,7 @@ void Server::add_module(void *handle){
                 break;
             }
 
-            printf("Added module entrypoint\n");
-            ltype = MODULE;
-            
-            module = new ServerModule(name, id, type, handle, 
+            module = new ServerModule(name, id, MODULE, handle, 
                                       entrypoint, nullptr);
 
             break;
@@ -162,15 +155,14 @@ void Server::add_module(void *handle){
                 printf("[Loader] Failed to find transport API structure\n"); 
                 break;
             }
-            ltype = TRANSPORT;
-            ret = api;
-            module = new ServerModule(name, id, type, handle, 
+            
+            module = new ServerModule(name, id, TRANSPORT, handle, 
                                       nullptr, api);
             break;
 
         default:
             // unknown module type
-            printf("[Loader] Unknown type: %d\n", ltype);
+            printf("[Loader] Unknown type: %d\n", type);
             break;
     }
 
@@ -253,8 +245,7 @@ void *init_instance(void *args){
     int port = passed_args[1];
     bool found = false;
     bool is_module = false;
-    ptransport_t* api;
-
+    
     class ConnectionInstance *instance = new ConnectionInstance();
     std::vector<ServerModule*> *modules = server->get_modules();
 

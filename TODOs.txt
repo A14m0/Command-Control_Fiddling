@@ -3,8 +3,6 @@ Todos:
 1. Rework ConnectionInstance::send_loot to only loop once through directory
 2. Rework ConnectionInstance::send_loot to use built-in transport functionality
 3. Rework ConnectionInstance::agent_handler to use ConnectionInstance functions instead of calling API functions directly
-4. Rethink case MANAG_GET_AGENT idea... Does the server really need to know how to compile a new agent?
-5. Add better generic checks of transport function calls (reduce repetitive checks)
 
 _____________________________________________________________________________________________________
 Current Bugs: 
@@ -17,8 +15,6 @@ Current Bugs:
 3. Fix catching of empty data file
 
 4. Fix server not overwriting default agent manifest 
-
-5. Rework server parsing to parse X-character-long module IDs 
 
 _____________________________________________________________________________________________________
 Feature Ideas:
