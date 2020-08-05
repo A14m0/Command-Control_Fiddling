@@ -218,7 +218,14 @@ int ConnectionInstance::manager_handler() {
 
             // Manager wants to start transport backend
         case MANAG_START_TRANSPORT:
-            this->setup_transport(ptr);
+            if(!this->setup_transport(ptr)){
+                if(!this->api_check(this->transport->send_err(this->data)))
+                    quitting = true;
+            } else {
+                if(!this->api_check(this->transport->send_ok(this->data)))
+                    quitting = true;
+            }
+            
             break;
 
             // Unknown operation
