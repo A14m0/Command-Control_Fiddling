@@ -29,6 +29,14 @@ endif
 	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
 	/bin/bash ./python/update_uis.sh
 
+server_release: $(OBJECT_FILES)
+ifeq (,$(wildcard out))
+	@mkdir out
+endif
+	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
+	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
+
+
 debug: $(OBJECT_FILES)
 ifeq (,$(wildcard out))
 	@mkdir out
