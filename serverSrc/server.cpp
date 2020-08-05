@@ -19,7 +19,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state){
     {
     case 'r':
         AgentInformationHandler::register_agent(arg);
-        exit(1);
+        exit(0);
         break;
     
     default:
