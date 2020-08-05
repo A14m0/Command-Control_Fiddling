@@ -21,7 +21,7 @@ OBJECT_FILES = $(CFILESSO:%.cpp=$(ODIR)/%.o)
 
 release: $(OBJECT_FILES)
 ifeq (,$(wildcard out))
-	@mkdir -p out
+	@mkdir -p out/shared
 endif
 	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
 	$(CC) -o $(EXECOUTDIR)/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSREL)
@@ -31,7 +31,7 @@ endif
 
 server_release: $(OBJECT_FILES)
 ifeq (,$(wildcard out))
-	@mkdir -p out
+	@mkdir -p out/shared
 endif
 	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
 	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
@@ -39,7 +39,7 @@ endif
 
 debug: $(OBJECT_FILES)
 ifeq (,$(wildcard out))
-	@mkdir -p out
+	@mkdir -p out/shared
 endif
 	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSDBG)
 	$(CC) -o $(EXECOUTDIR)/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSDBG)
