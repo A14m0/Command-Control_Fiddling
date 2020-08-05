@@ -5,7 +5,7 @@ CC = gcc
 EXECOUTDIR = out
 ODIR = serverSrc/build
 
-CFLAGSSERV = -lssh -lpthread -lcrypto -ldl -fpermissive
+CFLAGSSERV = -lpthread -lcrypto -ldl -fpermissive
 CFILESSERV = serverSrc/misc.cpp serverSrc/agents.cpp serverSrc/authenticate.cpp serverSrc/b64.cpp serverSrc/log.cpp serverSrc/connection.cpp serverSrc/server.cpp serverSrc/common.cpp serverSrc/server_module.cpp
 
 CFLAGSCLI = -lssh -lcurl
@@ -26,7 +26,7 @@ endif
 	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
 	$(CC) -o $(EXECOUTDIR)/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSREL)
 
-	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
+	$(CPPC) -shared -lssh -lcrypto -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
 	/bin/bash ./python/update_uis.sh
 
 server_release: $(OBJECT_FILES)
@@ -34,7 +34,7 @@ ifeq (,$(wildcard out))
 	@mkdir -p out/shared
 endif
 	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
-	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
+	$(CPPC) -shared -lssh -lcrypto -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
 
 
 debug: $(OBJECT_FILES)
@@ -43,7 +43,7 @@ ifeq (,$(wildcard out))
 endif
 	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSDBG)
 	$(CC) -o $(EXECOUTDIR)/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSDBG)
-	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
+	$(CPPC) -shared -lssh -lcrypto -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
 	@/bin/bash ./python/update_uis.sh
 
 clean:
