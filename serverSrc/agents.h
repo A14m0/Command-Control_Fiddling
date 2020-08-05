@@ -20,6 +20,8 @@ public:
     static int register_agent(const char *username, 
                             const char *password);
 
+    static int register_agent(char *line);
+
     static int task(const int operation, const char *agent, 
                     const char *opt);
 

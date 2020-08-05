@@ -77,11 +77,34 @@ int AgentInformationHandler::register_agent(const char *username, const char *pa
 
     // go to the end and write data
     fseek(file, 0L, SEEK_END);
-    fwrite("\n", 1, 1, file);
     fprintf(file, "\n%s:%s", username, Authenticate::digest(password));
     
     // close and return
     fclose(file);
+    return 0;
+}
+
+/* Registers agent using single line format */
+int AgentInformationHandler::register_agent(char *line){
+
+    char *id;
+    char *passwd;
+
+    // find the delimeter character ':'
+    int delim = misc_index_of(line, ':', 0);
+    
+    // the password is everything after the delim 
+    passwd = line + delim + 1;
+
+    // zero the delimeter so we can terminate the id string
+    line[delim] = '\0';
+    id = line;
+
+    // register the agent
+    printf("Registering agents: %s,%s\n", id, passwd);
+
+    AgentInformationHandler::register_agent(id, passwd);
+
     return 0;
 }
 

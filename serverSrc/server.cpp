@@ -3,6 +3,34 @@
 /* Global variables and data structures */
 Server *server;
 
+/* Command-line argument handling information */
+const char *argp_program_version = "C2 Server 0.1 Beta";
+const char *argp_program_bug_address = "TheMissileKnowsWhereItIs@ItIsnt.com";
+static char doc[] = "A simple Command and Control server";
+static char args_doc[] = "";
+static struct argp_option options[] = {
+    {"register", 'r', "ID:PASS", 0, "Registers agent with `id` and `pass`"},
+    0
+};
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state){
+    
+    switch (key)
+    {
+    case 'r':
+        AgentInformationHandler::register_agent(arg);
+        exit(1);
+        break;
+    
+    default:
+        break;
+    }
+    return 0;
+}
+
+static struct argp argp = { options, parse_opt, args_doc, doc};
+
+
 /* handy little print function for debugging pClientDat structures */
 void print_clientDat(pClientDat str){
     printf("\n\nID: %s\n", str->id);
@@ -301,7 +329,13 @@ void *init_instance(void *args){
 
 /*Funny enough, this is the main function*/
 int main(int argc, char **argv){
-    // TODO: UPDATE SIGHANDLERS TO MODERN STUFF
+
+    // parse CLI arguments
+    // /struct arguments arguments;
+
+    argp_parse(&argp, argc, argv, 0, 0, 0);
+
+
 
     // initialize variables
     server = new Server();

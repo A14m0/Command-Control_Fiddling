@@ -2,6 +2,7 @@
 
 
 #include <dlfcn.h>
+#include <argp.h>
 #include "transport.h"
 #include "authenticate.h"
 #include "agents.h"
