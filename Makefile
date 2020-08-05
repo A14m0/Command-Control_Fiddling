@@ -26,7 +26,7 @@ endif
 	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
 	$(CC) -o $(EXECOUTDIR)/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSREL)
 
-	$(CPPC) -shared -lssh -lcrypto -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
+	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES) -lcrypto -lssh
 	/bin/bash ./python/update_uis.sh
 
 server_release: $(OBJECT_FILES)
@@ -34,7 +34,7 @@ ifeq (,$(wildcard out))
 	@mkdir -p out/shared
 endif
 	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSREL)
-	$(CPPC) -shared -lssh -lcrypto -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
+	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES) -lcrypto -lssh
 
 
 debug: $(OBJECT_FILES)
@@ -43,7 +43,7 @@ ifeq (,$(wildcard out))
 endif
 	$(CPPC) -o $(EXECOUTDIR)/server.out $(CFILESSERV) $(CFLAGSSERV) $(CFLAGSDBG)
 	$(CC) -o $(EXECOUTDIR)/client.out $(CFILESCLI) $(CFLAGSCLI) $(CFLAGSDBG)
-	$(CPPC) -shared -lssh -lcrypto -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES)
+	$(CPPC) -shared -o $(EXECOUTDIR)/shared/ssh_transport.so $(OBJECT_FILES) -lcrypto -lssh
 	@/bin/bash ./python/update_uis.sh
 
 clean:
