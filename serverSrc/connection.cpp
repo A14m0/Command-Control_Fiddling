@@ -185,9 +185,11 @@ int ConnectionInstance::manager_handler() {
         case MANAG_REG_AGENT:
             printf("Caught agent register call\n");
 
-             /*
-            UNIMPLEMENTED
-            */
+            AgentInformationHandler::register_agent(ptr);
+
+            if(!this->api_check(this->transport->send_ok(this->data))){
+                return 1;
+            }
 
             break;
 
