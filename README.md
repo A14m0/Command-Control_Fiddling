@@ -30,9 +30,10 @@ you may use.
 This is an example client executable written in C. Its basically just there to provide 
 an example for other clients. Note that it may not be registered with the server after 
 initial clone of this repo, so make sure you add its credentials to the server database 
-(gonna add a way of adding this at some point, so in the meantime, add the following to 
-the server's main function, `make`, run it, remove the line, `make` again: 
-`AgentInformationHandler::register_agent("NAME_OF_AGENT", "PASSWORD")`
+
+To do this: 
+
+`sudo server.out -r AGENT_NAME:PASSWORD`
 
 It will be added to the server's database of known agents and saved from here on out).
 
