@@ -77,7 +77,7 @@ int AgentInformationHandler::register_agent(const char *username, const char *pa
 
     // go to the end and write data
     fseek(file, 0L, SEEK_END);
-    fprintf(file, "\n%s:%s", username, Authenticate::digest(password));
+    fprintf(file, "%s:%s\n", username, Authenticate::digest(password));
     
     // close and return
     fclose(file);
