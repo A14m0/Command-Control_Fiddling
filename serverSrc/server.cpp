@@ -42,7 +42,7 @@ Server::Server(){
 
     // initialize all of the vectors and queues needed 
     this->modules = new std::vector<class ServerModule *>(0);
-    this->shell_queue = new std::queue<ConnectionInstance *>();
+    this->shell_sessions = new std::vector<class ShellComms *>();
     this->logger = new Log();
 
     int ret;
@@ -114,8 +114,8 @@ int Server::listen_instance(class ServerModule *module, int port){
 }
 
 /* Returns the queue of available remote shell sessions */
-std::queue<ConnectionInstance *> *Server::get_shell_queue(){
-    return this->shell_queue;
+std::vector<class ShellComms *> *Server::get_shell_sessions(){
+    return this->shell_sessions;
 }
 /* Returns vector of loaded modules */
 std::vector<ServerModule *> *Server::get_modules(){

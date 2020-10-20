@@ -6,6 +6,7 @@
 #include "common.h"
 #include "server.h"
 #include "b64.h"
+#include "shell.h"
 
 
 class ConnectionInstance : public Common
@@ -16,6 +17,7 @@ private:
     int shell_finished = 0;
     void* data;
     pthread_t thread;
+    int type = 0;
     char *agent_name;
 public:
     ConnectionInstance();
@@ -42,6 +44,8 @@ public:
     
     // misc functions
     int reverse_shell();
+    int manager_shell_session(ShellComms *session);
+    int agent_shell_session(ShellComms *session);
     int send_transports();
     int setup_transport(char *ptr);
     int send_info(char *ptr);

