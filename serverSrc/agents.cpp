@@ -71,7 +71,6 @@ int AgentInformationHandler::register_agent(const char *username, const char *pa
     if (!file)
     {
         printf("Failed to open file thing\n");
-        fclose(file);
         return 1;
     }
 

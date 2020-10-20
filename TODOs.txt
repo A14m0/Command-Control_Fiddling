@@ -1,9 +1,29 @@
+Current objectives:
+    1. Design and setup MainWindow.rev_sh GUI widget
+    2. Set up session.req_rvsh to task the reverse shell, and start 2 new listeners
+        - One listener for the agent, and one listener for the manager's terminal session
+    2a. session.req_rvsh needs to fork a new background terminal process for handling the session
+    3. Work on SshTransport->init_reverse_shell
+        - One design idea would be to include a third connection type for shells, and sessions that listen on the particular socket would accept multiple connections?
+            * that way we could just drop a connection into a wait cycle until the other connection comes through
+            * Note that this could be done with multiple listeners too (and that might be better for server-side information handling and flexibility)
+        - Note: may need a moderator function that can take input from one thread and pass it to another
+        - Maybe through a shared memory chunk? 
+    4. Incorporate agent management/information into server
+        - maintain a list of awaiting agents in the server and their listening ports
+        
+
+
+
+
 Todos:
 
 1. Rework ConnectionInstance::send_loot to only loop once through directory
 2. Rework ConnectionInstance::send_loot to use built-in transport functionality
 3. Rework ConnectionInstance::agent_handler to use ConnectionInstance functions instead of calling API functions directly
+4. Rework Server in order to restart listening services when they end
 
+a. Comment python code for easier maintenence
 _____________________________________________________________________________________________________
 Current Bugs: 
 

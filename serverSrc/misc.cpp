@@ -68,7 +68,8 @@ int misc_copy_file(const char *filename, const char *dest){
     if( in == NULL || out == NULL )
     {
         perror( "An error occured while opening files" ) ;
-        in = out = 0 ;
+        in = out = 0;
+        return 1;
     }
 
     // loop through the first file and write all data to second

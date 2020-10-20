@@ -48,8 +48,9 @@ int Authenticate::doauth(const char *usr, const char *pass){
             // check if `usr` is the current line's username
             if(!strcmp(usr, *(subtokens))){
                 // check if the digest of `pass` is the same as the hash
-                if(!strcmp(Authenticate::digest(pass), *(subtokens+1))){
-
+                char *auth = Authenticate::digest(pass);
+                if(!strcmp(auth, *(subtokens+1))){
+                    free(auth);
                     // success and free
                     printf("Server: ID %s successfully authenticated\n", usr);
                     for (int i = 0; *(tokens + i); i++)
@@ -65,6 +66,7 @@ int Authenticate::doauth(const char *usr, const char *pass){
                     return 1;
                 }
                 else {
+                    free(auth);
                     // note here that we do not break the loop, 
                     //t o prevent brute forcing of IDs through response time correlation
                     printf("Server: ID %s failed to pass password authentication\n", usr);

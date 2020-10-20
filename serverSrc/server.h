@@ -9,12 +9,13 @@
 #include "common.h"
 #include "connection.h"
 #include "server_module.h"
+#include "shell.h"
 
 class Server : public Common 
 {
 private:
     std::vector<class ServerModule *> *modules;
-    std::queue<class ConnectionInstance *> *shell_queue;
+    std::vector<class ShellComms *> *shell_sessions;
     
     class Log *logger;
     ptransport_t transport;
@@ -24,7 +25,7 @@ public:
     ~Server();
 
     int listen_instance(class ServerModule *module, int port);
-    std::queue<class ConnectionInstance *> *get_shell_queue();
+    std::vector<class ShellComms *> *get_shell_sessions();
     std::vector<class ServerModule *> *get_modules();
 
     void add_module(void *handle);
