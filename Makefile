@@ -3,19 +3,19 @@ CC = gcc
 
 
 EXECOUTDIR = out
-ODIR = serverSrc/build
+ODIR = server/build
 
 CFLAGSSERV = -lpthread -lcrypto -ldl -fpermissive
-CFILESSERV = serverSrc/misc.cpp serverSrc/agents.cpp serverSrc/authenticate.cpp serverSrc/b64.cpp serverSrc/log.cpp serverSrc/connection.cpp serverSrc/server.cpp serverSrc/common.cpp serverSrc/server_module.cpp serverSrc/shell.cpp
+CFILESSERV = server/misc.cpp server/agents.cpp server/authenticate.cpp server/b64.cpp server/log.cpp server/connection.cpp server/server.cpp server/common.cpp server/server_module.cpp server/shell.cpp
 
 CFLAGSCLI = -lssh -lcurl
-CFILESCLI = clientSrc/client.c clientSrc/agent.c clientSrc/b64.c clientSrc/beacon.c clientSrc/shell.c
+CFILESCLI = agent/client.c agent/agent.c agent/b64.c agent/beacon.c agent/shell.c
 
 CFLAGSREL = -s
 CFLAGSDBG = -ggdb -Wall
 
 CFLAGSSO = -c -fpic -static -lssh -lcrypto
-CFILESSO = serverSrc/ssh_transport/ssh_transport.cpp serverSrc/b64.cpp serverSrc/authenticate.cpp serverSrc/misc.cpp serverSrc/agents.cpp
+CFILESSO = server/ssh_transport/ssh_transport.cpp server/b64.cpp server/authenticate.cpp server/misc.cpp server/agents.cpp
 
 OBJECT_FILES = $(CFILESSO:%.cpp=$(ODIR)/%.o)
 
