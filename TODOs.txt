@@ -55,6 +55,22 @@ Unsolved/Misc Problems:
 
 
 
+New Network Frame Communication Structure:
+
+1 byte --> OPCODE (dont think we need more than 256 OPCODES)
+4 bytes --> unsigned int SIZE OF data
+    -> could we make this a long (8 byte) and just use the upper byte to encode
+       OPCODE so we only need to read 1 long before reading the whole data payload?
+
+v bytes --> data
+
+
+Could use a hearbeat opcode that a remote agent could send to check if there has
+been an update on what anything going on
+
+
+
+
 
 //////////////////////// OLD STUFF DOWN HERE //////////////////////////////////
 
