@@ -30,6 +30,10 @@ int Common::log(const char *format, const char *id, ...){
 
 /* Handles response from API calls */
 bool Common::api_check(api_return api){
+    char *info = "[NO INFO]";
+    char def[10];
+    char *err_type = "";
+
     switch (api.error_code)
     {
     case API_OK:
@@ -40,80 +44,76 @@ bool Common::api_check(api_return api){
         break;
 
     case API_ERR_GENERIC:
+        err_type = "generic";
         if(api.data != NULL){
-            this->log("API encountered a generic error: %s\n", "GENERIC", api.data);
-        } else {
-            this->log("API encountered a generic error: [NO INFO]\n", "GENERIC");
-        }
+            info = (char*)api.data;
+        } 
         break;
 
     case API_ERR_WRITE:
+        err_type = "write";
         if(api.data != NULL){
-            this->log("API encountered a write error: %s\n", "GENERIC", api.data);
-        } else {
-            this->log("API encountered a write error: [NO INFO]\n", "GENERIC");
-        }
+            info = (char*)api.data;
+        } 
         break;
     
     case API_ERR_READ:
+        err_type = "read";
         if(api.data != NULL){
-            this->log("API encountered a read error: %s\n", "GENERIC", api.data);
-        } else {
-            this->log("API encountered a read error: [NO INFO]\n", "GENERIC");
-        }
+            info = (char*)api.data;
+        } 
         break;
 
     case API_ERR_LISTEN:
+        err_type = "socket listen";
         if(api.data != NULL){
-            this->log("API encountered a listening error: %s\n", "GENERIC", api.data);
-        } else {
-            this->log("API encountered a listening error: [NO INFO]\n", "GENERIC");
-        }
+            info = (char*)api.data;
+        } 
         break;
 
     case API_ERR_BIND:
+        err_type = "port bind";
         if(api.data != NULL){
-            this->log("API encountered a port bind error: %s\n", "GENERIC", api.data);
-        } else {
-            this->log("API encountered a port bind error: [NO INFO]\n", "GENERIC");
-        }
+            info = (char*)api.data;
+        } 
         break;
 
     case API_ERR_ACCEPT:
+        err_type = "socket accept";
         if(api.data != NULL){
-            this->log("API encountered a socket accept error: %s\n", "GENERIC", api.data);
-        } else {
-            this->log("API encountered a socket accept error: [NO INFO]\n", "GENERIC");
-        }
+            info = (char*)api.data;
+        } 
         break;
 
     case API_ERR_AUTH:
+        err_type = "authentication";
         if(api.data != NULL){
-            this->log("API encountered an authentication error: %s\n", "GENERIC", api.data);
-        } else {
-            this->log("API encountered an authentication error: [NO INFO]\n", "GENERIC");
-        }
+            info = (char*)api.data;
+        } 
         break;
 
     case API_ERR_CLIENT:
+        err_type = "client-side";
         if(api.data != NULL){
-            this->log("API encountered a client-side error: %s\n", "GENERIC", api.data);
-        } else {
-            this->log("API encountered a client-side error: [NO INFO]\n", "GENERIC");
-        }
+            info = (char*)api.data;
+        } 
         break;
 
     case API_ERR_LOCAL:
+        err_type = "server-side";
+
         if(api.data != NULL){
-            this->log("API encountered a local error: %s\n", "GENERIC", api.data);
-        } else {
-            this->log("API encountered a local error: [NO INFO]\n", "GENERIC");
-        }
+            info = (char*)api.data;
+        } 
         break;
 
     default:
-        this->log("Caught unknown API error code: %d\n", "GENERIC", api.error_code);
+        err_type = "unknown API";
+        info = def;
+        sprintf(info, "%d", api.error_code);
         break;
     }
+
+    this->log("API encountered %d error: %s\n", "GENERIC", err_type, info);
     return false;
 }

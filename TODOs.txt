@@ -31,21 +31,25 @@ What doesn't work
     -> Components need to be standalone enough to run tests against
 11. Authentication can probably be handled better than a file
     -> Look into database solutions?
-12. Clean up API check function (itll be ez)
-13. Compartmentalize functionality better 
+12. Compartmentalize functionality better 
     -> ex. Manager handler shouldnt be in the same file as the agent handler
     -> could make a generic handler that takes in a data structure that maps opcodes to functions
         * would require making API generic, which wont be good
-14. Keep everything C++ style 
+13. Keep everything C++ style 
     -> ex. misc.cpp isnt C++, its C
-15. Keep code ordering organized/easy to navigate
-16. WTF are we gonna do about shells?
+14. Keep code ordering organized/easy to navigate
+15. WTF are we gonna do about shells?
     -> How to handle asynchronous netcomms over synchronous connection?
         * could use switch w/ file descriptors
         * maybe make backends use FDs to communicate?
+16. Move to easier make system/compiler?
 
 
+Problems solved with new outline:
+1,2,3,5,6,10,12,13,15(kind of)
 
+Unsolved/Misc Problems:
+4,7,8,9,11,14,16
 
 
 
