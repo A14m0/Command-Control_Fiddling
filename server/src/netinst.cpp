@@ -130,7 +130,7 @@ bool NetInst::api_check(api_return api){
         break;
     }
 
-    this->log(LOG_ERROR, "API encountered %d error: %s\n", "GENERIC", err_type, info);
+    this->log(LOG_ERROR, "API encountered %d error: %s", "GENERIC", err_type, info);
     return false;
 }
 

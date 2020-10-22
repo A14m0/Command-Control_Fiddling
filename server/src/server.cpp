@@ -36,8 +36,7 @@ Server::Server(){
     // gets current file path, so data will be written to correct folder regardless of where execution is called
 	readlink( "/proc/self/exe", result, 4096);
 
-    printf("%s\n", result);
-	last = strrchr(result, '/');
+    last = strrchr(result, '/');
 	index = last - result;
 	strncpy(dir, result, index);
 	
@@ -146,7 +145,7 @@ int Server::ReloadModules(){
                 // open the module and handle the instance
                 void *handle = dlopen(buff, RTLD_NOW);
                 if(!handle) {
-                    log(LOG_ERROR, "Failed to load .so file: %s\n", dlerror());    
+                    log(LOG_ERROR, "Failed to load .so file: %s", dlerror());    
                     continue;
                 }
 
@@ -155,7 +154,7 @@ int Server::ReloadModules(){
         }
     } else {
         // Failed to open directory 
-        this->log(LOG_FATAL, "[Loader] Failed to open target directory 'shared/'\n");
+        this->log(LOG_FATAL, "[Loader] Failed to open target directory 'shared/'");
         perror("");
         exit(2);
     }
@@ -170,8 +169,8 @@ int Server::AddModule(void *handle){
 
     // check if the handle is not null
     if(!handle) {
-        log(LOG_ERROR, "Broken handle found. Skipping...\n");
-        return;
+        log(LOG_ERROR, "Broken handle found. Skipping...");
+        return 1;
     }
     
     // get required global constants from the handle
@@ -181,16 +180,16 @@ int Server::AddModule(void *handle){
 
     // check if they worked
     if(!type) {
-        log(LOG_ERROR, "Failed to find type symbol\n");
-        return;
+        log(LOG_ERROR, "Failed to find type symbol");
+        return 1;
     }
     
     if (!id){
-        log(LOG_ERROR, "Failed to locate the module's ID\n");
+        log(LOG_ERROR, "Failed to locate the module's ID");
         return 1;
     }
     if (!name){
-        log(LOG_ERROR, "Failed to locate the module's name\n");
+        log(LOG_ERROR, "Failed to locate the module's name");
         return 1;
     }
             
@@ -205,7 +204,7 @@ int Server::AddModule(void *handle){
             // resolve transport API and add it to available transport APIs
             *api = (ptransport_t)dlsym(handle, "transport_api");
             if(!api) {
-                log(LOG_ERROR, "Failed to find transport API structure\n"); 
+                log(LOG_ERROR, "Failed to find transport API structure"); 
                 return 1;
             }
             
@@ -228,7 +227,7 @@ int Server::AddModule(void *handle){
         
         default:
             // unknown module type
-            log(LOG_ERROR, "Unknown module type: %d\n", type);
+            log(LOG_ERROR, "Unknown module type: %d", type);
             return 1;
     }
 
