@@ -241,10 +241,18 @@ int Server::AddModule(void *handle){
 // logs things
 int Server::DoLog(plog_t log_ent){
     char *log_buffer = (char *)malloc(4096);
+    char time_str[4096];
     memset(log_buffer, 0, 4096);
     
     char *reset = "\033[0m";
     char *concode = "";
+
+    time_t raw;
+    time(&raw);
+    struct tm *c_time;
+    c_time = localtime(&raw);
+
+    sprintf(time_str, "%i/%i/%02i  %i:%i:%02i", c_time->tm_mon, c_time->tm_mday, c_time->tm_year - 100, c_time->tm_hour, c_time->tm_min, c_time->tm_sec);
     
     if(log_ent->message == NULL){
         log_ent->message = "NO INFO";
@@ -255,19 +263,19 @@ int Server::DoLog(plog_t log_ent){
     {
     case LOG_INFO:
         concode = "\033[92m";
-        sprintf(log_buffer, "[%d] [INFO]: %s\n", id, log_ent->message);
+        sprintf(log_buffer, "[%s] [%d] [INFO]: %s\n", time_str, log_ent->id, log_ent->message);
         break;
     case LOG_WARN:
         concode = "\033[93m";
-        sprintf(log_buffer, "[%d] [WARNING]: %s\n", id, log_ent->message);
+        sprintf(log_buffer, "[%s] [%d] [WARNING]: %s\n",time_str, log_ent->id, log_ent->message);
         break;
     case LOG_ERROR:
         concode = "\033[91m";
-        sprintf(log_buffer, "[%d] [ERROR]: %s\n", id, log_ent->message);
+        sprintf(log_buffer, "[%s] [%d] [ERROR]: %s\n", time_str, log_ent->id, log_ent->message);
         break;
     case LOG_FATAL:
         concode = "\033[1;4;5;31m";
-        sprintf(log_buffer, "[%d] [FATAL]: %s\n", id, log_ent->message);
+        sprintf(log_buffer, "[%s] [%d] [FATAL]: %s\n", time_str, log_ent->id, log_ent->message);
         break;
     default:
         break;
