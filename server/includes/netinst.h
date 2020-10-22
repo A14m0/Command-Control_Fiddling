@@ -16,8 +16,7 @@ private:
     int HandleTask(task_t task);
     void FreeTask(ptask_t task);
     bool api_check(api_return api);
-    int log(int type, char *frmt, ...);// override;
-
+    
     static void Trampoline(void*self);
 
 public:
@@ -25,6 +24,7 @@ public:
     NetInst(Server *server, int id, ptransport_t transport); 
 
     std::thread *StartThread();
+    int log(int type, char *frmt, ...);// override;
 
     ~NetInst();
 };

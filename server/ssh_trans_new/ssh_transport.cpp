@@ -1,56 +1,179 @@
 #include "ssh_transport.h"
 
 // server required defines 
-int type = 99; // type TRANSPORT
+int type = TRANSPORT; // type TRANSPORT
 char *name = "SSH Backend";
 int id = 55;
 
 
 
-const int default_port = 22;
-
+// instance data
 typedef struct _dat_str {
-    clientDat data;
     int portno;
+    char *agent_name;
     ssh_bind sshbind;
     ssh_session session;
     ssh_channel channel;
-} data_struct, pdata_struct;
+} data_struct, *pdata_struct;
 
 
-transport_t transport_api = {
-    send_ok, send_err, listen, read, write,
-    upload_file, init_reverse_shell, 
-    determine_handler, get_dat_siz, init, end, 
-    get_name, get_id, set_port, get_agent_name
-};
-
-api_return init(void* instance_struct)
-{
-    return api_return{API_OK, nullptr};
+// API struct resolved at runtime, points to all the required functions
+extern "C"{
+    void *generate_class(NetInst *parent){
+        SshTransport *ptr = new SshTransport(parent);
+        return ptr;
+    }
 }
 
-api_return end(void* instance_struct)
-{
-    data_struct *dat_structure = (data_struct*)instance_struct;
-    
-    ssh_bind_free(dat_structure->sshbind);
+
+
+
+
+
+
+
+
+// initializes the instance data
+SshTransport::SshTransport(NetInst *parent){
+    p_ref = parent;
+}
+
+// frees instance data and variables
+SshTransport::~SshTransport() {
+    ssh_bind_free(sshbind);
     ssh_finalize();
+}
+
+// fetches tasking from the remote agent
+api_return SshTransport::fetch_tasking() {
     return api_return{API_OK, nullptr};
 }
 
-const char *get_name(){
+// pushes tasking to the remote agent
+api_return SshTransport::push_tasking(ptask_t task){
+    return api_return{API_OK, nullptr};
+}
+
+// listens for an incoming connection
+api_return SshTransport::listen() {
+    int r;
+
+    int sock = socket(AF_INET , SOCK_STREAM , 0);
+    
+    sshbind=ssh_bind_new();
+    session=ssh_new();
+
+    ssh_options_set(session, SSH_OPTIONS_FD, &sock);
+	
+    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, KEYS_FOLDER "ssh_host_dsa_key");
+    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, KEYS_FOLDER "ssh_host_rsa_key");
+    //printf("Binding to portno %d...\n", tmp->portno);
+    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT, &(portno));
+
+    if(ssh_bind_listen(sshbind)<0){
+        printf("Error listening to socket: %s\n", ssh_get_error(sshbind));
+        return api_return{API_ERR_LISTEN, (void*) ssh_get_error(sshbind)};
+    }
+
+    // bind the listener to the port
+    printf("Server: Bound to listening port\n");
+
+    r=ssh_bind_accept(sshbind, session);
+    printf("Server: Accepting connection\n");
+    if(r==SSH_ERROR){
+      	printf("Error accepting a connection : %s\n",ssh_get_error(sshbind));
+        return api_return{API_ERR_ACCEPT, (void*) ssh_get_error(sshbind)};
+    }
+    if (ssh_handle_key_exchange(session)) {
+        printf("ssh_handle_key_exchange: %s\n", ssh_get_error(session));
+        return api_return{API_ERR_AUTH, (void*) ssh_get_error(sshbind)};
+    }
+
+    if (!Authenticate()) {
+        printf("Initialization: Failed to authenticate agent\n");
+        return api_return{API_ERR_AUTH, (void*) "Bad authentication"};
+    }
+    
+    return api_return{API_OK, nullptr};
+}
+
+// returns the transport's name
+const char *get_tname(){
     return name;
 }
 
+// returns the currently connected agent's name
+api_return SshTransport::get_aname() {
+    return api_return{API_OK, nullptr};
+}
+
+// returns the transport's ID
 int get_id(){
     return id;
 }
 
-api_return get_dat_siz(){
-    return api_return{API_OK, (void*)sizeof(data_struct)};
+// sets the port to listen on
+api_return SshTransport::set_port(int portno){
+    portno = portno;
+
+    return api_return{API_OK, nullptr};
 }
 
+
+/////////////////////////// HELPER FUNCTIONS ///////////////////////////////////
+
+int SshTransport::Authenticate(){
+    // initialize variables
+    int auth=0;
+    ssh_message message;
+    
+    do {
+        message=ssh_message_get(session);
+        if(!message)
+            break;
+        switch(ssh_message_type(message)){
+            case SSH_REQUEST_AUTH:
+                switch(ssh_message_subtype(message)){
+                    // authenticate connection
+                    case SSH_AUTH_METHOD_PASSWORD:
+                        if(Authenticate::doauth(ssh_message_auth_user(message), ssh_message_auth_password(message))){
+                            auth=1;
+                            agent_name = (char*)malloc(128);
+                            memset(agent_name, 0, 128);//strlen(ssh_message_auth_user(message)));
+                            snprintf(agent_name, 128, "%s", ssh_message_auth_user(message));
+                            ssh_message_auth_reply_success(message,0);
+                            break;
+                       	} else {
+                            auth = 2;
+                            ssh_message_reply_default(message);
+                            break;
+                        }
+                    // not authenticated, send default message
+                    case SSH_AUTH_METHOD_NONE:
+                    default:
+                        ssh_message_auth_set_methods(message,SSH_AUTH_METHOD_PASSWORD);
+                        ssh_message_reply_default(message);
+                        break;
+                }
+                break;
+            default:
+                ssh_message_reply_default(message);
+        }
+        ssh_message_free(message);
+    } while (!auth);
+    
+    // Check if the client authenticated successfully
+	if(auth != 1){
+        p_ref->log(LOG_WARN, "Transport terminating connection (failed auth)\n");
+        ssh_disconnect(session);
+        return 0;
+    } else {
+        return 1;
+    }
+    return 0;
+}
+
+/*
 api_return determine_handler(void* instance_struct){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
@@ -164,7 +287,7 @@ api_return determine_handler(void* instance_struct){
     return api_return{API_ERR_GENERIC, nullptr};
 }
 
-/*Uploads a file to some connected entity*/
+/*Uploads a file to some connected entity
 api_return upload_file(void* instance_struct, const char *ptr, int is_module){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
@@ -320,7 +443,7 @@ api_return init_reverse_shell(void* instance_struct){
         }
     }#0  Server::handle_instance (server=0x555555580730, handle=0x555555589c90, reload=true) at serverSrc/server.cpp:209
 
-    inst->shell_finish();*/
+    inst->shell_finish();
     return api_return{API_ERR_WRITE, nullptr};
 }
 
@@ -509,4 +632,4 @@ api_return get_agent_name(void* instance_struct){
     data_struct *dat_structure = (data_struct*)instance_struct;
 
     return api_return{API_OK, dat_structure->data.id};
-}
+}*/

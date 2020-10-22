@@ -1,10 +1,6 @@
 /* Defines constant values used throughout the program */
 #pragma once
 
-// defines module types
-#define TRANSPORT 0
-#define STANDALONE 1
-
 // defines error codes that can be returned by transport functions
 #define API_OK 0
 #define API_ERR_GENERIC 1

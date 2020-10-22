@@ -1,7 +1,9 @@
 #pragma once
 
 #include "api.h"
+#include "netinst.h"
 
+#include <stdlib.h>
 #include <libssh/libssh.h>
 #include <libssh/server.h>
 
@@ -14,26 +16,35 @@
 #endif
 
 
-    
-api_return authenticate(void** instance_struct);
-api_return init(void* dat);
-api_return end(void* instance_struct);
+void *generate_transport(NetInst *parent);
 
-// generic protocol handlers
-api_return send_ok(void* instance_struct);
-api_return send_err(void* instance_struct);
-api_return listen(void* instance_struct);
-api_return read(void* instance_struct, char **buff, int length);
-api_return write(void* instance_struct, const char *buff, int length);
-    
-api_return determine_handler(void* instance_struct);
-api_return upload_file(void* instance_struct, const char *ptr, int is_module);
-api_return download_file(void* instance_struct, char *ptr, int is_manager, char *extra);
 
-api_return init_reverse_shell(void* instance_struct);
+class SshTransport : TransportAPI{
+private:
+    int portno = 22;
+    char *agent_name = "NONE";
+    ssh_bind sshbind;
+    ssh_session session;
+    ssh_channel channel;
+    NetInst *p_ref;
 
-const char * get_name();    
-int get_id();
-api_return set_port(void* instance_struct, int portno);
-api_return get_dat_siz();
-api_return get_agent_name(void* instance_struct);
+    int Authenticate();
+
+public:
+    SshTransport(NetInst *parent_ref);
+    ~SshTransport();
+
+
+    // gets the next available tasking
+    // returns tasking struct with OP_NODATA if nothing available
+    api_return fetch_tasking() override;
+    // pushes a task update to connected client
+    api_return push_tasking(ptask_t task) override;
+    // starts listening for this instance
+    api_return listen() override;
+    // returns the currently connected agent's name
+    api_return get_aname() override;
+    // sets the listening port of the instance
+    api_return set_port(int portno) override;
+};
+
