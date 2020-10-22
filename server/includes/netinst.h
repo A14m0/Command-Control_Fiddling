@@ -9,7 +9,7 @@ class NetInst : Common
 private:
     // instance data for transports
     void *t_dat;
-    ptransport_t tspt;
+    TransportAPI *tspt;
     Server *srv;
 
     void MainLoop();
@@ -20,11 +20,11 @@ private:
     static void Trampoline(void*self);
 
 public:
-    // constructs a CommInst
-    NetInst(Server *server, int id, ptransport_t transport); 
+    int log(int type, char *frmt, ...);// override;
+    NetInst(Server *server, int id, TransportAPI *transport); 
 
     std::thread *StartThread();
-    int log(int type, char *frmt, ...);// override;
+    ptask_t AwaitTask(int type); 
 
     ~NetInst();
 };

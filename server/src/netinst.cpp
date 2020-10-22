@@ -3,7 +3,7 @@
 
 
 // class contructor
-NetInst::NetInst(Server *srv, int id, ptransport_t transport){
+NetInst::NetInst(Server *srv, int id, TransportAPI *transport){
     this->srv = srv;
     this->id = id;
     this->tspt = transport;
@@ -11,8 +11,8 @@ NetInst::NetInst(Server *srv, int id, ptransport_t transport){
 
 // class destructor
 NetInst::~NetInst(){
-    if(!api_check(tspt->end(t_dat))){
-        log(LOG_ERROR, "Failed to terminate transport! Force-killing...");
+    if(tspt){
+        delete tspt;
     }
 }
 
@@ -73,6 +73,21 @@ int NetInst::log(int type, char *fmt, ...){
     srv->PushLog(log_ent);
 
     return 0;
+} 
+
+
+// awaits a particular tasking type and returns it when found
+ptask_t NetInst::AwaitTask(int type){
+    while(1){
+        // loop over each item in the queue and see if its of the type we wwant
+        for(ptask_t task : *task_dispatch){
+            if(task->type == type){
+                return task;
+            } 
+        }
+        // wait before updating
+        std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+    }
 } 
 
 

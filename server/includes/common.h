@@ -22,6 +22,11 @@ typedef struct _task {
     void *data; // pointer to data on heap
 } task_t, *ptask_t;
 
+// defines task type vales
+#define TASK_AUTH 1
+#define TASK_NEW_NETINST 2
+#define TASK_WRITE_BEACON 3
+
 
 // log structure used to pass logs from threads to server
 typedef struct _log {
@@ -38,7 +43,7 @@ protected:
     int id; // class ID
     
     // dispatch queue
-    std::queue<ptask_t> *task_dispatch;
+    std::deque<ptask_t> *task_dispatch;
 
     //virtual int PushTask(ptask_t);
     //virtual ptask_t FetchDispatch();

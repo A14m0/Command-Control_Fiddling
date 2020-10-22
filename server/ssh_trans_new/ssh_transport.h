@@ -1,6 +1,7 @@
 #pragma once
 
 #include "api.h"
+#include "common.h"
 #include "netinst.h"
 
 #include <stdlib.h>
@@ -16,6 +17,12 @@
 #endif
 
 
+
+#define REQ_NONE 0
+#define REQ_EXEC 1
+#define REQ_TASKING 2
+#define REQ_TTY 3
+
 void *generate_transport(NetInst *parent);
 
 
@@ -29,6 +36,7 @@ private:
     NetInst *p_ref;
 
     int Authenticate();
+    int DetermineHandler();
 
 public:
     SshTransport(NetInst *parent_ref);

@@ -6,6 +6,9 @@
 #define TRANSPORT 0
 #define STANDALONE 1
 
+// defines connection types
+#define AGENT_TYPE 100
+#define MANAG_TYPE 101
 
 // defines error codes that can be returned by transport functions
 
