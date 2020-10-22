@@ -1,5 +1,5 @@
 /* defines the transport API structure */
-
+#pragma once
 
 // defines error codes that can be returned by transport functions
 

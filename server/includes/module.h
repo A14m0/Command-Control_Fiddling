@@ -1,4 +1,6 @@
 /* Defines generic server module class */
+#pragma once
+
 #include "common.h"
 
 // Module class

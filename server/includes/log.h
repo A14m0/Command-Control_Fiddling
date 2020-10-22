@@ -1,4 +1,5 @@
 /* Defines logging information */
+#pragma once
 
 #define LOG_INFO 0 // just for inforation
 #define LOG_WARN 1 // something may not be working correctly

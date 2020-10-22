@@ -7,6 +7,7 @@
 #include <dirent.h>
 
 #include "server.h"
+#include "netinst.h"
 
 
 
@@ -16,6 +17,7 @@ Server::Server(){
     this->task_dispatch = new std::queue<ptask_t>();
     this->log_dispatch = new std::queue<plog_t>();
     this->modules = new std::vector<Module *>();
+    this->thread_objs = new std::vector<std::thread *>();
 
 
     int ret;
@@ -25,6 +27,8 @@ Server::Server(){
     unsigned long index;
     struct stat st = {0};
 
+    memset(dir, 0, 4096);
+
 
     // seed RNG
     srand(time(NULL));
@@ -32,6 +36,7 @@ Server::Server(){
     // gets current file path, so data will be written to correct folder regardless of where execution is called
 	readlink( "/proc/self/exe", result, 4096);
 
+    printf("%s\n", result);
 	last = strrchr(result, '/');
 	index = last - result;
 	strncpy(dir, result, index);
@@ -40,6 +45,7 @@ Server::Server(){
 	ret = chdir(dir);
 	if(ret < 0){
 		perror("Failed to change directory");
+        printf("Path: %s\n", dir);
 		exit(1);
 	}
 
@@ -65,7 +71,7 @@ Server::Server(){
 
     
     // populate backends
-    if(!this->ReloadModules()){
+    if(this->ReloadModules()){
         printf("[Server] Failed to load backends. Quitting...\n");
         exit(1);
     }
@@ -86,7 +92,7 @@ int Server::WriteLogs(){
 int Server::GenerateInstance(int id){
     bool found = false;
     // check if the ID exists in the list of modules
-    for(Module *mod : *modules){
+    /*for(Module *mod : *modules){
         if(mod->get_id() == id){
             found = true;
         }
@@ -95,12 +101,15 @@ int Server::GenerateInstance(int id){
     if(!found){
         log(LOG_WARN, "Failed to find module of type '%d'", id);
         return 1;
-    }
+    }*/
 
     // set up thread classes
+    int nid = rand();
+    NetInst *inst = new NetInst(this, nid, NULL);
+    std::thread *obj = inst->StartThread();
+    thread_objs->push_back(obj);
     
-    
-    
+    log(LOG_INFO, "Thread started with ID '%d'", nid);
     
     return 0;
 }
@@ -142,7 +151,6 @@ int Server::ReloadModules(){
                 }
 
                 AddModule(handle);
-                printf("Added module to server\n");
             }
         }
     } else {
@@ -247,19 +255,19 @@ int Server::DoLog(plog_t log_ent){
     {
     case LOG_INFO:
         concode = "\033[92m";
-        sprintf(log_buffer, "[%d] [INFO]: %s", id, log_ent->message);
+        sprintf(log_buffer, "[%d] [INFO]: %s\n", id, log_ent->message);
         break;
     case LOG_WARN:
         concode = "\033[93m";
-        sprintf(log_buffer, "[%d] [WARNING]: %s", id, log_ent->message);
+        sprintf(log_buffer, "[%d] [WARNING]: %s\n", id, log_ent->message);
         break;
     case LOG_ERROR:
         concode = "\033[91m";
-        sprintf(log_buffer, "[%d] [ERROR]: %s", id, log_ent->message);
+        sprintf(log_buffer, "[%d] [ERROR]: %s\n", id, log_ent->message);
         break;
     case LOG_FATAL:
-        concode = "\033[1;31m";
-        sprintf(log_buffer, "[%d] [FATAL]: %s", id, log_ent->message);
+        concode = "\033[1;4;5;31m";
+        sprintf(log_buffer, "[%d] [FATAL]: %s\n", id, log_ent->message);
         break;
     default:
         break;
@@ -286,9 +294,56 @@ int Server::DoLog(plog_t log_ent){
     return 0;
 } 
 
+
+// internal log function
+// logs data to console and file
+int Server::log(int type, char *fmt, ...){
+    char *log_buffer = (char *)malloc(4096);
+    memset(log_buffer, 0, 4096);
+    va_list vl;
+
+    // format the format
+    va_start(vl, fmt);
+    vsprintf(log_buffer, fmt, vl);
+    va_end(vl);
+
+
+    // push log
+    plog_t log_ent = (plog_t)malloc(sizeof(log_ent));
+
+    log_ent->id = id;
+    log_ent->type = type;
+    log_ent->message = log_buffer;
+
+    PushLog(log_ent);
+
+    return 0;
+} 
+
+int Server::MainLoop(){
+
+    /*
+    UNIMPLEMENTED
+    */
+
+   GenerateInstance(0);
+
+   while(1){
+        // print all accumulated logs
+        WriteLogs();
+
+        // check available tasking
+        log(LOG_INFO, "Server Heartbeat");
+
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+   }
+
+
+    return 0;
+}
+
 // public function to push logs to the queue
 int Server::PushLog(plog_t log_ent){
     log_dispatch->push(log_ent);
     return 0;
 }
-

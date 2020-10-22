@@ -1,4 +1,5 @@
 /* Defines constant values used throughout the program */
+#pragma once
 
 // defines module types
 #define TRANSPORT 0

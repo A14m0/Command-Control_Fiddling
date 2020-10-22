@@ -16,6 +16,24 @@ NetInst::~NetInst(){
     }
 }
 
+// main loop of the class
+void NetInst::MainLoop(){
+    
+    /*
+        UNIMPLEMENTED
+    */
+
+    while(1){
+        
+        log(LOG_INFO, "This is the thread! WOO");
+        log(LOG_INFO, "Here's my second log!");
+
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        
+    }
+    
+    return;
+}
 
 // handles a given task
 int NetInst::HandleTask(task_t task){
@@ -116,3 +134,13 @@ bool NetInst::api_check(api_return api){
     return false;
 }
 
+// trampoline p2
+void NetInst::Trampoline(void *self){
+    ((NetInst *)(self))->MainLoop();
+}
+
+// trampoline to thread execution
+std::thread *NetInst::StartThread(){
+    std::thread *thread_obj = new std::thread(NetInst::Trampoline, this);
+    return thread_obj;
+}

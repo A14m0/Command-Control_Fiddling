@@ -1,4 +1,6 @@
 /* Server class header */
+#pragma once
+
 #include <vector>
 #include "common.h"
 #include "module.h"
@@ -17,6 +19,7 @@ private:
     int id = 0; // Server ID
     std::queue<plog_t> *log_dispatch; // log queue
     std::vector<Module *> *modules; // list of available transports
+    std::vector<std::thread *> *thread_objs;
 
     int WriteLogs(); // loops over all available logs and writes/prints them
     int GenerateInstance(int id); // generates and registers a new comms instance
@@ -24,12 +27,13 @@ private:
     int AddModule(void *handle); // adds a module to the internal modules vector
 
     int DoLog(plog_t log_ent); // writes a plog_t to console/file
-    int log(int type, char *fmt, ...) override; // internal logging function
+    int log(int type, char *fmt, ...);// override; // internal logging function
 public:
     Server(/* args */);
     ~Server();
 
     int PushLog(plog_t log); // pushes log to log_dispatch queue
-    
+
+    int MainLoop();
 };
 

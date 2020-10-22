@@ -1,5 +1,9 @@
 /* Defines common inherited attributes/functions of all classes */
+#pragma once
+
 #include <queue>
+#include <thread>
+#include <chrono>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -36,12 +40,12 @@ protected:
     // dispatch queue
     std::queue<ptask_t> *task_dispatch;
 
-    virtual int PushTask(ptask_t);
-    virtual ptask_t FetchDispatch();
-    virtual int log(int log_type, char *format, ...);
+    //virtual int PushTask(ptask_t);
+    //virtual ptask_t FetchDispatch();
+    //virtual int log(int log_type, char *format, ...);
     
 public:
-    
-    
+    Common();
+    ~Common();
 };
 
