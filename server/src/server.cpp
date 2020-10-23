@@ -14,7 +14,7 @@
 Server::Server(){
 
     // initialize internal queues/vectors
-    this->task_dispatch = new std::queue<ptask_t>();
+    this->task_dispatch = new std::deque<ptask_t>();
     this->log_dispatch = new std::queue<plog_t>();
     this->modules = new std::vector<Module *>();
     this->thread_objs = new std::vector<std::thread *>();
@@ -194,7 +194,7 @@ int Server::AddModule(void *handle){
     }
             
 
-    ptransport_t *api = new ptransport_t;
+    void *(*api_generator)(NetInst *);
     void (*entrypoint)();
     Module *module;
 
@@ -202,14 +202,14 @@ int Server::AddModule(void *handle){
     switch(type){
         case TRANSPORT:
             // resolve transport API and add it to available transport APIs
-            *api = (ptransport_t)dlsym(handle, "transport_api");
-            if(!api) {
+            api_generator = (void *(*)(NetInst *))dlsym(handle, "generate_class");
+            if(!api_generator) {
                 log(LOG_ERROR, "Failed to find transport API structure"); 
                 return 1;
             }
             
             module = new Module(name, id, TRANSPORT, handle, 
-                                      nullptr, api);
+                                      nullptr, api_generator);
             break;
 
         case STANDALONE:
@@ -304,7 +304,7 @@ int Server::DoLog(plog_t log_ent){
 
 // internal log function
 // logs data to console and file
-int Server::log(int type, char *fmt, ...){
+int Server::log(int type, const char *fmt, ...){
     char *log_buffer = (char *)malloc(4096);
     memset(log_buffer, 0, 4096);
     va_list vl;
@@ -352,5 +352,11 @@ int Server::MainLoop(){
 // public function to push logs to the queue
 int Server::PushLog(plog_t log_ent){
     log_dispatch->push(log_ent);
+    return 0;
+}
+
+// public function to push tasks to the queue
+int Server::PushTask(ptask_t task){
+    task_dispatch->push_back(task);
     return 0;
 }

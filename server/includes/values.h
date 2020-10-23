@@ -15,3 +15,4 @@
 
 
 // defines opcodes for tasks
+#define OP_AUTH 0

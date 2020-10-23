@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "server.h"
+#include "api.h"
 
 class NetInst : Common
 {
@@ -20,10 +21,12 @@ private:
     static void Trampoline(void*self);
 
 public:
-    int log(int type, char *frmt, ...);// override;
+    int log(int type, const char *frmt, ...);// override;
     NetInst(Server *server, int id, TransportAPI *transport); 
 
     std::thread *StartThread();
+    ptask_t CreateTasking(int to, unsigned char type, unsigned long length, void *data);
+    int PushTasking(ptask_t);
     ptask_t AwaitTask(int type); 
 
     ~NetInst();

@@ -5,14 +5,14 @@
 
 Module::Module(const char *name, const int id, 
                            const int type, void *handle, 
-                           void (*entrypoint)(), ptransport_t *transport)
+                           void (*entrypoint)(), void *(*generator)(NetInst *))
 {
     this->name = name;
     this->id = id;
     this->type = type;
     this->handle = handle;
     this->entrypoint = entrypoint;
-    this->transport = transport;
+    this->generator = generator;
 }
 
 Module::~Module() {
@@ -45,6 +45,9 @@ void *Module::get_entrypoint(){
     return this->entrypoint;
 }
 
-ptransport_t *Module::get_transport(){
-    return this->transport;
+TransportAPI *Module::new_transport(NetInst *parent){
+    if(type == TRANSPORT){
+        return (TransportAPI *)generator(parent);
+    }
+    return nullptr;    
 }

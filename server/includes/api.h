@@ -34,10 +34,14 @@ typedef struct _api_ret {
 
 class TransportAPI{
 private:
-    const int id;
-    const char *name;
+    int id;
+    char *name;
 
 public:
+    // dummy constructors
+    //TransportAPI();
+    virtual ~TransportAPI();
+
     // gets the next available tasking
     // returns tasking struct with OP_NODATA if nothing available
     virtual api_return fetch_tasking();

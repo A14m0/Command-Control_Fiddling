@@ -8,8 +8,8 @@ ODIR = server/build
 CFLAGSSERV = -lpthread -lcrypto -ldl -fpermissive
 CINCSERV = server/includes
 SSRCPATH = server/src
-CFILESSERV = $(SSRCPATH)/common.cpp $(SSRCPATH)/main.cpp $(SSRCPATH)/module.cpp $(SSRCPATH)/netinst.cpp $(SSRCPATH)/server.cpp 
-
+CFILESSERV =  $(SSRCPATH)/common.cpp $(SSRCPATH)/main.cpp $(SSRCPATH)/module.cpp $(SSRCPATH)/netinst.cpp $(SSRCPATH)/server.cpp 
+#$(SSRCPATH)/api.cpp
 CFLAGSCLI = -lssh -lcurl
 CFILESCLI = agent/client.c agent/agent.c agent/b64.c agent/beacon.c agent/shell.c
 

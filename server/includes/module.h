@@ -2,6 +2,10 @@
 #pragma once
 
 #include "common.h"
+//#include "netinst.h"
+#include "api.h"
+
+class NetInst;
 
 // Module class
 class Module
@@ -12,13 +16,13 @@ private:
     int type; // Type of the module (either transport or standalone)
     pthread_t thread; // thread refernce
     void *handle; // module handle
-    ptransport_t *transport; // pointer to transport (null if standalone type)
+    void *(*generator)(NetInst *); // pointer to transport (null if standalone type)
     void (*entrypoint)(); // pointer to entrypoint (null if transport type)
     
 public:
     Module(const char *name, const int id, 
                  const int type, void *handle, 
-                 void (*entrypoint)(), ptransport_t *transport);
+                 void (*entrypoint)(), void *(*generator)(NetInst *));
     ~Module();
 
     // gets module name
@@ -30,7 +34,7 @@ public:
     // gets module entrypoint
     void *get_entrypoint();
     // gets modue api
-    ptransport_t *get_transport();
+    TransportAPI *new_transport(NetInst *);
     // sets module thread reference
     int set_thread(pthread_t thread);
     // closes dlsym handle

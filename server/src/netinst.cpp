@@ -52,7 +52,7 @@ void NetInst::FreeTask(ptask_t task){
 
 
 // logs data to console and file
-int NetInst::log(int type, char *fmt, ...){
+int NetInst::log(int type, const char *fmt, ...){
     char *log_buffer = (char *)malloc(4096);
     memset(log_buffer, 0, 4096);
     va_list vl;
@@ -74,6 +74,26 @@ int NetInst::log(int type, char *fmt, ...){
 
     return 0;
 } 
+
+
+// wrapper for creating a ptask_t structure in heap
+ptask_t NetInst::CreateTasking(int to, unsigned char type, unsigned long length, void *data){
+    ptask_t ret = (ptask_t)malloc(sizeof(task_t));
+    ret->to = to;
+    ret->from = id;
+    ret->type = type;
+    ret->length = length;
+    ret->data = data;
+
+    return ret;
+}
+
+
+// pushes a tasking struct to the server
+int NetInst::PushTasking(ptask_t task){
+    srv->PushTask(task);
+    return 0;
+}
 
 
 // awaits a particular tasking type and returns it when found

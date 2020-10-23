@@ -27,12 +27,13 @@ private:
     int AddModule(void *handle); // adds a module to the internal modules vector
 
     int DoLog(plog_t log_ent); // writes a plog_t to console/file
-    int log(int type, char *fmt, ...);// override; // internal logging function
+    int log(int type, const char *fmt, ...);// override; // internal logging function
 public:
     Server(/* args */);
     ~Server();
 
     int PushLog(plog_t log); // pushes log to log_dispatch queue
+    int PushTask(ptask_t task); // pushes task to task_dispatch queue
 
     int MainLoop();
 };

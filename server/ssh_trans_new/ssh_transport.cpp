@@ -135,8 +135,12 @@ int SshTransport::Authenticate(){
                     // authenticate connection
                     case SSH_AUTH_METHOD_PASSWORD:
                         // generate tasking info 
-                        // uname ssh_message_auth_user(message)
-                        // passwd ssh_message_auth_password(message))
+                        pauth_t auth_struct = (pauth_t)malloc(sizeof(auth_t));
+                        strncpy(auth_struct->uname, ssh_message_auth_user(message), 16);
+                        strncpy(auth_struct->passwd, ssh_message_auth_password(message), 64);
+
+                        ptask_t send = p_ref->CreateTasking(0, OP_AUTH, sizeof(auth_struct), auth_struct);
+                        p_ref->PushTasking(send);
 
                         ptask_t auth_success = p_ref->AwaitTask(TASK_AUTH);
                         if((int)auth_success->data){

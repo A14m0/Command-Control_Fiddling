@@ -3,6 +3,7 @@
 #include "api.h"
 #include "common.h"
 #include "netinst.h"
+#include "auth.h"
 
 #include <stdlib.h>
 #include <libssh/libssh.h>
