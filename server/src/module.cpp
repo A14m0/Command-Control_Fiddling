@@ -16,36 +16,30 @@ Module::Module(const char *name, const int id,
 }
 
 Module::~Module() {
-    this->close_handle();
+    this->CloseHandle();
 }
 
-const char *Module::get_name(){
+const char *Module::GetName(){
     return this->name;
 }
 
-const int Module::get_id(){
+const int Module::GetID(){
     return this->id;
 }
 
-const int Module::get_type(){
+const int Module::GetType(){
     return this->type;
 }
 
-int Module::set_thread(pthread_t thread){
-    this->thread = thread;
-
-    return 0;
-}
-
-void Module::close_handle(){
+void Module::CloseHandle(){
     dlclose(this->handle);
 }
 
-void *Module::get_entrypoint(){
+void *Module::GetEntrypoint(){
     return this->entrypoint;
 }
 
-TransportAPI *Module::new_transport(NetInst *parent){
+TransportAPI *Module::NewTransport(NetInst *parent){
     if(type == TRANSPORT){
         return (TransportAPI *)generator(parent);
     }

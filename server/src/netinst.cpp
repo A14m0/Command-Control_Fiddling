@@ -95,6 +95,12 @@ int NetInst::PushTasking(ptask_t task){
     return 0;
 }
 
+// lets others push tasking to this instance
+int NetInst::ReceiveTasking(ptask_t task){
+    task_dispatch->push_back(task);
+    return 0;
+}
+
 
 // awaits a particular tasking type and returns it when found
 ptask_t NetInst::AwaitTask(int type){
@@ -109,6 +115,11 @@ ptask_t NetInst::AwaitTask(int type){
         std::this_thread::sleep_for(std::chrono::nanoseconds(100));
     }
 } 
+
+// returns the ID of this instance
+int NetInst::GetID(){
+    return id;
+}
 
 
 

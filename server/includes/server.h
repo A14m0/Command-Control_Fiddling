@@ -19,9 +19,11 @@ private:
     int id = 0; // Server ID
     std::queue<plog_t> *log_dispatch; // log queue
     std::vector<Module *> *modules; // list of available transports
-    std::vector<std::thread *> *thread_objs;
+    std::vector<NetInst *> *instances; // list of registered instances
+    std::vector<std::thread *> *thread_objs; // thread object memory reference
 
     int WriteLogs(); // loops over all available logs and writes/prints them
+    int DispatchTasking();
     int GenerateInstance(int id); // generates and registers a new comms instance
     int ReloadModules(); // clears and repopulates internal transports vector
     int AddModule(void *handle); // adds a module to the internal modules vector

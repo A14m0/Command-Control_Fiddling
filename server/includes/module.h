@@ -26,18 +26,16 @@ public:
     ~Module();
 
     // gets module name
-    const char *get_name();
+    const char *GetName();
     // gets module ID
-    const int get_id();
+    const int GetID();
     // gets module type
-    const int get_type();
+    const int GetType();
     // gets module entrypoint
-    void *get_entrypoint();
+    void *GetEntrypoint();
     // gets modue api
-    TransportAPI *new_transport(NetInst *);
-    // sets module thread reference
-    int set_thread(pthread_t thread);
+    TransportAPI *NewTransport(NetInst *);
     // closes dlsym handle
-    void close_handle();
+    void CloseHandle();
 
 };

@@ -86,25 +86,46 @@ int Server::WriteLogs(){
     return 0;
 }
 
+// sends all available tasking to each registered NetInst
+int Server::DispatchTasking(){
+    // loop over each task
+    for(ptask_t task : *task_dispatch){
+        bool found = false;
+        // loop over each NetInst
+        for(NetInst *inst : *instances){
+            if(inst->GetID() == task->to){
+                inst->PushTasking(task);
+                found = true;
+                break;
+            }
+        }
+        if(!found){
+            log(LOG_ERROR, "No registered instance with ID '%d' found for tasking (type %d)", task->to, task->type);
+        }
+    }
+}
+
 
 // creates a new thread using module of id `id`
 int Server::GenerateInstance(int id){
     bool found = false;
     // check if the ID exists in the list of modules
-    /*for(Module *mod : *modules){
-        if(mod->get_id() == id){
+    for(Module *mod : *modules){
+        if(mod->GetID() == id){
             found = true;
+            break;
         }
     }
 
     if(!found){
         log(LOG_WARN, "Failed to find module of type '%d'", id);
         return 1;
-    }*/
+    }
 
     // set up thread classes
     int nid = rand();
     NetInst *inst = new NetInst(this, nid, NULL);
+    instances->push_back(inst);
     std::thread *obj = inst->StartThread();
     thread_objs->push_back(obj);
     
@@ -338,11 +359,13 @@ int Server::MainLoop(){
    while(1){
         // print all accumulated logs
         WriteLogs();
+        // dispatch tasking
+        DispatchTasking();
 
         // check available tasking
         log(LOG_INFO, "Server Heartbeat");
 
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
    }
 
 
