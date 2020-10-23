@@ -17,6 +17,7 @@ Server::Server(){
     this->task_dispatch = new std::deque<ptask_t>();
     this->log_dispatch = new std::queue<plog_t>();
     this->modules = new std::vector<Module *>();
+    this->instances = new std::vector<NetInst *>();
     this->thread_objs = new std::vector<std::thread *>();
 
 
@@ -89,19 +90,30 @@ int Server::WriteLogs(){
 // sends all available tasking to each registered NetInst
 int Server::DispatchTasking(){
     // loop over each task
-    for(ptask_t task : *task_dispatch){
+    while(!this->task_dispatch->empty()){
+        printf("Size: %ld\n", this->task_dispatch->size());
+        
+        ptask_t task = this->task_dispatch->front();
+        printf("server task ptr: %p\n", task);
         bool found = false;
         // loop over each NetInst
         for(NetInst *inst : *instances){
+            // check for nullptr
+            if(inst == nullptr){
+                printf("FATAL\n");
+                log(LOG_FATAL, "Instance has nullpointer! Exiting!!");
+                exit(1);
+            }
             if(inst->GetID() == task->to){
                 inst->PushTasking(task);
                 found = true;
-                break;
             }
         }
         if(!found){
             log(LOG_ERROR, "No registered instance with ID '%d' found for tasking (type %d)", task->to, task->type);
         }
+        printf("DEQUEING!\n");
+        this->task_dispatch->pop_front();
     }
 }
 
@@ -110,7 +122,7 @@ int Server::DispatchTasking(){
 int Server::GenerateInstance(int id){
     bool found = false;
     // check if the ID exists in the list of modules
-    for(Module *mod : *modules){
+    /*for(Module *mod : *modules){
         if(mod->GetID() == id){
             found = true;
             break;
@@ -120,7 +132,7 @@ int Server::GenerateInstance(int id){
     if(!found){
         log(LOG_WARN, "Failed to find module of type '%d'", id);
         return 1;
-    }
+    }*/
 
     // set up thread classes
     int nid = rand();
@@ -272,7 +284,7 @@ int Server::DoLog(plog_t log_ent){
     struct tm *c_time;
     c_time = localtime(&raw);
 
-    sprintf(time_str, "%i/%i/%02i  %i:%i:%02i", c_time->tm_mon, c_time->tm_mday, c_time->tm_year - 100, c_time->tm_hour, c_time->tm_min, c_time->tm_sec);
+    sprintf(time_str, "%i/%i/%02i  %i:%i:%02i", c_time->tm_mon+1, c_time->tm_mday, c_time->tm_year - 100, c_time->tm_hour, c_time->tm_min, c_time->tm_sec);
     
     if(log_ent->message == NULL){
         log_ent->message = "NO INFO";
@@ -356,6 +368,15 @@ int Server::MainLoop(){
 
    GenerateInstance(0);
 
+   ptask_t tmp = (ptask_t)malloc(sizeof(task_t));
+   tmp->to = 0;
+   tmp->from = 0;
+   tmp->type = 0x1;
+   tmp->length = 0;
+   tmp->data = nullptr;
+
+   PushTask(tmp);
+
    while(1){
         // print all accumulated logs
         WriteLogs();
@@ -365,7 +386,7 @@ int Server::MainLoop(){
         // check available tasking
         log(LOG_INFO, "Server Heartbeat");
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
    }
 
 

@@ -4,6 +4,7 @@
 
 // class contructor
 NetInst::NetInst(Server *srv, int id, TransportAPI *transport){
+    this->task_dispatch = new std::deque<ptask_t>();
     this->srv = srv;
     this->id = id;
     this->tspt = transport;
@@ -24,9 +25,20 @@ void NetInst::MainLoop(){
     */
 
     while(1){
+        // handle tasks
+        while(!task_dispatch->empty()){
+            printf("Tasking size: %ld\n", task_dispatch->size());
+            ptask_t task = task_dispatch->front();
+            HandleTask(*task);
+            task_dispatch->pop_front();
+        }
         
         log(LOG_INFO, "This is the thread! WOO");
         log(LOG_INFO, "Here's my second log!");
+
+        ptask_t test = CreateTasking(id, OP_AUTH, 0, nullptr);
+        printf("Thread task ptr: %p\n", test);
+        PushTasking(test);
 
         std::this_thread::sleep_for(std::chrono::seconds(5));
         
@@ -37,9 +49,12 @@ void NetInst::MainLoop(){
 
 // handles a given task
 int NetInst::HandleTask(task_t task){
-    /*
-        UNIMPLEMENTED
-    */
+    printf("Task received:\n");
+    printf("\tTO: %d\n", task.to);
+    printf("\tFROM: %d\n", task.from);
+    printf("\tTYPE: %d\n", task.type);
+    printf("\tLENGTH: %lu\n", task.length);
+    printf("\tDATA ADDRESS: %p\n", task.data);
     
     return 0;
 }
@@ -79,6 +94,8 @@ int NetInst::log(int type, const char *fmt, ...){
 // wrapper for creating a ptask_t structure in heap
 ptask_t NetInst::CreateTasking(int to, unsigned char type, unsigned long length, void *data){
     ptask_t ret = (ptask_t)malloc(sizeof(task_t));
+    memset(ret, 0, sizeof(task_t));
+    printf("Thread task ptr (internal): %p\n", ret);
     ret->to = to;
     ret->from = id;
     ret->type = type;
