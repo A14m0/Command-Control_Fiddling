@@ -8,6 +8,7 @@ NetInst::NetInst(Server *srv, int id, TransportAPI *transport){
     this->srv = srv;
     this->id = id;
     this->tspt = transport;
+    this->int_task_lock = PTHREAD_MUTEX_INITIALIZER;
 }
 
 // class destructor
@@ -36,7 +37,7 @@ void NetInst::MainLoop(){
         log(LOG_INFO, "This is the thread! WOO");
         log(LOG_INFO, "Here's my second log!");
 
-        ptask_t test = CreateTasking(id, OP_AUTH, 0, nullptr);
+        ptask_t test = CreateTasking(id, TASK_AUTH, 0, nullptr);
         printf("Thread task ptr: %p\n", test);
         PushTasking(test);
 
@@ -101,6 +102,12 @@ ptask_t NetInst::CreateTasking(int to, unsigned char type, unsigned long length,
     ret->type = type;
     ret->length = length;
     ret->data = data;
+    printf("\tTO: %d\n", ret->to);
+    printf("\tFROM: %d\n", ret->from);
+    printf("\tTYPE: %d\n", ret->type);
+    printf("\tLENGTH: %lu\n", ret->length);
+    printf("\tDATA ADDRESS: %p\n", ret->data);
+    
 
     return ret;
 }
@@ -114,7 +121,9 @@ int NetInst::PushTasking(ptask_t task){
 
 // lets others push tasking to this instance
 int NetInst::ReceiveTasking(ptask_t task){
+    pthread_mutex_lock(&int_task_lock);
     task_dispatch->push_back(task);
+    pthread_mutex_unlock(&int_task_lock);
     return 0;
 }
 

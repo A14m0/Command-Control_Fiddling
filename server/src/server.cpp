@@ -6,8 +6,16 @@
 #include <dlfcn.h>
 #include <dirent.h>
 
+
+#define DEBUG 0
+
+#ifdef DEBUG
+#include <assert.h>
+#endif
+
 #include "server.h"
 #include "netinst.h"
+
 
 
 
@@ -19,6 +27,7 @@ Server::Server(){
     this->modules = new std::vector<Module *>();
     this->instances = new std::vector<NetInst *>();
     this->thread_objs = new std::vector<std::thread *>();
+    this->task_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
     int ret;
@@ -90,7 +99,12 @@ int Server::WriteLogs(){
 // sends all available tasking to each registered NetInst
 int Server::DispatchTasking(){
     // loop over each task
+    int loop = 0;
+    pthread_mutex_lock(&task_lock);
     while(!this->task_dispatch->empty()){
+        loop++;
+
+        assert(loop <10);
         printf("Size: %ld\n", this->task_dispatch->size());
         
         ptask_t task = this->task_dispatch->front();
@@ -105,7 +119,7 @@ int Server::DispatchTasking(){
                 exit(1);
             }
             if(inst->GetID() == task->to){
-                inst->PushTasking(task);
+                inst->ReceiveTasking(task);
                 found = true;
             }
         }
@@ -115,6 +129,12 @@ int Server::DispatchTasking(){
         printf("DEQUEING!\n");
         this->task_dispatch->pop_front();
     }
+
+    pthread_mutex_unlock(&task_lock);
+
+    printf("Dispatch complete\n");
+
+    return 0;
 }
 
 
@@ -401,6 +421,8 @@ int Server::PushLog(plog_t log_ent){
 
 // public function to push tasks to the queue
 int Server::PushTask(ptask_t task){
+    pthread_mutex_lock(&task_lock);
     task_dispatch->push_back(task);
+    pthread_mutex_unlock(&task_lock);
     return 0;
 }

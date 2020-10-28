@@ -12,6 +12,7 @@ private:
     void *t_dat;
     TransportAPI *tspt;
     Server *srv;
+    pthread_mutex_t int_task_lock;
 
     void MainLoop();
     int HandleTask(task_t task);

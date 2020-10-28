@@ -23,9 +23,9 @@ typedef struct _task {
 } task_t, *ptask_t;
 
 // defines task type vales
-#define TASK_AUTH 1
-#define TASK_NEW_NETINST 2
-#define TASK_WRITE_BEACON 3
+#define TASK_AUTH 0x1
+#define TASK_NEW_NETINST 0x2
+#define TASK_WRITE_BEACON 0x3
 
 
 // log structure used to pass logs from threads to server

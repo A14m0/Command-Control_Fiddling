@@ -17,6 +17,7 @@ class Server : Common
 {
 private:
     int id = 0; // Server ID
+    pthread_mutex_t task_lock; // task thread lock
     std::queue<plog_t> *log_dispatch; // log queue
     std::vector<Module *> *modules; // list of available transports
     std::vector<NetInst *> *instances; // list of registered instances

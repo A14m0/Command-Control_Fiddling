@@ -12,7 +12,3 @@
 #define API_ERR_AUTH 7
 #define API_ERR_CLIENT 8
 #define API_ERR_LOCAL 9
-
-
-// defines opcodes for tasks
-#define OP_AUTH 0
