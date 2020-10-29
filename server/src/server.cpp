@@ -294,6 +294,7 @@ int Server::AddModule(void *handle){
 int Server::DoLog(plog_t log_ent){
     char *log_buffer = (char *)malloc(4096);
     char time_str[4096];
+    bool nodat = false;
     memset(log_buffer, 0, 4096);
     
     char *reset = "\033[0m";
@@ -308,6 +309,7 @@ int Server::DoLog(plog_t log_ent){
     
     if(log_ent->message == NULL){
         log_ent->message = "NO INFO";
+        nodat = true;
     }
 
     // set up format string and console colors
@@ -350,6 +352,10 @@ int Server::DoLog(plog_t log_ent){
 
     // free data
     free(log_buffer);
+
+    if(!nodat){
+        free((void*)log_ent->message);
+    }
 
     return 0;
 } 

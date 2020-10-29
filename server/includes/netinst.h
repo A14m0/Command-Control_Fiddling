@@ -15,7 +15,7 @@ private:
     pthread_mutex_t int_task_lock;
 
     void MainLoop();
-    int HandleTask(task_t task);
+    int HandleTask(ptask_t task);
     void FreeTask(ptask_t task);
     bool api_check(api_return api);
     

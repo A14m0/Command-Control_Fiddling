@@ -28,10 +28,11 @@ void NetInst::MainLoop(){
     while(1){
         // handle tasks
         while(!task_dispatch->empty()){
-            printf("Tasking size: %ld\n", task_dispatch->size());
+            pthread_mutex_lock(&int_task_lock);
             ptask_t task = task_dispatch->front();
-            HandleTask(*task);
+            HandleTask(task);
             task_dispatch->pop_front();
+            pthread_mutex_unlock(&int_task_lock);
         }
         
         log(LOG_INFO, "This is the thread! WOO");
@@ -49,20 +50,26 @@ void NetInst::MainLoop(){
 }
 
 // handles a given task
-int NetInst::HandleTask(task_t task){
+int NetInst::HandleTask(ptask_t task){
     printf("Task received:\n");
-    printf("\tTO: %d\n", task.to);
-    printf("\tFROM: %d\n", task.from);
-    printf("\tTYPE: %d\n", task.type);
-    printf("\tLENGTH: %lu\n", task.length);
-    printf("\tDATA ADDRESS: %p\n", task.data);
+    printf("\tTO: %d\n", task->to);
+    printf("\tFROM: %d\n", task->from);
+    printf("\tTYPE: %d\n", task->type);
+    printf("\tLENGTH: %lu\n", task->length);
+    printf("\tDATA ADDRESS: %p\n", task->data);
+
+
+    // free the task at the end
+    FreeTask(task);
     
     return 0;
 }
 
 // frees a given task
 void NetInst::FreeTask(ptask_t task){
-    free(task->data);
+    if(task->data == NULL){
+        free(task->data);
+    }
     free(task);
 }
 
@@ -96,19 +103,12 @@ int NetInst::log(int type, const char *fmt, ...){
 ptask_t NetInst::CreateTasking(int to, unsigned char type, unsigned long length, void *data){
     ptask_t ret = (ptask_t)malloc(sizeof(task_t));
     memset(ret, 0, sizeof(task_t));
-    printf("Thread task ptr (internal): %p\n", ret);
     ret->to = to;
     ret->from = id;
     ret->type = type;
     ret->length = length;
     ret->data = data;
-    printf("\tTO: %d\n", ret->to);
-    printf("\tFROM: %d\n", ret->from);
-    printf("\tTYPE: %d\n", ret->type);
-    printf("\tLENGTH: %lu\n", ret->length);
-    printf("\tDATA ADDRESS: %p\n", ret->data);
     
-
     return ret;
 }
 
