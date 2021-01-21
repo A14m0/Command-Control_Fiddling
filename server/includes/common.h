@@ -9,6 +9,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 //#include "api.h"
 #include "log.h"
 #include "values.h"
@@ -51,6 +56,26 @@ protected:
     
 public:
     Common();
+    static int index_of(const char* str, const char find, int rev);
+    static int directory_exists(const char* path);
+    static void clean_input(char *input);
+    static char* substring(const char* string, int position);
+    static char** str_split(char* str, const char delim);
     ~Common();
+};
+
+// base64 encoding/decoding functions
+class B64
+{
+private:
+    /* data */
+public:
+    static size_t enc_size(size_t inlen);
+    static size_t dec_size(const char *in);
+    static void encode(const unsigned char *in, size_t len, char **buff);
+    static int decode(const char *in, unsigned char *out, size_t outlen);
+    static int isvalidchar(char c);
+    static const char b64chars[];
+    static const int b64invs[];
 };
 

@@ -134,29 +134,33 @@ int SshTransport::Authenticate(){
                 switch(ssh_message_subtype(message)){
                     // authenticate connection
                     case SSH_AUTH_METHOD_PASSWORD:
-                        // generate tasking info 
-                        pauth_t auth_struct = (pauth_t)malloc(sizeof(auth_t));
-                        strncpy(auth_struct->uname, ssh_message_auth_user(message), 16);
-                        strncpy(auth_struct->passwd, ssh_message_auth_password(message), 64);
-
-                        ptask_t send = p_ref->CreateTasking(0, OP_AUTH, sizeof(auth_struct), auth_struct);
-                        p_ref->PushTasking(send);
-
-                        ptask_t auth_success = p_ref->AwaitTask(TASK_AUTH);
-                        if((int)auth_success->data){
-                            auth=1;
-                            
-                            memset(agent_name, 0, 128);//strlen(ssh_message_auth_user(message)));
-                            snprintf(agent_name, 128, "%s", ssh_message_auth_user(message));
-                            ssh_message_auth_reply_success(message,0);
-                            break;
-                       	} else {
-                            auth = 2;
-                            ssh_message_reply_default(message);
-                            break;
+                        {
+                            // generate tasking info 
+                            pauth_t auth_struct = (pauth_t)malloc(sizeof(auth_t));
+                            strncpy(auth_struct->uname, ssh_message_auth_user(message), 16);
+                            strncpy(auth_struct->passwd, ssh_message_auth_password(message), 64);
+    
+                            ptask_t send = p_ref->CreateTasking(0, OP_AUTH, sizeof(auth_struct), auth_struct);
+                            p_ref->PushTasking(send);
+    
+                            ptask_t auth_success = p_ref->AwaitTask(TASK_AUTH);
+                            if((int)auth_success->data){
+                                auth=1;
+                                
+                                memset(agent_name, 0, 128);//strlen(ssh_message_auth_user(message)));
+                                snprintf(agent_name, 128, "%s", ssh_message_auth_user(message));
+                                ssh_message_auth_reply_success(message,0);
+                                break;
+                       	    } else {
+                                auth = 2;
+                                ssh_message_reply_default(message);
+                                break;
+                            }
                         }
-                    // not authenticated, send default message
+                        // not authenticated, send default message
                     case SSH_AUTH_METHOD_NONE:
+                        printf("lol wtf (Line 160 ssh_transport)\n");
+
                     default:
                         ssh_message_auth_set_methods(message,SSH_AUTH_METHOD_PASSWORD);
                         ssh_message_reply_default(message);
@@ -246,7 +250,7 @@ int SshTransport::DetermineHandler(){
 ////////////////////////////////////////////////////////////////////////////////
             memset(buf, 0, sizeof(buf));
             strcat(buf, "agents/");
-            int exists = misc_directory_exists(strcat(buf, agent_name));
+            int exists = Common::directory_exists(strcat(buf, agent_name));
         
             if(!exists){
                 AgentInformationHandler::init(agent_name);

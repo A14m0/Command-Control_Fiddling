@@ -1,0 +1,27 @@
+[
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g -o server/CMakeFiles/Server.dir/src/main.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/main.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/main.cpp"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g -o server/CMakeFiles/Server.dir/src/common.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g -o server/CMakeFiles/Server.dir/src/module.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g -o server/CMakeFiles/Server.dir/src/netinst.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g -o server/CMakeFiles/Server.dir/src/server.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp"
+}
+]

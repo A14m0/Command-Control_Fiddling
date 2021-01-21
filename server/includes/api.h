@@ -23,6 +23,9 @@
 #define API_ERR_CLIENT 8
 #define API_ERR_LOCAL 9
 
+// defines operation codes for tasking
+#define OP_AUTH 0
+
 
 // structures that outlines transports
 typedef struct _api_ret {

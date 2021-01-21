@@ -1,0 +1,5 @@
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/CMakeFiles/rebuild_cache.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/CMakeFiles/edit_cache.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/rebuild_cache.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/edit_cache.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/Server.dir
