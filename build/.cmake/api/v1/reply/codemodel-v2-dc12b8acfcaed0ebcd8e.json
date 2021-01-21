@@ -8,7 +8,9 @@
 					"build" : ".",
 					"childIndexes" : 
 					[
-						1
+						1,
+						2,
+						3
 					],
 					"minimumCMakeVersion" : 
 					{
@@ -28,7 +30,35 @@
 					"source" : "server",
 					"targetIndexes" : 
 					[
+						1
+					]
+				},
+				{
+					"build" : "agent",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "agent",
+					"targetIndexes" : 
+					[
 						0
+					]
+				},
+				{
+					"build" : "server/ssh_trans_new",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "server/ssh_trans_new",
+					"targetIndexes" : 
+					[
+						2
 					]
 				}
 			],
@@ -39,22 +69,40 @@
 					"directoryIndexes" : 
 					[
 						0,
-						1
+						1,
+						2,
+						3
 					],
 					"name" : "Global",
 					"targetIndexes" : 
 					[
-						0
+						0,
+						1,
+						2
 					]
 				}
 			],
 			"targets" : 
 			[
 				{
+					"directoryIndex" : 2,
+					"id" : "Agent::@e2a0fc020fba741d1a6f",
+					"jsonFile" : "target-Agent-Debug-05e4a27957f77fcf2c2b.json",
+					"name" : "Agent",
+					"projectIndex" : 0
+				},
+				{
 					"directoryIndex" : 1,
 					"id" : "Server::@d19778d2e34a1e3ddfc0",
 					"jsonFile" : "target-Server-Debug-3d8f2dedda494d0cc6aa.json",
 					"name" : "Server",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ssh_transport.so::@ae0a22a8bd19e6c39a5b",
+					"jsonFile" : "target-ssh_transport.so-Debug-ab4e32893a439c7f1dfc.json",
+					"name" : "ssh_transport.so",
 					"projectIndex" : 0
 				}
 			]

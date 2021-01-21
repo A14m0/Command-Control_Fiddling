@@ -3,3 +3,9 @@
 /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/rebuild_cache.dir
 /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/edit_cache.dir
 /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/Server.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent/CMakeFiles/rebuild_cache.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent/CMakeFiles/edit_cache.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent/CMakeFiles/Agent.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/ssh_trans_new/CMakeFiles/rebuild_cache.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/ssh_trans_new/CMakeFiles/edit_cache.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir

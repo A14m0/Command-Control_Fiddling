@@ -148,9 +148,179 @@ build server/Server: CXX_EXECUTABLE_LINKER__Server_Debug server/CMakeFiles/Serve
   TARGET_PDB = Server.dbg
 
 # =============================================================================
+# Write statements declared in CMakeLists.txt:
+# /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/CMakeLists.txt
+# =============================================================================
+
+
+#############################################
+# Utility command for rebuild_cache
+
+build agent/CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent && /usr/bin/cmake --regenerate-during-build -S/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling -B/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build
+  DESC = Running CMake to regenerate build system...
+  pool = console
+  restat = 1
+
+build agent/rebuild_cache: phony agent/CMakeFiles/rebuild_cache.util
+
+
+#############################################
+# Utility command for edit_cache
+
+build agent/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent && /usr/bin/cmake-gui -S/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling -B/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build
+  DESC = Running CMake cache editor...
+  pool = console
+  restat = 1
+
+build agent/edit_cache: phony agent/CMakeFiles/edit_cache.util
+
+# =============================================================================
+# Object build statements for EXECUTABLE target Agent
+
+
+#############################################
+# Order-only phony target for Agent
+
+build cmake_object_order_depends_target_Agent: phony || agent/CMakeFiles/Agent.dir
+
+build agent/CMakeFiles/Agent.dir/src/agent.c.o: C_COMPILER__Agent_Debug ../agent/src/agent.c || cmake_object_order_depends_target_Agent
+  DEP_FILE = agent/CMakeFiles/Agent.dir/src/agent.c.o.d
+  FLAGS = -g
+  INCLUDES = -I../agent/includes
+  OBJECT_DIR = agent/CMakeFiles/Agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+
+build agent/CMakeFiles/Agent.dir/src/b64.c.o: C_COMPILER__Agent_Debug ../agent/src/b64.c || cmake_object_order_depends_target_Agent
+  DEP_FILE = agent/CMakeFiles/Agent.dir/src/b64.c.o.d
+  FLAGS = -g
+  INCLUDES = -I../agent/includes
+  OBJECT_DIR = agent/CMakeFiles/Agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+
+build agent/CMakeFiles/Agent.dir/src/beacon.c.o: C_COMPILER__Agent_Debug ../agent/src/beacon.c || cmake_object_order_depends_target_Agent
+  DEP_FILE = agent/CMakeFiles/Agent.dir/src/beacon.c.o.d
+  FLAGS = -g
+  INCLUDES = -I../agent/includes
+  OBJECT_DIR = agent/CMakeFiles/Agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+
+build agent/CMakeFiles/Agent.dir/src/client.c.o: C_COMPILER__Agent_Debug ../agent/src/client.c || cmake_object_order_depends_target_Agent
+  DEP_FILE = agent/CMakeFiles/Agent.dir/src/client.c.o.d
+  FLAGS = -g
+  INCLUDES = -I../agent/includes
+  OBJECT_DIR = agent/CMakeFiles/Agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+
+build agent/CMakeFiles/Agent.dir/src/shell.c.o: C_COMPILER__Agent_Debug ../agent/src/shell.c || cmake_object_order_depends_target_Agent
+  DEP_FILE = agent/CMakeFiles/Agent.dir/src/shell.c.o.d
+  FLAGS = -g
+  INCLUDES = -I../agent/includes
+  OBJECT_DIR = agent/CMakeFiles/Agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target Agent
+
+
+#############################################
+# Link the executable agent/Agent
+
+build agent/Agent: C_EXECUTABLE_LINKER__Agent_Debug agent/CMakeFiles/Agent.dir/src/agent.c.o agent/CMakeFiles/Agent.dir/src/b64.c.o agent/CMakeFiles/Agent.dir/src/beacon.c.o agent/CMakeFiles/Agent.dir/src/client.c.o agent/CMakeFiles/Agent.dir/src/shell.c.o
+  FLAGS = -g
+  OBJECT_DIR = agent/CMakeFiles/Agent.dir
+  POST_BUILD = :
+  PRE_LINK = :
+  TARGET_FILE = agent/Agent
+  TARGET_PDB = Agent.dbg
+
+# =============================================================================
+# Write statements declared in CMakeLists.txt:
+# /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/CMakeLists.txt
+# =============================================================================
+
+
+#############################################
+# Utility command for rebuild_cache
+
+build server/ssh_trans_new/CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/ssh_trans_new && /usr/bin/cmake --regenerate-during-build -S/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling -B/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build
+  DESC = Running CMake to regenerate build system...
+  pool = console
+  restat = 1
+
+build server/ssh_trans_new/rebuild_cache: phony server/ssh_trans_new/CMakeFiles/rebuild_cache.util
+
+
+#############################################
+# Utility command for edit_cache
+
+build server/ssh_trans_new/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/ssh_trans_new && /usr/bin/cmake-gui -S/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling -B/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build
+  DESC = Running CMake cache editor...
+  pool = console
+  restat = 1
+
+build server/ssh_trans_new/edit_cache: phony server/ssh_trans_new/CMakeFiles/edit_cache.util
+
+# =============================================================================
+# Object build statements for STATIC_LIBRARY target ssh_transport.so
+
+
+#############################################
+# Order-only phony target for ssh_transport.so
+
+build cmake_object_order_depends_target_ssh_transport.so: phony || server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
+
+build server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/ssh_transport.cpp.o: CXX_COMPILER__ssh_transport.2eso_Debug ../server/ssh_trans_new/ssh_transport.cpp || cmake_object_order_depends_target_ssh_transport.so
+  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/ssh_transport.cpp.o.d
+  FLAGS = -lcrypto -lssh -fpermissive -g
+  INCLUDES = -I../server/includes -I../server/ssh_trans_new
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
+  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
+
+build server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/common.cpp.o: CXX_COMPILER__ssh_transport.2eso_Debug ../server/src/common.cpp || cmake_object_order_depends_target_ssh_transport.so
+  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/common.cpp.o.d
+  FLAGS = -lcrypto -lssh -fpermissive -g
+  INCLUDES = -I../server/includes -I../server/ssh_trans_new
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
+  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src
+
+build server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/netinst.cpp.o: CXX_COMPILER__ssh_transport.2eso_Debug ../server/src/netinst.cpp || cmake_object_order_depends_target_ssh_transport.so
+  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/netinst.cpp.o.d
+  FLAGS = -lcrypto -lssh -fpermissive -g
+  INCLUDES = -I../server/includes -I../server/ssh_trans_new
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
+  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target ssh_transport.so
+
+
+#############################################
+# Link the static library server/ssh_trans_new/libssh_transport.so.a
+
+build server/ssh_trans_new/libssh_transport.so.a: CXX_STATIC_LIBRARY_LINKER__ssh_transport.2eso_Debug server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/ssh_transport.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/common.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/netinst.cpp.o
+  LANGUAGE_COMPILE_FLAGS = -lcrypto -lssh -fpermissive -g
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
+  POST_BUILD = :
+  PRE_LINK = :
+  TARGET_FILE = server/ssh_trans_new/libssh_transport.so.a
+  TARGET_PDB = ssh_transport.so.a.dbg
+
+# =============================================================================
 # Target aliases.
 
+build Agent: phony agent/Agent
+
 build Server: phony server/Server
+
+build libssh_transport.so.a: phony server/ssh_trans_new/libssh_transport.so.a
+
+build ssh_transport.so: phony server/ssh_trans_new/libssh_transport.so.a
 
 # =============================================================================
 # Folder targets.
@@ -160,7 +330,14 @@ build Server: phony server/Server
 #############################################
 # Folder: /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build
 
-build all: phony server/all
+build all: phony server/all agent/all server/ssh_trans_new/all
+
+# =============================================================================
+
+#############################################
+# Folder: /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent
+
+build agent/all: phony agent/Agent
 
 # =============================================================================
 
@@ -170,20 +347,27 @@ build all: phony server/all
 build server/all: phony server/Server
 
 # =============================================================================
+
+#############################################
+# Folder: /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/ssh_trans_new
+
+build server/ssh_trans_new/all: phony server/ssh_trans_new/libssh_transport.so.a
+
+# =============================================================================
 # Built-in targets
 
 
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | ../CMakeLists.txt ../server/CMakeLists.txt /usr/share/cmake-3.19/Modules/CMakeCInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.19/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.19/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.19/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.19/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux.cmake /usr/share/cmake-3.19/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.19.3/CMakeCCompiler.cmake CMakeFiles/3.19.3/CMakeCXXCompiler.cmake CMakeFiles/3.19.3/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | ../CMakeLists.txt ../agent/CMakeLists.txt ../server/CMakeLists.txt ../server/ssh_trans_new/CMakeLists.txt /usr/share/cmake-3.19/Modules/CMakeCInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.19/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.19/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.19/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.19/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux.cmake /usr/share/cmake-3.19/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.19.3/CMakeCCompiler.cmake CMakeFiles/3.19.3/CMakeCXXCompiler.cmake CMakeFiles/3.19.3/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build ../CMakeLists.txt ../server/CMakeLists.txt /usr/share/cmake-3.19/Modules/CMakeCInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.19/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.19/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.19/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.19/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux.cmake /usr/share/cmake-3.19/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.19.3/CMakeCCompiler.cmake CMakeFiles/3.19.3/CMakeCXXCompiler.cmake CMakeFiles/3.19.3/CMakeSystem.cmake: phony
+build ../CMakeLists.txt ../agent/CMakeLists.txt ../server/CMakeLists.txt ../server/ssh_trans_new/CMakeLists.txt /usr/share/cmake-3.19/Modules/CMakeCInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.19/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.19/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.19/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.19/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux.cmake /usr/share/cmake-3.19/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.19.3/CMakeCCompiler.cmake CMakeFiles/3.19.3/CMakeCXXCompiler.cmake CMakeFiles/3.19.3/CMakeSystem.cmake: phony
 
 
 #############################################

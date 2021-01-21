@@ -1,4 +1,4 @@
-# Install script for directory: /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling
+# Install script for directory: /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/ssh_trans_new
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -42,21 +42,3 @@ if(NOT DEFINED CMAKE_OBJDUMP)
   set(CMAKE_OBJDUMP "/usr/bin/objdump")
 endif()
 
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for each subdirectory.
-  include("/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/cmake_install.cmake")
-  include("/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent/cmake_install.cmake")
-  include("/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/ssh_trans_new/cmake_install.cmake")
-
-endif()
-
-if(CMAKE_INSTALL_COMPONENT)
-  set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INSTALL_COMPONENT}.txt")
-else()
-  set(CMAKE_INSTALL_MANIFEST "install_manifest.txt")
-endif()
-
-string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
-       "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/${CMAKE_INSTALL_MANIFEST}"
-     "${CMAKE_INSTALL_MANIFEST_CONTENT}")

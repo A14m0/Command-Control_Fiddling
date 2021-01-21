@@ -23,5 +23,45 @@
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
   "command": "/opt/cuda/bin/g++ -I../server/includes  -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g -o server/CMakeFiles/Server.dir/src/server.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/gcc -I../agent/includes -g -o agent/CMakeFiles/Agent.dir/src/agent.c.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/agent.c",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/agent.c"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/gcc -I../agent/includes -g -o agent/CMakeFiles/Agent.dir/src/b64.c.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/b64.c",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/b64.c"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/gcc -I../agent/includes -g -o agent/CMakeFiles/Agent.dir/src/beacon.c.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/beacon.c",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/beacon.c"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/gcc -I../agent/includes -g -o agent/CMakeFiles/Agent.dir/src/client.c.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/client.c",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/client.c"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/gcc -I../agent/includes -g -o agent/CMakeFiles/Agent.dir/src/shell.c.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/shell.c",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/agent/src/shell.c"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -I../server/includes -I../server/ssh_trans_new  -lcrypto -lssh -fpermissive -g -o server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/ssh_transport.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/ssh_trans_new/ssh_transport.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/ssh_trans_new/ssh_transport.cpp"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -I../server/includes -I../server/ssh_trans_new  -lcrypto -lssh -fpermissive -g -o server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/common.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -I../server/includes -I../server/ssh_trans_new  -lcrypto -lssh -fpermissive -g -o server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/netinst.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp"
 }
 ]
