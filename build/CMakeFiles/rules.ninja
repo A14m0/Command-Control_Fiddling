@@ -41,7 +41,7 @@ rule CXX_EXECUTABLE_LINKER__Server_Debug
 #############################################
 # Rule for compiling C files.
 
-rule C_COMPILER__Agent_Debug
+rule C_COMPILER__agent_Debug
   depfile = $DEP_FILE
   deps = gcc
   command = /opt/cuda/bin/gcc $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
@@ -51,7 +51,7 @@ rule C_COMPILER__Agent_Debug
 #############################################
 # Rule for linking C executable.
 
-rule C_EXECUTABLE_LINKER__Agent_Debug
+rule C_EXECUTABLE_LINKER__agent_Debug
   command = $PRE_LINK && /opt/cuda/bin/gcc $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
   description = Linking C executable $TARGET_FILE
   restat = $RESTAT
@@ -60,7 +60,7 @@ rule C_EXECUTABLE_LINKER__Agent_Debug
 #############################################
 # Rule for compiling CXX files.
 
-rule CXX_COMPILER__ssh_transport.2eso_Debug
+rule CXX_COMPILER__ssh_transport_Debug
   depfile = $DEP_FILE
   deps = gcc
   command = /opt/cuda/bin/g++ $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
@@ -68,11 +68,11 @@ rule CXX_COMPILER__ssh_transport.2eso_Debug
 
 
 #############################################
-# Rule for linking CXX static library.
+# Rule for linking CXX shared library.
 
-rule CXX_STATIC_LIBRARY_LINKER__ssh_transport.2eso_Debug
-  command = $PRE_LINK && /usr/bin/cmake -E rm -f $TARGET_FILE && /usr/bin/ar qc $TARGET_FILE $LINK_FLAGS $in && /usr/bin/ranlib $TARGET_FILE && $POST_BUILD
-  description = Linking CXX static library $TARGET_FILE
+rule CXX_SHARED_LIBRARY_LINKER__ssh_transport_Debug
+  command = $PRE_LINK && /opt/cuda/bin/g++ -fPIC $LANGUAGE_COMPILE_FLAGS $ARCH_FLAGS $LINK_FLAGS -shared $SONAME_FLAG$SONAME -o $TARGET_FILE $in $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
+  description = Linking CXX shared library $TARGET_FILE
   restat = $RESTAT
 
 

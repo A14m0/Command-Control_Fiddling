@@ -30,7 +30,7 @@
 					"source" : "server",
 					"targetIndexes" : 
 					[
-						1
+						0
 					]
 				},
 				{
@@ -44,7 +44,7 @@
 					"source" : "agent",
 					"targetIndexes" : 
 					[
-						0
+						1
 					]
 				},
 				{
@@ -85,24 +85,24 @@
 			"targets" : 
 			[
 				{
-					"directoryIndex" : 2,
-					"id" : "Agent::@e2a0fc020fba741d1a6f",
-					"jsonFile" : "target-Agent-Debug-05e4a27957f77fcf2c2b.json",
-					"name" : "Agent",
-					"projectIndex" : 0
-				},
-				{
 					"directoryIndex" : 1,
 					"id" : "Server::@d19778d2e34a1e3ddfc0",
-					"jsonFile" : "target-Server-Debug-3d8f2dedda494d0cc6aa.json",
+					"jsonFile" : "target-Server-Debug-1fbc813aec528dc6bbcd.json",
 					"name" : "Server",
 					"projectIndex" : 0
 				},
 				{
+					"directoryIndex" : 2,
+					"id" : "agent::@e2a0fc020fba741d1a6f",
+					"jsonFile" : "target-agent-Debug-8ad33427df089fe05c03.json",
+					"name" : "agent",
+					"projectIndex" : 0
+				},
+				{
 					"directoryIndex" : 3,
-					"id" : "ssh_transport.so::@ae0a22a8bd19e6c39a5b",
-					"jsonFile" : "target-ssh_transport.so-Debug-ab4e32893a439c7f1dfc.json",
-					"name" : "ssh_transport.so",
+					"id" : "ssh_transport::@ae0a22a8bd19e6c39a5b",
+					"jsonFile" : "target-ssh_transport-Debug-c96dd8ed4bdea4ca9007.json",
+					"name" : "ssh_transport",
 					"projectIndex" : 0
 				}
 			]

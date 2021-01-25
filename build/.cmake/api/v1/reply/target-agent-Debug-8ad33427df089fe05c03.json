@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "agent/Agent"
+			"path" : "agent/agent"
 		}
 	],
 	"backtrace" : 1,
@@ -25,7 +25,7 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 11,
+				"line" : 12,
 				"parent" : 0
 			},
 			{
@@ -63,7 +63,7 @@
 			]
 		}
 	],
-	"id" : "Agent::@e2a0fc020fba741d1a6f",
+	"id" : "agent::@e2a0fc020fba741d1a6f",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -75,12 +75,27 @@
 			{
 				"fragment" : "",
 				"role" : "flags"
+			},
+			{
+				"backtrace" : 1,
+				"fragment" : "-lcrypto",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 1,
+				"fragment" : "-lssh",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 1,
+				"fragment" : "-lcurl",
+				"role" : "libraries"
 			}
 		],
 		"language" : "C"
 	},
-	"name" : "Agent",
-	"nameOnDisk" : "Agent",
+	"name" : "agent",
+	"nameOnDisk" : "agent",
 	"paths" : 
 	{
 		"build" : "agent",

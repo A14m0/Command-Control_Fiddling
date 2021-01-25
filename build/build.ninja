@@ -98,35 +98,35 @@ build cmake_object_order_depends_target_Server: phony || server/CMakeFiles/Serve
 
 build server/CMakeFiles/Server.dir/src/main.cpp.o: CXX_COMPILER__Server_Debug ../server/src/main.cpp || cmake_object_order_depends_target_Server
   DEP_FILE = server/CMakeFiles/Server.dir/src/main.cpp.o.d
-  FLAGS = -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g
+  FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/Server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
 
 build server/CMakeFiles/Server.dir/src/common.cpp.o: CXX_COMPILER__Server_Debug ../server/src/common.cpp || cmake_object_order_depends_target_Server
   DEP_FILE = server/CMakeFiles/Server.dir/src/common.cpp.o.d
-  FLAGS = -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g
+  FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/Server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
 
 build server/CMakeFiles/Server.dir/src/module.cpp.o: CXX_COMPILER__Server_Debug ../server/src/module.cpp || cmake_object_order_depends_target_Server
   DEP_FILE = server/CMakeFiles/Server.dir/src/module.cpp.o.d
-  FLAGS = -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g
+  FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/Server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
 
 build server/CMakeFiles/Server.dir/src/netinst.cpp.o: CXX_COMPILER__Server_Debug ../server/src/netinst.cpp || cmake_object_order_depends_target_Server
   DEP_FILE = server/CMakeFiles/Server.dir/src/netinst.cpp.o.d
-  FLAGS = -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g
+  FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/Server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
 
 build server/CMakeFiles/Server.dir/src/server.cpp.o: CXX_COMPILER__Server_Debug ../server/src/server.cpp || cmake_object_order_depends_target_Server
   DEP_FILE = server/CMakeFiles/Server.dir/src/server.cpp.o.d
-  FLAGS = -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g
+  FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/Server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
@@ -140,7 +140,8 @@ build server/CMakeFiles/Server.dir/src/server.cpp.o: CXX_COMPILER__Server_Debug 
 # Link the executable server/Server
 
 build server/Server: CXX_EXECUTABLE_LINKER__Server_Debug server/CMakeFiles/Server.dir/src/main.cpp.o server/CMakeFiles/Server.dir/src/common.cpp.o server/CMakeFiles/Server.dir/src/module.cpp.o server/CMakeFiles/Server.dir/src/netinst.cpp.o server/CMakeFiles/Server.dir/src/server.cpp.o
-  FLAGS = -lpthread -lcrypto -ldl -fpermissive -ggdb -Wall -g
+  FLAGS = -fpermissive -ggdb -Wall -g
+  LINK_LIBRARIES = -lpthread  -lcrypto  -ldl
   OBJECT_DIR = server/CMakeFiles/Server.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -177,64 +178,65 @@ build agent/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
 build agent/edit_cache: phony agent/CMakeFiles/edit_cache.util
 
 # =============================================================================
-# Object build statements for EXECUTABLE target Agent
+# Object build statements for EXECUTABLE target agent
 
 
 #############################################
-# Order-only phony target for Agent
+# Order-only phony target for agent
 
-build cmake_object_order_depends_target_Agent: phony || agent/CMakeFiles/Agent.dir
+build cmake_object_order_depends_target_agent: phony || agent/CMakeFiles/agent.dir
 
-build agent/CMakeFiles/Agent.dir/src/agent.c.o: C_COMPILER__Agent_Debug ../agent/src/agent.c || cmake_object_order_depends_target_Agent
-  DEP_FILE = agent/CMakeFiles/Agent.dir/src/agent.c.o.d
+build agent/CMakeFiles/agent.dir/src/agent.c.o: C_COMPILER__agent_Debug ../agent/src/agent.c || cmake_object_order_depends_target_agent
+  DEP_FILE = agent/CMakeFiles/agent.dir/src/agent.c.o.d
   FLAGS = -g
   INCLUDES = -I../agent/includes
-  OBJECT_DIR = agent/CMakeFiles/Agent.dir
-  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+  OBJECT_DIR = agent/CMakeFiles/agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
 
-build agent/CMakeFiles/Agent.dir/src/b64.c.o: C_COMPILER__Agent_Debug ../agent/src/b64.c || cmake_object_order_depends_target_Agent
-  DEP_FILE = agent/CMakeFiles/Agent.dir/src/b64.c.o.d
+build agent/CMakeFiles/agent.dir/src/b64.c.o: C_COMPILER__agent_Debug ../agent/src/b64.c || cmake_object_order_depends_target_agent
+  DEP_FILE = agent/CMakeFiles/agent.dir/src/b64.c.o.d
   FLAGS = -g
   INCLUDES = -I../agent/includes
-  OBJECT_DIR = agent/CMakeFiles/Agent.dir
-  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+  OBJECT_DIR = agent/CMakeFiles/agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
 
-build agent/CMakeFiles/Agent.dir/src/beacon.c.o: C_COMPILER__Agent_Debug ../agent/src/beacon.c || cmake_object_order_depends_target_Agent
-  DEP_FILE = agent/CMakeFiles/Agent.dir/src/beacon.c.o.d
+build agent/CMakeFiles/agent.dir/src/beacon.c.o: C_COMPILER__agent_Debug ../agent/src/beacon.c || cmake_object_order_depends_target_agent
+  DEP_FILE = agent/CMakeFiles/agent.dir/src/beacon.c.o.d
   FLAGS = -g
   INCLUDES = -I../agent/includes
-  OBJECT_DIR = agent/CMakeFiles/Agent.dir
-  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+  OBJECT_DIR = agent/CMakeFiles/agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
 
-build agent/CMakeFiles/Agent.dir/src/client.c.o: C_COMPILER__Agent_Debug ../agent/src/client.c || cmake_object_order_depends_target_Agent
-  DEP_FILE = agent/CMakeFiles/Agent.dir/src/client.c.o.d
+build agent/CMakeFiles/agent.dir/src/client.c.o: C_COMPILER__agent_Debug ../agent/src/client.c || cmake_object_order_depends_target_agent
+  DEP_FILE = agent/CMakeFiles/agent.dir/src/client.c.o.d
   FLAGS = -g
   INCLUDES = -I../agent/includes
-  OBJECT_DIR = agent/CMakeFiles/Agent.dir
-  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+  OBJECT_DIR = agent/CMakeFiles/agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
 
-build agent/CMakeFiles/Agent.dir/src/shell.c.o: C_COMPILER__Agent_Debug ../agent/src/shell.c || cmake_object_order_depends_target_Agent
-  DEP_FILE = agent/CMakeFiles/Agent.dir/src/shell.c.o.d
+build agent/CMakeFiles/agent.dir/src/shell.c.o: C_COMPILER__agent_Debug ../agent/src/shell.c || cmake_object_order_depends_target_agent
+  DEP_FILE = agent/CMakeFiles/agent.dir/src/shell.c.o.d
   FLAGS = -g
   INCLUDES = -I../agent/includes
-  OBJECT_DIR = agent/CMakeFiles/Agent.dir
-  OBJECT_FILE_DIR = agent/CMakeFiles/Agent.dir/src
+  OBJECT_DIR = agent/CMakeFiles/agent.dir
+  OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
 
 
 # =============================================================================
-# Link build statements for EXECUTABLE target Agent
+# Link build statements for EXECUTABLE target agent
 
 
 #############################################
-# Link the executable agent/Agent
+# Link the executable agent/agent
 
-build agent/Agent: C_EXECUTABLE_LINKER__Agent_Debug agent/CMakeFiles/Agent.dir/src/agent.c.o agent/CMakeFiles/Agent.dir/src/b64.c.o agent/CMakeFiles/Agent.dir/src/beacon.c.o agent/CMakeFiles/Agent.dir/src/client.c.o agent/CMakeFiles/Agent.dir/src/shell.c.o
+build agent/agent: C_EXECUTABLE_LINKER__agent_Debug agent/CMakeFiles/agent.dir/src/agent.c.o agent/CMakeFiles/agent.dir/src/b64.c.o agent/CMakeFiles/agent.dir/src/beacon.c.o agent/CMakeFiles/agent.dir/src/client.c.o agent/CMakeFiles/agent.dir/src/shell.c.o
   FLAGS = -g
-  OBJECT_DIR = agent/CMakeFiles/Agent.dir
+  LINK_LIBRARIES = -lcrypto  -lssh  -lcurl
+  OBJECT_DIR = agent/CMakeFiles/agent.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_FILE = agent/Agent
-  TARGET_PDB = Agent.dbg
+  TARGET_FILE = agent/agent
+  TARGET_PDB = agent.dbg
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
@@ -266,61 +268,66 @@ build server/ssh_trans_new/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
 build server/ssh_trans_new/edit_cache: phony server/ssh_trans_new/CMakeFiles/edit_cache.util
 
 # =============================================================================
-# Object build statements for STATIC_LIBRARY target ssh_transport.so
+# Object build statements for SHARED_LIBRARY target ssh_transport
 
 
 #############################################
-# Order-only phony target for ssh_transport.so
+# Order-only phony target for ssh_transport
 
-build cmake_object_order_depends_target_ssh_transport.so: phony || server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
+build cmake_object_order_depends_target_ssh_transport: phony || server/ssh_trans_new/CMakeFiles/ssh_transport.dir
 
-build server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/ssh_transport.cpp.o: CXX_COMPILER__ssh_transport.2eso_Debug ../server/ssh_trans_new/ssh_transport.cpp || cmake_object_order_depends_target_ssh_transport.so
-  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/ssh_transport.cpp.o.d
-  FLAGS = -lcrypto -lssh -fpermissive -g
+build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/ssh_transport.cpp.o: CXX_COMPILER__ssh_transport_Debug ../server/ssh_trans_new/ssh_transport.cpp || cmake_object_order_depends_target_ssh_transport
+  DEFINES = -Dssh_transport_EXPORTS
+  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/ssh_transport.cpp.o.d
+  FLAGS = -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC
   INCLUDES = -I../server/includes -I../server/ssh_trans_new
-  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
-  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
+  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
 
-build server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/common.cpp.o: CXX_COMPILER__ssh_transport.2eso_Debug ../server/src/common.cpp || cmake_object_order_depends_target_ssh_transport.so
-  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/common.cpp.o.d
-  FLAGS = -lcrypto -lssh -fpermissive -g
+build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/common.cpp.o: CXX_COMPILER__ssh_transport_Debug ../server/src/common.cpp || cmake_object_order_depends_target_ssh_transport
+  DEFINES = -Dssh_transport_EXPORTS
+  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/common.cpp.o.d
+  FLAGS = -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC
   INCLUDES = -I../server/includes -I../server/ssh_trans_new
-  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
-  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
+  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src
 
-build server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/netinst.cpp.o: CXX_COMPILER__ssh_transport.2eso_Debug ../server/src/netinst.cpp || cmake_object_order_depends_target_ssh_transport.so
-  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/netinst.cpp.o.d
-  FLAGS = -lcrypto -lssh -fpermissive -g
+build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o: CXX_COMPILER__ssh_transport_Debug ../server/src/netinst.cpp || cmake_object_order_depends_target_ssh_transport
+  DEFINES = -Dssh_transport_EXPORTS
+  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o.d
+  FLAGS = -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC
   INCLUDES = -I../server/includes -I../server/ssh_trans_new
-  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
-  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
+  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src
 
 
 # =============================================================================
-# Link build statements for STATIC_LIBRARY target ssh_transport.so
+# Link build statements for SHARED_LIBRARY target ssh_transport
 
 
 #############################################
-# Link the static library server/ssh_trans_new/libssh_transport.so.a
+# Link the shared library server/ssh_trans_new/libssh_transport.so
 
-build server/ssh_trans_new/libssh_transport.so.a: CXX_STATIC_LIBRARY_LINKER__ssh_transport.2eso_Debug server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/ssh_transport.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/common.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir/__/src/netinst.cpp.o
-  LANGUAGE_COMPILE_FLAGS = -lcrypto -lssh -fpermissive -g
-  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.so.dir
+build server/ssh_trans_new/libssh_transport.so: CXX_SHARED_LIBRARY_LINKER__ssh_transport_Debug server/ssh_trans_new/CMakeFiles/ssh_transport.dir/ssh_transport.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/common.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o
+  LANGUAGE_COMPILE_FLAGS = -fpic -shared -lcrypto -lssh -fpermissive -g
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_FILE = server/ssh_trans_new/libssh_transport.so.a
-  TARGET_PDB = ssh_transport.so.a.dbg
+  SONAME = libssh_transport.so
+  SONAME_FLAG = -Wl,-soname,
+  TARGET_FILE = server/ssh_trans_new/libssh_transport.so
+  TARGET_PDB = ssh_transport.so.dbg
 
 # =============================================================================
 # Target aliases.
 
-build Agent: phony agent/Agent
-
 build Server: phony server/Server
 
-build libssh_transport.so.a: phony server/ssh_trans_new/libssh_transport.so.a
+build agent: phony agent/agent
 
-build ssh_transport.so: phony server/ssh_trans_new/libssh_transport.so.a
+build libssh_transport.so: phony server/ssh_trans_new/libssh_transport.so
+
+build ssh_transport: phony server/ssh_trans_new/libssh_transport.so
 
 # =============================================================================
 # Folder targets.
@@ -337,7 +344,7 @@ build all: phony server/all agent/all server/ssh_trans_new/all
 #############################################
 # Folder: /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent
 
-build agent/all: phony agent/Agent
+build agent/all: phony agent/agent
 
 # =============================================================================
 
@@ -351,7 +358,7 @@ build server/all: phony server/Server
 #############################################
 # Folder: /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/ssh_trans_new
 
-build server/ssh_trans_new/all: phony server/ssh_trans_new/libssh_transport.so.a
+build server/ssh_trans_new/all: phony server/ssh_trans_new/libssh_transport.so
 
 # =============================================================================
 # Built-in targets

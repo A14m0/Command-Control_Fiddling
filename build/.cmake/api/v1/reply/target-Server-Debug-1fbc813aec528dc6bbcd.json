@@ -1,9 +1,8 @@
 {
-	"archive" : {},
 	"artifacts" : 
 	[
 		{
-			"path" : "server/ssh_trans_new/libssh_transport.so.a"
+			"path" : "server/Server"
 		}
 	],
 	"backtrace" : 1,
@@ -11,12 +10,12 @@
 	{
 		"commands" : 
 		[
-			"add_library",
+			"add_executable",
 			"include_directories"
 		],
 		"files" : 
 		[
-			"server/ssh_trans_new/CMakeLists.txt"
+			"server/CMakeLists.txt"
 		],
 		"nodes" : 
 		[
@@ -26,13 +25,13 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 10,
+				"line" : 12,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 8,
+				"line" : 10,
 				"parent" : 0
 			}
 		]
@@ -43,7 +42,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : " -lcrypto -lssh -fpermissive -g"
+					"fragment" : " -fpermissive -ggdb -Wall -g"
 				}
 			],
 			"includes" : 
@@ -51,10 +50,6 @@
 				{
 					"backtrace" : 2,
 					"path" : "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/includes"
-				},
-				{
-					"backtrace" : 2,
-					"path" : "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/ssh_trans_new"
 				}
 			],
 			"language" : "CXX",
@@ -62,17 +57,49 @@
 			[
 				0,
 				1,
-				2
+				2,
+				3,
+				4
 			]
 		}
 	],
-	"id" : "ssh_transport.so::@ae0a22a8bd19e6c39a5b",
-	"name" : "ssh_transport.so",
-	"nameOnDisk" : "libssh_transport.so.a",
+	"id" : "Server::@d19778d2e34a1e3ddfc0",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-fpermissive -ggdb -Wall -g",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 1,
+				"fragment" : "-lpthread",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 1,
+				"fragment" : "-lcrypto",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 1,
+				"fragment" : "-ldl",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "Server",
+	"nameOnDisk" : "Server",
 	"paths" : 
 	{
-		"build" : "server/ssh_trans_new",
-		"source" : "server/ssh_trans_new"
+		"build" : "server",
+		"source" : "server"
 	},
 	"sourceGroups" : 
 	[
@@ -82,7 +109,9 @@
 			[
 				0,
 				1,
-				2
+				2,
+				3,
+				4
 			]
 		}
 	],
@@ -91,7 +120,7 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "server/ssh_trans_new/ssh_transport.cpp",
+			"path" : "server/src/main.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -103,9 +132,21 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
+			"path" : "server/src/module.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
 			"path" : "server/src/netinst.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "server/src/server.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],
-	"type" : "STATIC_LIBRARY"
+	"type" : "EXECUTABLE"
 }
