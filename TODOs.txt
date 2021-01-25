@@ -1,5 +1,5 @@
 What currently works/is good?
-1. Modularity 
+1. Modularity
     a. API for backends to implement/keeping connections generic enough for easy changing of that
 2. Multithreading
 3. Rough structure of a controlling server that handles each thread in a separate child class
@@ -27,29 +27,29 @@ What doesn't work
 9. Misc defunked/unused functionality in server
     -> General use audit might be good
 10. Too hard to manually Test
-    -> Make it in such a way that components dont need to necessarily know eachother 
+    -> Make it in such a way that components dont need to necessarily know eachother
     -> Components need to be standalone enough to run tests against
 11. Authentication can probably be handled better than a file
     -> Look into database solutions?
-12. Compartmentalize functionality better 
+12. Compartmentalize functionality better
     -> ex. Manager handler shouldnt be in the same file as the agent handler
     -> could make a generic handler that takes in a data structure that maps opcodes to functions
         * would require making API generic, which wont be good
-13. Keep everything C++ style 
+13. Keep everything C++ style
     -> ex. misc.cpp isnt C++, its C
 14. Keep code ordering organized/easy to navigate
 15. WTF are we gonna do about shells?
     -> How to handle asynchronous netcomms over synchronous connection?
         * could use switch w/ file descriptors
         * maybe make backends use FDs to communicate?
-16. Move to easier make system/compiler?
+16. (SOLVED) Move to easier make system/compiler? --> CMake
 
 
 Problems solved with new outline:
 1,2,3,5,6,10,12,13,15(kind of)
 
 Unsolved/Misc Problems:
-4,7,8,9,11,14,16
+4,7,8,9,11,14
 
 
 
@@ -101,10 +101,10 @@ Current objectives:
             * that way we could just drop a connection into a wait cycle until the other connection comes through
             * Note that this could be done with multiple listeners too (and that might be better for server-side information handling and flexibility)
         - Note: may need a moderator function that can take input from one thread and pass it to another
-        - Maybe through a shared memory chunk? 
+        - Maybe through a shared memory chunk?
     4. Incorporate agent management/information into server
         - maintain a list of awaiting agents in the server and their listening ports
-        
+
 
 
 
@@ -118,7 +118,7 @@ Todos:
 
 a. Comment python code for easier maintenence
 _____________________________________________________________________________________________________
-Current Bugs: 
+Current Bugs:
 
 1. Fix problems related to uncleared server buffers
     * Check out loot downloading
@@ -127,7 +127,7 @@ Current Bugs:
 
 3. Fix catching of empty data file
 
-4. Fix server not overwriting default agent manifest 
+4. Fix server not overwriting default agent manifest
 
 _____________________________________________________________________________________________________
 Feature Ideas:
@@ -142,7 +142,7 @@ Feature Ideas:
             https://kb.vmware.com/s/article/1009458
             https://www.cyberbit.com/blog/endpoint-security/anti-vm-and-anti-sandbox-explained/
 
-3. Add argparsing onto client 
+3. Add argparsing onto client
     * Maybe homebrew in order to keep dependencies low?
 
 
