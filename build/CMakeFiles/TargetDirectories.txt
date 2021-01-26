@@ -2,7 +2,7 @@
 /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/CMakeFiles/edit_cache.dir
 /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/rebuild_cache.dir
 /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/edit_cache.dir
-/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/Server.dir
+/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/CMakeFiles/server.dir
 /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent/CMakeFiles/rebuild_cache.dir
 /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent/CMakeFiles/edit_cache.dir
 /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent/CMakeFiles/agent.dir

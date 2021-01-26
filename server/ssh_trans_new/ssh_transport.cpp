@@ -2,8 +2,8 @@
 
 // server required defines
 int type = TRANSPORT; // type TRANSPORT
-char *name = "SSH Backend";
-int id = 55;
+char *t_name = "SSH Backend";
+int t_id = 55;
 
 
 
@@ -35,12 +35,15 @@ extern "C"{
 
 // initializes the instance data
 SshTransport::SshTransport(NetInst *parent) {
+    id = t_id;
+    name = t_name;
     p_ref = parent;
     agent_name = (char*)malloc(128);
 }
 
 // frees instance data and variables
 SshTransport::~SshTransport() {
+    free(agent_name);
     ssh_bind_free(sshbind);
     ssh_finalize();
 }
@@ -96,7 +99,7 @@ api_return SshTransport::listen() {
 }
 
 // returns the transport's name
-const char *get_tname(){
+const char *SshTransport::get_tname(){
     return name;
 }
 
@@ -106,7 +109,7 @@ api_return SshTransport::get_aname() {
 }
 
 // returns the transport's ID
-int get_id(){
+int SshTransport::get_id(){
     return id;
 }
 

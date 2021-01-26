@@ -55,5 +55,9 @@ public:
     api_return get_aname() override;
     // sets the listening port of the instance
     api_return set_port(int portno) override;
+    // returns transport id
+    int get_id() override;
+    // returns transport name
+    const char* get_tname() override;
 };
 

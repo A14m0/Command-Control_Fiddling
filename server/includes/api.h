@@ -1,10 +1,10 @@
 /* defines the transport API structure */
 #pragma once
-#include "common.h"
+#include "types.h"
 
 // defines module types
-#define TRANSPORT 0
-#define STANDALONE 1
+#define TRANSPORT 1
+#define STANDALONE 2
 
 // defines connection types
 #define AGENT_TYPE 100
@@ -27,40 +27,34 @@
 #define OP_AUTH 0
 
 
-// structures that outlines transports
-typedef struct _api_ret {
-    int error_code;
-    void *data;
-} api_return, *papi_return;
 
 
-
-class TransportAPI{
-private:
+class TransportAPI {
+protected:
     int id;
     char *name;
 
 public:
     // dummy constructors
-    //TransportAPI();
-    virtual ~TransportAPI();
+    //virtual TransportAPI();
+    //virtual ~TransportAPI();
 
     // gets the next available tasking
     // returns tasking struct with OP_NODATA if nothing available
-    virtual api_return fetch_tasking();
+    virtual api_return fetch_tasking() = 0;
     // pushes a task update to connected client
-    virtual api_return push_tasking(ptask_t task);
+    virtual api_return push_tasking(ptask_t task) = 0;
 
     // starts listening for this instance
-    virtual api_return listen();
+    virtual api_return listen() = 0;
 
     // returns transport name info
-    const char *get_tname();
+    virtual const char *get_tname() = 0;
     // returns the currently connected agent's name
-    virtual api_return get_aname();
+    virtual api_return get_aname() = 0;
     // returns transport ID
-    int get_id();
+    virtual int get_id() = 0;
     // sets the listening port of the instance
-    virtual api_return set_port(int portno);
+    virtual api_return set_port(int portno) = 0;
 };
 

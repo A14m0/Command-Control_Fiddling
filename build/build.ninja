@@ -88,65 +88,65 @@ build server/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
 build server/edit_cache: phony server/CMakeFiles/edit_cache.util
 
 # =============================================================================
-# Object build statements for EXECUTABLE target Server
+# Object build statements for EXECUTABLE target server
 
 
 #############################################
-# Order-only phony target for Server
+# Order-only phony target for server
 
-build cmake_object_order_depends_target_Server: phony || server/CMakeFiles/Server.dir
+build cmake_object_order_depends_target_server: phony || server/CMakeFiles/server.dir
 
-build server/CMakeFiles/Server.dir/src/main.cpp.o: CXX_COMPILER__Server_Debug ../server/src/main.cpp || cmake_object_order_depends_target_Server
-  DEP_FILE = server/CMakeFiles/Server.dir/src/main.cpp.o.d
+build server/CMakeFiles/server.dir/src/main.cpp.o: CXX_COMPILER__server_Debug ../server/src/main.cpp || cmake_object_order_depends_target_server
+  DEP_FILE = server/CMakeFiles/server.dir/src/main.cpp.o.d
   FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
-  OBJECT_DIR = server/CMakeFiles/Server.dir
-  OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
+  OBJECT_DIR = server/CMakeFiles/server.dir
+  OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
 
-build server/CMakeFiles/Server.dir/src/common.cpp.o: CXX_COMPILER__Server_Debug ../server/src/common.cpp || cmake_object_order_depends_target_Server
-  DEP_FILE = server/CMakeFiles/Server.dir/src/common.cpp.o.d
+build server/CMakeFiles/server.dir/src/common.cpp.o: CXX_COMPILER__server_Debug ../server/src/common.cpp || cmake_object_order_depends_target_server
+  DEP_FILE = server/CMakeFiles/server.dir/src/common.cpp.o.d
   FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
-  OBJECT_DIR = server/CMakeFiles/Server.dir
-  OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
+  OBJECT_DIR = server/CMakeFiles/server.dir
+  OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
 
-build server/CMakeFiles/Server.dir/src/module.cpp.o: CXX_COMPILER__Server_Debug ../server/src/module.cpp || cmake_object_order_depends_target_Server
-  DEP_FILE = server/CMakeFiles/Server.dir/src/module.cpp.o.d
+build server/CMakeFiles/server.dir/src/module.cpp.o: CXX_COMPILER__server_Debug ../server/src/module.cpp || cmake_object_order_depends_target_server
+  DEP_FILE = server/CMakeFiles/server.dir/src/module.cpp.o.d
   FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
-  OBJECT_DIR = server/CMakeFiles/Server.dir
-  OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
+  OBJECT_DIR = server/CMakeFiles/server.dir
+  OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
 
-build server/CMakeFiles/Server.dir/src/netinst.cpp.o: CXX_COMPILER__Server_Debug ../server/src/netinst.cpp || cmake_object_order_depends_target_Server
-  DEP_FILE = server/CMakeFiles/Server.dir/src/netinst.cpp.o.d
+build server/CMakeFiles/server.dir/src/netinst.cpp.o: CXX_COMPILER__server_Debug ../server/src/netinst.cpp || cmake_object_order_depends_target_server
+  DEP_FILE = server/CMakeFiles/server.dir/src/netinst.cpp.o.d
   FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
-  OBJECT_DIR = server/CMakeFiles/Server.dir
-  OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
+  OBJECT_DIR = server/CMakeFiles/server.dir
+  OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
 
-build server/CMakeFiles/Server.dir/src/server.cpp.o: CXX_COMPILER__Server_Debug ../server/src/server.cpp || cmake_object_order_depends_target_Server
-  DEP_FILE = server/CMakeFiles/Server.dir/src/server.cpp.o.d
+build server/CMakeFiles/server.dir/src/server.cpp.o: CXX_COMPILER__server_Debug ../server/src/server.cpp || cmake_object_order_depends_target_server
+  DEP_FILE = server/CMakeFiles/server.dir/src/server.cpp.o.d
   FLAGS = -fpermissive -ggdb -Wall -g
   INCLUDES = -I../server/includes
-  OBJECT_DIR = server/CMakeFiles/Server.dir
-  OBJECT_FILE_DIR = server/CMakeFiles/Server.dir/src
+  OBJECT_DIR = server/CMakeFiles/server.dir
+  OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
 
 
 # =============================================================================
-# Link build statements for EXECUTABLE target Server
+# Link build statements for EXECUTABLE target server
 
 
 #############################################
-# Link the executable server/Server
+# Link the executable server/server
 
-build server/Server: CXX_EXECUTABLE_LINKER__Server_Debug server/CMakeFiles/Server.dir/src/main.cpp.o server/CMakeFiles/Server.dir/src/common.cpp.o server/CMakeFiles/Server.dir/src/module.cpp.o server/CMakeFiles/Server.dir/src/netinst.cpp.o server/CMakeFiles/Server.dir/src/server.cpp.o
+build server/server: CXX_EXECUTABLE_LINKER__server_Debug server/CMakeFiles/server.dir/src/main.cpp.o server/CMakeFiles/server.dir/src/common.cpp.o server/CMakeFiles/server.dir/src/module.cpp.o server/CMakeFiles/server.dir/src/netinst.cpp.o server/CMakeFiles/server.dir/src/server.cpp.o
   FLAGS = -fpermissive -ggdb -Wall -g
   LINK_LIBRARIES = -lpthread  -lcrypto  -ldl
-  OBJECT_DIR = server/CMakeFiles/Server.dir
+  OBJECT_DIR = server/CMakeFiles/server.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_FILE = server/Server
-  TARGET_PDB = Server.dbg
+  TARGET_FILE = server/server
+  TARGET_PDB = server.dbg
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
@@ -321,11 +321,11 @@ build server/ssh_trans_new/libssh_transport.so: CXX_SHARED_LIBRARY_LINKER__ssh_t
 # =============================================================================
 # Target aliases.
 
-build Server: phony server/Server
-
 build agent: phony agent/agent
 
 build libssh_transport.so: phony server/ssh_trans_new/libssh_transport.so
+
+build server: phony server/server
 
 build ssh_transport: phony server/ssh_trans_new/libssh_transport.so
 
@@ -351,7 +351,7 @@ build agent/all: phony agent/agent
 #############################################
 # Folder: /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server
 
-build server/all: phony server/Server
+build server/all: phony server/server
 
 # =============================================================================
 

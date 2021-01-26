@@ -1,6 +1,7 @@
 /* Defines common inherited attributes/functions of all classes */
 #pragma once
 
+// include system libraries
 #include <queue>
 #include <thread>
 #include <chrono>
@@ -15,39 +16,16 @@
 #include <sys/types.h>
 #include <openssl/sha.h>
 
-//#include "api.h"
+// our own headers
 #include "log.h"
 #include "values.h"
+#include "types.h"
 
-// task structure passed to dispatch queues
-typedef struct _task {
-    int to; // defines what ID the task is meant for
-    int from; // defines who sent the task
-    unsigned char type; // OPCODE of the task
-    unsigned long length; // length of data
-    void *data; // pointer to data on heap
-} task_t, *ptask_t;
-
-
-// authentication credentials helper structure
-typedef struct ret
-{
-    char *usr;
-    char *passwd;
-} passwd_t, *ppasswd_t;
 
 // defines task type vales
 #define TASK_AUTH 0x1
 #define TASK_NEW_NETINST 0x2
 #define TASK_WRITE_BEACON 0x3
-
-
-// log structure used to pass logs from threads to server
-typedef struct _log {
-    int id; // who sent the log
-    int type; // log type
-    const char *message; // message of the log
-} log_t, *plog_t;
 
 
 // common class

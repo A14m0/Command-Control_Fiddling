@@ -8,6 +8,7 @@
 
 
 #define DEBUG 0
+#define TRANSPORT_DIR "ssh_trans_new"
 
 #ifdef DEBUG
 #include <assert.h>
@@ -181,19 +182,23 @@ int Server::ReloadModules(){
     this->modules->clear();
 
     // open modules directory 
-    if ((dir = opendir ("shared/")) != NULL) {
+    // note that we only look in ssh_trans_new for the time being
+    // eventually we will progress to where the move to /shared makes sense
+    // if ((dir = opendir ("shared/")) != NULL) {
+    if ((dir = opendir (TRANSPORT_DIR)) != NULL) {
 
         // loop over each module
         while ((ent = readdir (dir)) != NULL) {
 
-            // ignore current and parent dir entries 
-            if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")){
+            // ignore non-lib entries 
+            if(strncmp(ent->d_name, "lib", 3)){
+                log(LOG_INFO, "Ignoring non-library file \"%s\"", ent->d_name);
                 continue;
             } else {
 
                 // get module path
                 memset(buff, 0, 2048);
-                sprintf(buff, "./shared/%s", ent->d_name);
+                sprintf(buff, "./%s/%s", TRANSPORT_DIR, ent->d_name);
                 
                 // open the module and handle the instance
                 void *handle = dlopen(buff, RTLD_NOW);
@@ -228,8 +233,8 @@ int Server::AddModule(void *handle){
     
     // get required global constants from the handle
     const int type = *(const int *)dlsym(handle, "type");
-    const int id = *(const int *)dlsym(handle, "id");
-    const char *name = *(const char **)dlsym(handle, "name");
+    const int id = *(const int *)dlsym(handle, "t_id");
+    const char *name = *(const char **)dlsym(handle, "t_name");
 
     // check if they worked
     if(!type) {

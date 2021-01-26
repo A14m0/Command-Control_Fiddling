@@ -30,7 +30,7 @@
 					"source" : "server",
 					"targetIndexes" : 
 					[
-						0
+						1
 					]
 				},
 				{
@@ -44,7 +44,7 @@
 					"source" : "agent",
 					"targetIndexes" : 
 					[
-						1
+						0
 					]
 				},
 				{
@@ -85,17 +85,17 @@
 			"targets" : 
 			[
 				{
-					"directoryIndex" : 1,
-					"id" : "Server::@d19778d2e34a1e3ddfc0",
-					"jsonFile" : "target-Server-Debug-1fbc813aec528dc6bbcd.json",
-					"name" : "Server",
-					"projectIndex" : 0
-				},
-				{
 					"directoryIndex" : 2,
 					"id" : "agent::@e2a0fc020fba741d1a6f",
 					"jsonFile" : "target-agent-Debug-8ad33427df089fe05c03.json",
 					"name" : "agent",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "server::@d19778d2e34a1e3ddfc0",
+					"jsonFile" : "target-server-Debug-3b20947c2368eb0f4b8b.json",
+					"name" : "server",
 					"projectIndex" : 0
 				},
 				{

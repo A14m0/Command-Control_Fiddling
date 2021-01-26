@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "server/Server"
+			"path" : "server/server"
 		}
 	],
 	"backtrace" : 1,
@@ -63,7 +63,7 @@
 			]
 		}
 	],
-	"id" : "Server::@d19778d2e34a1e3ddfc0",
+	"id" : "server::@d19778d2e34a1e3ddfc0",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -94,8 +94,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "Server",
-	"nameOnDisk" : "Server",
+	"name" : "server",
+	"nameOnDisk" : "server",
 	"paths" : 
 	{
 		"build" : "server",
