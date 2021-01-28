@@ -143,7 +143,7 @@ int SshTransport::Authenticate(){
                             strncpy(auth_struct->uname, ssh_message_auth_user(message), 16);
                             strncpy(auth_struct->passwd, ssh_message_auth_password(message), 64);
 
-                            ptask_t send = p_ref->CreateTasking(0, OP_AUTH, sizeof(auth_struct), auth_struct);
+                            ptask_t send = p_ref->CreateTasking(0, TASK_NULL, sizeof(auth_struct), auth_struct);
                             p_ref->PushTasking(send);
 
                             ptask_t auth_success = p_ref->AwaitTask(TASK_AUTH);

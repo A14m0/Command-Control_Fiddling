@@ -1,6 +1,16 @@
 /* Defines constant values used throughout the program */
 #pragma once
 
+
+// defines module types
+#define TRANSPORT 1
+#define STANDALONE 2
+
+// defines connection types
+#define AGENT_TYPE 100
+#define MANAG_TYPE 101
+
+
 // defines error codes that can be returned by transport functions
 #define API_OK 0          // No problems encountered
 #define API_ERR_GENERIC 1 // Generic problem encountered
