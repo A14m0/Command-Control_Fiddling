@@ -63,5 +63,15 @@
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
   "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/server.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp"
+},
+{
+  "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
+  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/module.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp",
+  "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp"
 }
 ]

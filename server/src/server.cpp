@@ -9,6 +9,7 @@
 
 #define DEBUG 0
 #define TRANSPORT_DIR "ssh_trans_new"
+#define SRV_DELAY 200
 
 #ifdef DEBUG
 #include <assert.h>
@@ -28,7 +29,10 @@ Server::Server(){
     this->modules = new std::vector<Module *>();
     this->instances = new std::vector<NetInst *>();
     this->thread_objs = new std::vector<std::thread *>();
+    this->task_dispatch = new std::deque<ptask_t>();
+    this->int_task_dispatch = new std::deque<ptask_t>();
     this->task_lock = PTHREAD_MUTEX_INITIALIZER;
+    this->int_task_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
     int ret;
@@ -124,6 +128,14 @@ int Server::DispatchTasking(){
                 found = true;
             }
         }
+
+        // check and see if its actually trying to go to the server
+        // ID of zero is always the server
+        if(task->to == 0){
+            ReceiveTasking(task);
+            found = true;
+        }
+
         if(!found){
             log(LOG_ERROR, "No registered instance with ID '%d' found for tasking (type %d)", task->to, task->type);
         }
@@ -133,7 +145,7 @@ int Server::DispatchTasking(){
 
     pthread_mutex_unlock(&task_lock);
 
-    printf("Dispatch complete\n");
+    //printf("Dispatch complete\n");
 
     return 0;
 }
@@ -141,7 +153,7 @@ int Server::DispatchTasking(){
 
 // creates a new thread using module of id `id`
 int Server::GenerateInstance(int id){
-    bool found = false;
+    //bool found = false;
     // check if the ID exists in the list of modules
     /*for(Module *mod : *modules){
         if(mod->GetID() == id){
@@ -192,7 +204,9 @@ int Server::ReloadModules(){
 
             // ignore non-lib entries 
             if(strncmp(ent->d_name, "lib", 3)){
+                #ifdef DEBUG
                 log(LOG_INFO, "Ignoring non-library file \"%s\"", ent->d_name);
+                #endif
                 continue;
             } else {
 
@@ -206,6 +220,8 @@ int Server::ReloadModules(){
                     log(LOG_ERROR, "Failed to load .so file: %s", dlerror());    
                     continue;
                 }
+
+                log(LOG_INFO, "Loading transport library \"%s\"", ent->d_name);
 
                 AddModule(handle);
             }
@@ -302,8 +318,8 @@ int Server::DoLog(plog_t log_ent){
     bool nodat = false;
     memset(log_buffer, 0, 4096);
     
-    char *reset = "\033[0m";
-    char *concode = "";
+    const char *reset = "\033[0m";
+    char *concode;
 
     time_t raw;
     time(&raw);
@@ -337,6 +353,7 @@ int Server::DoLog(plog_t log_ent){
         sprintf(log_buffer, "[%s] [%d] [FATAL]: %s\n", time_str, log_ent->id, log_ent->message);
         break;
     default:
+        concode = "";
         break;
     }
 
@@ -391,6 +408,61 @@ int Server::log(int type, const char *fmt, ...){
     return 0;
 } 
 
+
+// handles the adding of tasks to the internal task list
+int Server::ReceiveTasking(ptask_t task){
+    pthread_mutex_lock(&int_task_lock);
+    int_task_dispatch->push_back(task);
+    pthread_mutex_unlock(&int_task_lock);
+    
+    return 0;
+}
+
+
+// handles the server's tasking
+int Server::HandleTaskings(){
+    // unlike the NetInst, we lock everything before the while loop
+    // because we want to minimize server soft locks
+
+    pthread_mutex_lock(&int_task_lock);
+
+    while(!int_task_dispatch->empty()){
+        ptask_t task = int_task_dispatch->front();
+        HandleTask(task);
+        int_task_dispatch->pop_front();
+    }
+
+    pthread_mutex_unlock(&int_task_lock);
+    return 0;
+}
+
+
+// handles an individual tasking operation
+int Server::HandleTask(ptask_t task){
+    printf("Task received:\n");
+    printf("\tTO: %d\n", task->to);
+    printf("\tFROM: %d\n", task->from);
+    printf("\tTYPE: %d\n", task->type);
+    printf("\tLENGTH: %lu\n", task->length);
+    printf("\tDATA ADDRESS: %p\n", task->data);
+
+    // free the task at the end
+    FreeTask(task);
+
+    return 0;
+}
+
+
+// frees a given task
+void Server::FreeTask(ptask_t task){
+    if(task->data == NULL){
+        free(task->data);
+    }
+    free(task);
+}
+
+
+// the main logical loop of the server
 int Server::MainLoop(){
 
     /*
@@ -402,7 +474,7 @@ int Server::MainLoop(){
    ptask_t tmp = (ptask_t)malloc(sizeof(task_t));
    tmp->to = 0;
    tmp->from = 0;
-   tmp->type = 0x1;
+   tmp->type = TASK_NULL;
    tmp->length = 0;
    tmp->data = nullptr;
 
@@ -411,13 +483,14 @@ int Server::MainLoop(){
    while(1){
         // print all accumulated logs
         WriteLogs();
+
         // dispatch tasking
         DispatchTasking();
 
-        // check available tasking
-        log(LOG_INFO, "Server Heartbeat");
+        // handle internal tasks first
+        HandleTaskings();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(SRV_DELAY));
    }
 
 
@@ -437,3 +510,4 @@ int Server::PushTask(ptask_t task){
     pthread_mutex_unlock(&task_lock);
     return 0;
 }
+

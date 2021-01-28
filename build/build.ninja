@@ -102,6 +102,8 @@ build server/CMakeFiles/server.dir/src/main.cpp.o: CXX_COMPILER__server_Debug ..
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
+  TARGET_COMPILE_PDB = server/CMakeFiles/server.dir/
+  TARGET_PDB = server/server.pdb
 
 build server/CMakeFiles/server.dir/src/common.cpp.o: CXX_COMPILER__server_Debug ../server/src/common.cpp || cmake_object_order_depends_target_server
   DEP_FILE = server/CMakeFiles/server.dir/src/common.cpp.o.d
@@ -109,6 +111,8 @@ build server/CMakeFiles/server.dir/src/common.cpp.o: CXX_COMPILER__server_Debug 
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
+  TARGET_COMPILE_PDB = server/CMakeFiles/server.dir/
+  TARGET_PDB = server/server.pdb
 
 build server/CMakeFiles/server.dir/src/module.cpp.o: CXX_COMPILER__server_Debug ../server/src/module.cpp || cmake_object_order_depends_target_server
   DEP_FILE = server/CMakeFiles/server.dir/src/module.cpp.o.d
@@ -116,6 +120,8 @@ build server/CMakeFiles/server.dir/src/module.cpp.o: CXX_COMPILER__server_Debug 
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
+  TARGET_COMPILE_PDB = server/CMakeFiles/server.dir/
+  TARGET_PDB = server/server.pdb
 
 build server/CMakeFiles/server.dir/src/netinst.cpp.o: CXX_COMPILER__server_Debug ../server/src/netinst.cpp || cmake_object_order_depends_target_server
   DEP_FILE = server/CMakeFiles/server.dir/src/netinst.cpp.o.d
@@ -123,6 +129,8 @@ build server/CMakeFiles/server.dir/src/netinst.cpp.o: CXX_COMPILER__server_Debug
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
+  TARGET_COMPILE_PDB = server/CMakeFiles/server.dir/
+  TARGET_PDB = server/server.pdb
 
 build server/CMakeFiles/server.dir/src/server.cpp.o: CXX_COMPILER__server_Debug ../server/src/server.cpp || cmake_object_order_depends_target_server
   DEP_FILE = server/CMakeFiles/server.dir/src/server.cpp.o.d
@@ -130,6 +138,8 @@ build server/CMakeFiles/server.dir/src/server.cpp.o: CXX_COMPILER__server_Debug 
   INCLUDES = -I../server/includes
   OBJECT_DIR = server/CMakeFiles/server.dir
   OBJECT_FILE_DIR = server/CMakeFiles/server.dir/src
+  TARGET_COMPILE_PDB = server/CMakeFiles/server.dir/
+  TARGET_PDB = server/server.pdb
 
 
 # =============================================================================
@@ -145,8 +155,9 @@ build server/server: CXX_EXECUTABLE_LINKER__server_Debug server/CMakeFiles/serve
   OBJECT_DIR = server/CMakeFiles/server.dir
   POST_BUILD = :
   PRE_LINK = :
+  TARGET_COMPILE_PDB = server/CMakeFiles/server.dir/
   TARGET_FILE = server/server
-  TARGET_PDB = server.dbg
+  TARGET_PDB = server/server.pdb
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
@@ -192,6 +203,8 @@ build agent/CMakeFiles/agent.dir/src/agent.c.o: C_COMPILER__agent_Debug ../agent
   INCLUDES = -I../agent/includes
   OBJECT_DIR = agent/CMakeFiles/agent.dir
   OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
+  TARGET_COMPILE_PDB = agent/CMakeFiles/agent.dir/
+  TARGET_PDB = agent/agent.pdb
 
 build agent/CMakeFiles/agent.dir/src/b64.c.o: C_COMPILER__agent_Debug ../agent/src/b64.c || cmake_object_order_depends_target_agent
   DEP_FILE = agent/CMakeFiles/agent.dir/src/b64.c.o.d
@@ -199,6 +212,8 @@ build agent/CMakeFiles/agent.dir/src/b64.c.o: C_COMPILER__agent_Debug ../agent/s
   INCLUDES = -I../agent/includes
   OBJECT_DIR = agent/CMakeFiles/agent.dir
   OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
+  TARGET_COMPILE_PDB = agent/CMakeFiles/agent.dir/
+  TARGET_PDB = agent/agent.pdb
 
 build agent/CMakeFiles/agent.dir/src/beacon.c.o: C_COMPILER__agent_Debug ../agent/src/beacon.c || cmake_object_order_depends_target_agent
   DEP_FILE = agent/CMakeFiles/agent.dir/src/beacon.c.o.d
@@ -206,6 +221,8 @@ build agent/CMakeFiles/agent.dir/src/beacon.c.o: C_COMPILER__agent_Debug ../agen
   INCLUDES = -I../agent/includes
   OBJECT_DIR = agent/CMakeFiles/agent.dir
   OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
+  TARGET_COMPILE_PDB = agent/CMakeFiles/agent.dir/
+  TARGET_PDB = agent/agent.pdb
 
 build agent/CMakeFiles/agent.dir/src/client.c.o: C_COMPILER__agent_Debug ../agent/src/client.c || cmake_object_order_depends_target_agent
   DEP_FILE = agent/CMakeFiles/agent.dir/src/client.c.o.d
@@ -213,6 +230,8 @@ build agent/CMakeFiles/agent.dir/src/client.c.o: C_COMPILER__agent_Debug ../agen
   INCLUDES = -I../agent/includes
   OBJECT_DIR = agent/CMakeFiles/agent.dir
   OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
+  TARGET_COMPILE_PDB = agent/CMakeFiles/agent.dir/
+  TARGET_PDB = agent/agent.pdb
 
 build agent/CMakeFiles/agent.dir/src/shell.c.o: C_COMPILER__agent_Debug ../agent/src/shell.c || cmake_object_order_depends_target_agent
   DEP_FILE = agent/CMakeFiles/agent.dir/src/shell.c.o.d
@@ -220,6 +239,8 @@ build agent/CMakeFiles/agent.dir/src/shell.c.o: C_COMPILER__agent_Debug ../agent
   INCLUDES = -I../agent/includes
   OBJECT_DIR = agent/CMakeFiles/agent.dir
   OBJECT_FILE_DIR = agent/CMakeFiles/agent.dir/src
+  TARGET_COMPILE_PDB = agent/CMakeFiles/agent.dir/
+  TARGET_PDB = agent/agent.pdb
 
 
 # =============================================================================
@@ -235,8 +256,9 @@ build agent/agent: C_EXECUTABLE_LINKER__agent_Debug agent/CMakeFiles/agent.dir/s
   OBJECT_DIR = agent/CMakeFiles/agent.dir
   POST_BUILD = :
   PRE_LINK = :
+  TARGET_COMPILE_PDB = agent/CMakeFiles/agent.dir/
   TARGET_FILE = agent/agent
-  TARGET_PDB = agent.dbg
+  TARGET_PDB = agent/agent.pdb
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
@@ -283,6 +305,8 @@ build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/ssh_transport.cpp.o: CXX
   INCLUDES = -I../server/includes -I../server/ssh_trans_new
   OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
   OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
+  TARGET_COMPILE_PDB = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/
+  TARGET_PDB = server/ssh_trans_new/libssh_transport.pdb
 
 build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/common.cpp.o: CXX_COMPILER__ssh_transport_Debug ../server/src/common.cpp || cmake_object_order_depends_target_ssh_transport
   DEFINES = -Dssh_transport_EXPORTS
@@ -291,6 +315,8 @@ build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/common.cpp.o: CXX
   INCLUDES = -I../server/includes -I../server/ssh_trans_new
   OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
   OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src
+  TARGET_COMPILE_PDB = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/
+  TARGET_PDB = server/ssh_trans_new/libssh_transport.pdb
 
 build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o: CXX_COMPILER__ssh_transport_Debug ../server/src/netinst.cpp || cmake_object_order_depends_target_ssh_transport
   DEFINES = -Dssh_transport_EXPORTS
@@ -299,6 +325,28 @@ build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o: CX
   INCLUDES = -I../server/includes -I../server/ssh_trans_new
   OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
   OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src
+  TARGET_COMPILE_PDB = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/
+  TARGET_PDB = server/ssh_trans_new/libssh_transport.pdb
+
+build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/server.cpp.o: CXX_COMPILER__ssh_transport_Debug ../server/src/server.cpp || cmake_object_order_depends_target_ssh_transport
+  DEFINES = -Dssh_transport_EXPORTS
+  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/server.cpp.o.d
+  FLAGS = -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC
+  INCLUDES = -I../server/includes -I../server/ssh_trans_new
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
+  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src
+  TARGET_COMPILE_PDB = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/
+  TARGET_PDB = server/ssh_trans_new/libssh_transport.pdb
+
+build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/module.cpp.o: CXX_COMPILER__ssh_transport_Debug ../server/src/module.cpp || cmake_object_order_depends_target_ssh_transport
+  DEFINES = -Dssh_transport_EXPORTS
+  DEP_FILE = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/module.cpp.o.d
+  FLAGS = -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC
+  INCLUDES = -I../server/includes -I../server/ssh_trans_new
+  OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
+  OBJECT_FILE_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src
+  TARGET_COMPILE_PDB = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/
+  TARGET_PDB = server/ssh_trans_new/libssh_transport.pdb
 
 
 # =============================================================================
@@ -308,15 +356,16 @@ build server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o: CX
 #############################################
 # Link the shared library server/ssh_trans_new/libssh_transport.so
 
-build server/ssh_trans_new/libssh_transport.so: CXX_SHARED_LIBRARY_LINKER__ssh_transport_Debug server/ssh_trans_new/CMakeFiles/ssh_transport.dir/ssh_transport.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/common.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o
+build server/ssh_trans_new/libssh_transport.so: CXX_SHARED_LIBRARY_LINKER__ssh_transport_Debug server/ssh_trans_new/CMakeFiles/ssh_transport.dir/ssh_transport.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/common.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/server.cpp.o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/module.cpp.o
   LANGUAGE_COMPILE_FLAGS = -fpic -shared -lcrypto -lssh -fpermissive -g
   OBJECT_DIR = server/ssh_trans_new/CMakeFiles/ssh_transport.dir
   POST_BUILD = :
   PRE_LINK = :
   SONAME = libssh_transport.so
   SONAME_FLAG = -Wl,-soname,
+  TARGET_COMPILE_PDB = server/ssh_trans_new/CMakeFiles/ssh_transport.dir/
   TARGET_FILE = server/ssh_trans_new/libssh_transport.so
-  TARGET_PDB = ssh_transport.so.dbg
+  TARGET_PDB = server/ssh_trans_new/libssh_transport.pdb
 
 # =============================================================================
 # Target aliases.
@@ -367,14 +416,14 @@ build server/ssh_trans_new/all: phony server/ssh_trans_new/libssh_transport.so
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | ../CMakeLists.txt ../agent/CMakeLists.txt ../server/CMakeLists.txt ../server/ssh_trans_new/CMakeLists.txt /usr/share/cmake-3.19/Modules/CMakeCInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.19/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.19/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.19/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.19/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux.cmake /usr/share/cmake-3.19/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.19.3/CMakeCCompiler.cmake CMakeFiles/3.19.3/CMakeCXXCompiler.cmake CMakeFiles/3.19.3/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | ../CMakeLists.txt ../agent/CMakeLists.txt ../server/CMakeLists.txt ../server/ssh_trans_new/CMakeLists.txt /usr/share/cmake-3.19/Modules/CMakeCCompiler.cmake.in /usr/share/cmake-3.19/Modules/CMakeCCompilerABI.c /usr/share/cmake-3.19/Modules/CMakeCInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCXXCompiler.cmake.in /usr/share/cmake-3.19/Modules/CMakeCXXCompilerABI.cpp /usr/share/cmake-3.19/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.19/Modules/CMakeCompilerIdDetection.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCXXCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCompileFeatures.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCompilerABI.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCompilerId.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineSystem.cmake /usr/share/cmake-3.19/Modules/CMakeFindBinUtils.cmake /usr/share/cmake-3.19/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.19/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.19/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.19/Modules/CMakeParseImplicitIncludeInfo.cmake /usr/share/cmake-3.19/Modules/CMakeParseImplicitLinkInfo.cmake /usr/share/cmake-3.19/Modules/CMakeSystem.cmake.in /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.19/Modules/CMakeTestCCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeTestCXXCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeTestCompilerCommon.cmake /usr/share/cmake-3.19/Modules/Compiler/ADSP-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/ARMCC-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/ARMClang-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/AppleClang-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Borland-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Bruce-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.19/Modules/Compiler/Clang-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Clang-DetermineCompilerInternal.cmake /usr/share/cmake-3.19/Modules/Compiler/Comeau-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Compaq-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Cray-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Embarcadero-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Fujitsu-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/GHS-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-FindBinUtils.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU.cmake /usr/share/cmake-3.19/Modules/Compiler/HP-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/HP-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/IAR-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake /usr/share/cmake-3.19/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake /usr/share/cmake-3.19/Modules/Compiler/Intel-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/MSVC-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/NVIDIA-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/PGI-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/PathScale-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/SCO-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/SDCC-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/SunPro-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/TI-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Watcom-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/XL-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/XL-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/XLClang-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/zOS-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Internal/FeatureTesting.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-Determine-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux.cmake /usr/share/cmake-3.19/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.19.4/CMakeCCompiler.cmake CMakeFiles/3.19.4/CMakeCXXCompiler.cmake CMakeFiles/3.19.4/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build ../CMakeLists.txt ../agent/CMakeLists.txt ../server/CMakeLists.txt ../server/ssh_trans_new/CMakeLists.txt /usr/share/cmake-3.19/Modules/CMakeCInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.19/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.19/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.19/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.19/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux.cmake /usr/share/cmake-3.19/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.19.3/CMakeCCompiler.cmake CMakeFiles/3.19.3/CMakeCXXCompiler.cmake CMakeFiles/3.19.3/CMakeSystem.cmake: phony
+build ../CMakeLists.txt ../agent/CMakeLists.txt ../server/CMakeLists.txt ../server/ssh_trans_new/CMakeLists.txt /usr/share/cmake-3.19/Modules/CMakeCCompiler.cmake.in /usr/share/cmake-3.19/Modules/CMakeCCompilerABI.c /usr/share/cmake-3.19/Modules/CMakeCInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCXXCompiler.cmake.in /usr/share/cmake-3.19/Modules/CMakeCXXCompilerABI.cpp /usr/share/cmake-3.19/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.19/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.19/Modules/CMakeCompilerIdDetection.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCXXCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCompileFeatures.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCompilerABI.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineCompilerId.cmake /usr/share/cmake-3.19/Modules/CMakeDetermineSystem.cmake /usr/share/cmake-3.19/Modules/CMakeFindBinUtils.cmake /usr/share/cmake-3.19/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.19/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.19/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.19/Modules/CMakeParseImplicitIncludeInfo.cmake /usr/share/cmake-3.19/Modules/CMakeParseImplicitLinkInfo.cmake /usr/share/cmake-3.19/Modules/CMakeSystem.cmake.in /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.19/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.19/Modules/CMakeTestCCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeTestCXXCompiler.cmake /usr/share/cmake-3.19/Modules/CMakeTestCompilerCommon.cmake /usr/share/cmake-3.19/Modules/Compiler/ADSP-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/ARMCC-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/ARMClang-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/AppleClang-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Borland-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Bruce-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.19/Modules/Compiler/Clang-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Clang-DetermineCompilerInternal.cmake /usr/share/cmake-3.19/Modules/Compiler/Comeau-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Compaq-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Cray-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Embarcadero-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Fujitsu-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/GHS-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU-FindBinUtils.cmake /usr/share/cmake-3.19/Modules/Compiler/GNU.cmake /usr/share/cmake-3.19/Modules/Compiler/HP-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/HP-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/IAR-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake /usr/share/cmake-3.19/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake /usr/share/cmake-3.19/Modules/Compiler/Intel-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/MSVC-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/NVIDIA-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/PGI-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/PathScale-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/SCO-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/SDCC-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/SunPro-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/TI-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/Watcom-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/XL-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/XL-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/XLClang-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/zOS-C-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake /usr/share/cmake-3.19/Modules/Internal/FeatureTesting.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-Determine-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.19/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.19/Modules/Platform/Linux.cmake /usr/share/cmake-3.19/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.19.4/CMakeCCompiler.cmake CMakeFiles/3.19.4/CMakeCXXCompiler.cmake CMakeFiles/3.19.4/CMakeSystem.cmake: phony
 
 
 #############################################

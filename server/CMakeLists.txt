@@ -1,7 +1,7 @@
 SET(SERVER_INCLUDES_DIR "${PROJECT_SOURCE_DIR}/server/includes")
 SET(SERVER_SOURCE_DIR "${PROJECT_SOURCE_DIR}/server/src")
 
-SET(SERVER_COMPILE_FLAGS "-fpermissive")
+SET(SERVER_COMPILE_FLAGS "-fpermissive -Wno-write-strings")
 SET(RELEASE_FLAGS "-s")
 SET(DEBUG_FLAGS "-ggdb -Wall")
 

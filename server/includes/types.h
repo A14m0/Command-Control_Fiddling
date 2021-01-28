@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 // task structure passed to dispatch queues
 typedef struct _task {
     int to; // defines what ID the task is meant for
