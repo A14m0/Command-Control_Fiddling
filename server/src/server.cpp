@@ -152,7 +152,7 @@ int Server::DispatchTasking(){
 
 
 // creates a new thread using module of id `id`
-int Server::GenerateInstance(int id){
+int Server::GenerateInstance(Module* mod){
     //bool found = false;
     // check if the ID exists in the list of modules
     /*for(Module *mod : *modules){
@@ -170,6 +170,8 @@ int Server::GenerateInstance(int id){
     // set up thread classes
     int nid = rand();
     NetInst *inst = new NetInst(this, nid, NULL);
+    TransportAPI* transport = mod->NewTransport(inst);
+    inst->SetTransport(transport);
     instances->push_back(inst);
     std::thread *obj = inst->StartThread();
     thread_objs->push_back(obj);
@@ -469,7 +471,7 @@ int Server::MainLoop(){
     UNIMPLEMENTED
     */
 
-   GenerateInstance(0);
+   GenerateInstance(modules->back());
 
    ptask_t tmp = (ptask_t)malloc(sizeof(task_t));
    tmp->to = 0;

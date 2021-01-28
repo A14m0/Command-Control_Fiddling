@@ -28,7 +28,7 @@ private:
 
     int WriteLogs(); // loops over all available logs and writes/prints them
     int DispatchTasking();
-    int GenerateInstance(int id); // generates and registers a new comms instance
+    int GenerateInstance(Module* mod); // generates and registers a new comms instance
     int ReloadModules(); // clears and repopulates internal transports vector
     int AddModule(void *handle); // adds a module to the internal modules vector
     int ReceiveTasking(ptask_t task); // adds a task to internal list

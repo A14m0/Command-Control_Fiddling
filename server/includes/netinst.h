@@ -29,6 +29,7 @@ public:
     ptask_t CreateTasking(int to, unsigned char type, unsigned long length, void *data);
     int PushTasking(ptask_t task);
     int ReceiveTasking(ptask_t task);
+    void SetTransport(TransportAPI *transport);
     ptask_t AwaitTask(int type); 
 
     int GetID();

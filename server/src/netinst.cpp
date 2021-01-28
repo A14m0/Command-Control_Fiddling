@@ -25,6 +25,10 @@ void NetInst::MainLoop(){
         UNIMPLEMENTED
     */
 
+   if(!api_check(tspt->listen())){
+       return;
+   }
+
     while(1){
         // handle tasks
         while(!task_dispatch->empty()){
@@ -215,4 +219,8 @@ void NetInst::Trampoline(void *self){
 std::thread *NetInst::StartThread(){
     std::thread *thread_obj = new std::thread(NetInst::Trampoline, this);
     return thread_obj;
+}
+
+void NetInst::SetTransport(TransportAPI *transport){
+    this->tspt = transport;
 }
