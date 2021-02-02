@@ -20,7 +20,6 @@
 
 
 
-
 Server::Server(){
 
     // initialize internal queues/vectors
@@ -448,6 +447,37 @@ int Server::HandleTask(ptask_t task){
     printf("\tLENGTH: %lu\n", task->length);
     printf("\tDATA ADDRESS: %p\n", task->data);
 
+    switch (task->type)
+    {
+    // authentication check
+    case TASK_AUTH:
+        {
+            pauth_t auth = (pauth_t) task->data;
+            int success = Authenticate(auth);
+            ptask_t remote_task = CreateTasking(task->from, success, 0, nullptr);
+            PushTask(remote_task);
+        }
+        break;
+
+    // create new backend instance
+    case TASK_NEW_NETINST:
+        log(LOG_INFO, "Caught request for new backend (UNIMPLEMENTED)");
+        break;
+    
+    // write beacon data for agent
+    case TASK_WRITE_BEACON:
+        log(LOG_INFO, "Caught beacon write request (UNIMPLEMENTED)");
+        break;
+
+    // unknown/NOP request
+    case TASK_NULL:
+    default:
+        log(LOG_WARN, "Got unknown/empty tasking operation (%d)", task->type);
+        break;
+    }
+
+
+
     // free the task at the end
     FreeTask(task);
 
@@ -461,6 +491,97 @@ void Server::FreeTask(ptask_t task){
         free(task->data);
     }
     free(task);
+}
+
+
+// wrapper for creating a ptask_t structure in heap
+ptask_t Server::CreateTasking(int to, unsigned char type, unsigned long length, void *data){
+    ptask_t ret = (ptask_t)malloc(sizeof(task_t));
+    memset(ret, 0, sizeof(task_t));
+    ret->to = to;
+    ret->from = id;
+    ret->type = type;
+    ret->length = length;
+    ret->data = data;
+    
+    return ret;
+}
+
+
+// checks an agents credentials
+int Server::Authenticate(pauth_t auth){
+    // initialize variables
+    char** tokens = NULL;
+    char** subtokens = NULL;
+    char *buff;
+    int size = 0;
+    
+    // read in data into buffer
+    size = Common::get_file("agents/agents.dat", &buff);
+    
+    if(size == 0){
+        log(LOG_ERROR, "Found default agent file. Register agents by compiling them with this install");
+        return RESP_AUTH_FAIL;
+    }
+
+    tokens = Common::str_split(buff, '\n');
+
+    // begin going through usernames and hashes to attemtp to authenticate
+    if(tokens){
+        int j;
+
+        // loop over each line in file
+        for (j = 0; *(tokens + j); j++)
+        {
+            // Split at `:` (to get username and hash separeately)
+            subtokens = Common::str_split(*(tokens + j), ':');
+
+            // check if `usr` is the current line's username
+            if(!strcmp(auth->uname, *(subtokens))){
+                // check if the digest of `pass` is the same as the hash
+                char *auth_pass = Common::digest(auth->passwd);
+                if(!strcmp(auth_pass, *(subtokens+1))){
+                    free(auth_pass);
+                    // success and free
+                    log(LOG_INFO, "ID %s successfully authenticated\n", auth->uname);
+                    for (int i = 0; *(tokens + i); i++)
+                    {
+                        free(*(tokens + i));
+                    }
+                    for (int i = 0; *(subtokens+i); i++)
+                    {
+                        free(*(subtokens+i));
+                    }
+                    free(subtokens);
+                    free(tokens);
+                    return RESP_AUTH_OK;
+                }
+                else {
+                    free(auth_pass);
+                    // note here that we do not break the loop, 
+                    //t o prevent brute forcing of IDs through response time correlation
+                    log(LOG_WARN, "ID %s failed to pass password authentication\n", auth->uname);
+                    return RESP_AUTH_FAIL;
+                }
+            }
+        }
+        // unknown username
+        log(LOG_WARN, "ID %s unknown to this server\n", auth->uname);
+    }
+
+    // free tokens
+    for (int i = 0; *(tokens + i); i++)
+    {
+        free(*(tokens + i));
+    }
+    for (int i = 0; *(subtokens+i); i++)
+    {
+        free(*(subtokens+i));
+    }
+    free(subtokens);
+    free(tokens);
+
+    return RESP_AUTH_FAIL;
 }
 
 

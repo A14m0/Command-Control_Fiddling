@@ -2,7 +2,6 @@
 #pragma once
 
 #include "common.h"
-//#include "netinst.h"
 #include "api.h"
 
 class NetInst;

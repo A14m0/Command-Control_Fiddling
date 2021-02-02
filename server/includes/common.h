@@ -52,6 +52,7 @@ public:
     static int write_agent_beacon(const char* id, const char* beacon);
     static int write_default_agent_manifest(char* path);
     static char* digest(const char* input);
+    static int get_file(const char* filename, char **buff);
     ~Common();
 };
 

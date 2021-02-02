@@ -1,27 +1,27 @@
 [
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/main.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/main.cpp",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -Wno-write-strings -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/main.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/main.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/main.cpp"
 },
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/common.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -Wno-write-strings -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/common.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp"
 },
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/module.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -Wno-write-strings -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/module.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp"
 },
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/netinst.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -Wno-write-strings -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/netinst.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp"
 },
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/server.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp",
+  "command": "/opt/cuda/bin/g++ -I../server/includes  -fpermissive -Wno-write-strings -ggdb -Wall -g -o server/CMakeFiles/server.dir/src/server.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp"
 },
 {
@@ -51,27 +51,27 @@
 },
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/ssh_transport.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/ssh_trans_new/ssh_transport.cpp",
+  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -Wno-write-strings -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/ssh_transport.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/ssh_trans_new/ssh_transport.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/ssh_trans_new/ssh_transport.cpp"
 },
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/common.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp",
+  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -Wno-write-strings -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/common.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/common.cpp"
 },
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp",
+  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -Wno-write-strings -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/netinst.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/netinst.cpp"
 },
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/server.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp",
+  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -Wno-write-strings -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/server.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/server.cpp"
 },
 {
   "directory": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build",
-  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/module.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp",
+  "command": "/opt/cuda/bin/g++ -Dssh_transport_EXPORTS -I../server/includes -I../server/ssh_trans_new  -fpic -shared -lcrypto -lssh -fpermissive -Wno-write-strings -g -fPIC -o server/ssh_trans_new/CMakeFiles/ssh_transport.dir/__/src/module.cpp.o -c /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp",
   "file": "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/server/src/module.cpp"
 }
 ]

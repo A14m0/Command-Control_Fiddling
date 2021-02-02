@@ -118,8 +118,8 @@ char *Common::substring(const char *string, int position)
     return pointer;
 }
 
-/*Reads `name`, stores data in `ptr` and returns the file size
-int misc_get_file(const char *name, char **ptr){
+// Reads `name`, stores data in `ptr` and returns the file size
+int Common::get_file(const char *name, char **ptr){
     int size = 0;
     FILE *file = NULL;
 
@@ -145,7 +145,7 @@ int misc_get_file(const char *name, char **ptr){
     fclose(file);
 
     return size;
-}*/
+}
 
 /* Splits `a_str` at `a_delim` and returns all of the substrings */
 char** Common::str_split(char* a_str, const char a_delim)

@@ -25,6 +25,8 @@ void NetInst::MainLoop(){
         UNIMPLEMENTED
     */
 
+   log(LOG_INFO, "Beginning instance listen");
+
    if(!api_check(tspt->listen())){
        return;
    }

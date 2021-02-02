@@ -24,9 +24,14 @@
 #define API_ERR_LOCAL 9   // Encountered local-side error
 
 
-
 // defines task type vales
-#define TASK_NULL 0x0           // NOP tasking
-#define TASK_AUTH 0x1           // Request to authenticate credentials
-#define TASK_NEW_NETINST 0x2    // Request to create new NetInst
-#define TASK_WRITE_BEACON 0x3   // Request to write beacon data
+#define TASK_NULL 0             // NOP tasking
+#define TASK_AUTH 1             // Request to authenticate credentials
+#define TASK_NEW_NETINST 2      // Request to create new NetInst
+#define TASK_WRITE_BEACON 3     // Request to write beacon data
+
+
+// defines task type responses
+#define RESP_NULL 0             // NOP response
+#define RESP_AUTH_OK 1          // Successfully authenticated agent
+#define RESP_AUTH_FAIL 2        // Failed to authenticate agent

@@ -140,14 +140,17 @@ int SshTransport::Authenticate(){
                         {
                             // generate tasking info
                             pauth_t auth_struct = (pauth_t)malloc(sizeof(auth_t));
-                            strncpy(auth_struct->uname, ssh_message_auth_user(message), 16);
+                            strncpy(auth_struct->uname, ssh_message_auth_user(message), 128);
                             strncpy(auth_struct->passwd, ssh_message_auth_password(message), 64);
 
-                            ptask_t send = p_ref->CreateTasking(0, TASK_NULL, sizeof(auth_struct), auth_struct);
+                            // send tasking to server and await tasking report
+                            ptask_t send = p_ref->CreateTasking(0, TASK_AUTH, sizeof(auth_struct), auth_struct);
                             p_ref->PushTasking(send);
 
                             ptask_t auth_success = p_ref->AwaitTask(TASK_AUTH);
-                            if((int)auth_success->data){
+
+                            // if we succeed, set the correct values and send OK
+                            if(auth_success->type == RESP_AUTH_OK){
                                 auth=1;
 
                                 memset(agent_name, 0, 128);//strlen(ssh_message_auth_user(message)));

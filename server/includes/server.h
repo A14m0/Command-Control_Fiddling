@@ -34,7 +34,9 @@ private:
     int ReceiveTasking(ptask_t task); // adds a task to internal list
     int HandleTaskings(); // handles all taskings assigned to server
     int HandleTask(ptask_t task); // handles an individual task
+    int Authenticate(pauth_t auth); // checks agent passphrase and username against known agents
     void FreeTask(ptask_t task); // safely deletes a task object
+    ptask_t CreateTasking(int to, unsigned char type, unsigned long length, void *data); // generates a tasking given the input
 
     int DoLog(plog_t log_ent); // writes a plog_t to console/file
     int log(int type, const char *fmt, ...);// override; // internal logging function

@@ -31,3 +31,10 @@ typedef struct _api_ret {
     int error_code;
     void *data;
 } api_return, *papi_return;
+
+
+// defines authentication structures
+typedef struct _auth {
+    char uname[128];
+    char passwd[64];
+} auth_t, *pauth_t;
