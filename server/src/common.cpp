@@ -8,6 +8,11 @@ Common::~Common(){}
 
 /* Gets the index of `find` in `str`. Goes backwards if `rev` is !0*/
 int Common::index_of(const char* str, const char find, int rev){
+    // check if the string is nullptr
+    if(!str){
+        return -1;
+    }
+
     // check if we are going backwards
     if (rev)
     {
@@ -411,7 +416,7 @@ int Common::_register_agent(const char *username, const char *password){
     file = fopen("agents/agents.dat", "a");
     if (!file)
     {
-        printf("Failed to open file thing\n");
+        printf("Failed to open file\n");
         return 1;
     }
 
@@ -432,6 +437,10 @@ int Common::register_agent(char *line){
 
     // find the delimeter character ':'
     int delim = Common::index_of(line, ':', 0);
+    if(delim == -1){
+        printf("Failed to register agent: Malformed input\n");
+        return 1;
+    }
 
     // the password is everything after the delim
     passwd = line + delim + 1;
