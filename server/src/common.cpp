@@ -9,9 +9,7 @@ Common::~Common(){}
 /* Gets the index of `find` in `str`. Goes backwards if `rev` is !0*/
 int Common::index_of(const char* str, const char find, int rev){
     // check if the string is nullptr
-    if(!str){
-        return -1;
-    }
+    if(!str) return -1;
 
     // check if we are going backwards
     if (rev)
@@ -22,10 +20,8 @@ int Common::index_of(const char* str, const char find, int rev){
 
         // loop over each character
         while(end - ctr > 0){
-            if(str[end-ctr] == find){
-                // found it so write index
-                return end - ctr;
-            }
+            // found it so write index
+            if(str[end-ctr] == find) return end - ctr;
             ctr++;
         }
     } else {
@@ -33,10 +29,7 @@ int Common::index_of(const char* str, const char find, int rev){
 
         // loop while there is no nullterm
         while (str[i] != '\0') {
-            if (str[i] == find) {
-                return i;
-            }
-
+            if (str[i] == find) return i;
             i++;
         }
     }
@@ -51,9 +44,7 @@ int Common::directory_exists( const char* pzPath ){
 
     // initialize a stats struct and checks if it succeeds
     // If it fails, it doesnt exist
-    if (stat(pzPath, &st) == -1) {
-        return 0;
-    }
+    if (stat(pzPath, &st) == -1) return 0;
 
     // directory exists
     return 1;
@@ -94,16 +85,14 @@ int Common::copy_file(const char *filename, const char *dest){
 } */
 
 /* Gets substring from `string` given a position and length*/
-char *Common::substring(const char *string, int position)
-{
+char *Common::substring(const char *string, int position) {
     char *pointer;
     int c;
 
     // allocate memory for substring
     pointer = (char *)malloc(strlen(string));
 
-    if (pointer == NULL)
-    {
+    if (pointer == NULL) {
         // malloc failed
         printf("Unable to allocate memory.\n");
         exit(1);
@@ -111,8 +100,7 @@ char *Common::substring(const char *string, int position)
 
     // sets all characters before position
     // to corresponding indexes in return string
-    for (c = 0 ; c < position ; c++)
-    {
+    for (c = 0 ; c < position ; c++) {
         *(pointer+c) = *(string);
         string++;
     }
@@ -130,8 +118,7 @@ int Common::get_file(const char *name, char **ptr){
 
     // open the file
     file = fopen(name, "rb");
-    if (file == NULL)
-    {
+    if (file == NULL) {
         printf("Failed to open file %s\n", name);
         return -1;
     }
@@ -164,10 +151,8 @@ char** Common::str_split(char* a_str, const char a_delim)
     delim[1] = 0;
 
     // Count how many elements will be extracted
-    while (*tmp)
-    {
-        if (a_delim == *tmp)
-        {
+    while (*tmp) {
+        if (a_delim == *tmp) {
             count++;
             last_comma = tmp;
         }
@@ -184,19 +169,17 @@ char** Common::str_split(char* a_str, const char a_delim)
     result = (char **)malloc(sizeof(char*) * count);
     memset(result, 0, sizeof(char*) * count);
 
-    if (result)
-    {
+    if (result) {
         size_t idx  = 0;
         char* token = strtok(a_str, delim);
 
         // loop over tokens and put them in the returned array
-        while (token)
-        {
+        while (token) {
             assert(idx < count);
             *(result + idx++) = strdup(token);
             token = strtok(0, delim);
         }
-        if(idx == count -1){
+        if(idx == count -1) {
             *(result + idx) = 0;
         }
     }
@@ -208,8 +191,7 @@ char** Common::str_split(char* a_str, const char a_delim)
 
 /* returns the size of the buffer
 given the `inlen` of the raw buffer */
-size_t B64::enc_size(size_t inlen)
-{
+size_t B64::enc_size(size_t inlen) {
 	size_t ret;
 
 	ret = inlen;
@@ -223,8 +205,7 @@ size_t B64::enc_size(size_t inlen)
 
 /* returns the size of the decoded buffer
 given the `in` string */
-size_t B64::dec_size(const char *in)
-{
+size_t B64::dec_size(const char *in) {
 	size_t len;
 	size_t ret;
 	size_t i;
@@ -248,15 +229,14 @@ size_t B64::dec_size(const char *in)
 
 /*Encodes the `in` buffer of size `len`
 and writes encoded string to `buff`*/
-void B64::encode(const unsigned char *in, size_t len, char **buff)
-{
+void B64::encode(const unsigned char *in, size_t len, char **buff) {
 	char   *out;
 	size_t  elen;
 	size_t  i;
 	size_t  j;
 	size_t  v;
 
-	if (in == NULL || len == 0){
+	if (in == NULL || len == 0) {
 		printf("INNODE IS NULL!\n");
 		return;
 	}
@@ -272,11 +252,13 @@ void B64::encode(const unsigned char *in, size_t len, char **buff)
 
 		out[j]   = B64::b64chars[(v >> 18) & 0x3F];
 		out[j+1] = B64::b64chars[(v >> 12) & 0x3F];
+
 		if (i+1 < len) {
 			out[j+2] = B64::b64chars[(v >> 6) & 0x3F];
 		} else {
 			out[j+2] = '=';
 		}
+
 		if (i+2 < len) {
 			out[j+3] = B64::b64chars[v & 0x3F];
 		} else {
@@ -289,33 +271,26 @@ void B64::encode(const unsigned char *in, size_t len, char **buff)
 }
 
 /* Checks if `c` is a valid character */
-int B64::isvalidchar(char c)
-{
-	if (c >= '0' && c <= '9')
-		return 1;
-	if (c >= 'A' && c <= 'Z')
-		return 1;
-	if (c >= 'a' && c <= 'z')
-		return 1;
-	if (c == '+' || c == '/' || c == '=')
-		return 1;
+int B64::isvalidchar(char c) {
+	if (c >= '0' && c <= '9') return 1;
+	if (c >= 'A' && c <= 'Z') return 1;
+	if (c >= 'a' && c <= 'z') return 1;
+	if (c == '+' || c == '/' || c == '=') return 1;
+    
 	return 0;
 }
 
 /* Decodes `in` and writes to `out`, storing length in `outlen`*/
-int B64::decode(const char *in, unsigned char *out, size_t outlen)
-{
+int B64::decode(const char *in, unsigned char *out, size_t outlen) {
 	size_t len;
 	size_t i;
 	size_t j;
 	int    v;
 
-	if (in == NULL || out == NULL)
-		return 0;
+	if (in == NULL || out == NULL) return 0;
 
 	len = strlen(in);
-	if (outlen < B64::dec_size(in) || len % 4 != 0)
-		return 0;
+	if (outlen < B64::dec_size(in) || len % 4 != 0) return 0;
 
 	for (i=0; i<len; i++) {
 		if (!B64::isvalidchar(in[i])) {
@@ -330,10 +305,8 @@ int B64::decode(const char *in, unsigned char *out, size_t outlen)
 		v = in[i+3]=='=' ? v << 6 : (v << 6) | B64::b64invs[in[i+3]-43];
 
 		out[j] = (v >> 16) & 0xFF;
-		if (in[i+2] != '=')
-			out[j+1] = (v >> 8) & 0xFF;
-		if (in[i+3] != '=')
-			out[j+2] = v & 0xFF;
+		if (in[i+2] != '=') out[j+1] = (v >> 8) & 0xFF;
+		if (in[i+3] != '=') out[j+2] = v & 0xFF;
 	}
 
 	return 1;
@@ -352,8 +325,7 @@ const int B64::b64invs[] = { 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58,
 const char *CONST_NA = "NA";
 
 /* Initializes an agent's working directory */
-int Common::init_agent(const char *agent_id){
-
+int Common::init_agent(const char *agent_id) {
     // initialize and zero needed variables and buffers
     FILE *manifest = NULL;
     char parent_dir[2048];
@@ -373,35 +345,27 @@ int Common::init_agent(const char *agent_id){
     tmp = strdup(parent_dir);
 
     // create dir with correct perms
-    rc = mkdir(parent_dir, 0755);
-    if(rc != 0){
+    if(mkdir(parent_dir, 0755)) {
         perror("Failed to create agent's directory");
         return 1;
     }
 
-    // creates the loot directory
-    rc = mkdir(strcat(parent_dir, "/loot"), 0755);
-    if(rc != 0){
+    // create the loot directory
+    if(mkdir(strcat(parent_dir, "/loot"), 0755)) {
         perror("Failed to create loot directory");
         return 1;
     }
 
     // create the tasking directory
-    rc = mkdir(strcat(tmp, "/tasking"), 0755);
-    if(rc != 0){
+    if(mkdir(strcat(tmp, "/tasking"), 0755)) {
         perror("Failed to create tasking directory");
         return 1;
     }
 
     // open and write default agent manifest
-    manifest = fopen(strcat(buff, "/agent.mfst"), "w");
-    if (!manifest){
-        perror("Failed to create agent manifest");
-        return 1;
-    }
-    fwrite("NULL :)", 1, sizeof("NULL :)"), manifest);
-    fclose(manifest);
-
+    strcat(buff, "/agent.mfst");
+    Common:write_default_agent_manifest(buff);
+    
     // write default agent information to its new info file
     Common::write_agent_beacon(agent_id, "NA\nNA\nNA\nNA\nNA\n");
 
@@ -409,13 +373,12 @@ int Common::init_agent(const char *agent_id){
 }
 
 /* Registers a new set of credentials with the server*/
-int Common::_register_agent(const char *username, const char *password){
+int Common::_register_agent(const char *username, const char *password) {
     FILE *file;
 
     // open credential store
     file = fopen("agents/agents.dat", "a");
-    if (!file)
-    {
+    if (!file) {
         printf("Failed to open file\n");
         return 1;
     }
@@ -430,14 +393,13 @@ int Common::_register_agent(const char *username, const char *password){
 }
 
 /* Registers agent using single line format */
-int Common::register_agent(char *line){
-
+int Common::register_agent(char *line) {
     char *id;
     char *passwd;
 
     // find the delimeter character ':'
     int delim = Common::index_of(line, ':', 0);
-    if(delim == -1){
+    if(delim == -1) {
         printf("Failed to register agent: Malformed input\n");
         return 1;
     }
@@ -452,13 +414,15 @@ int Common::register_agent(char *line){
     // register the agent
     printf("Registering agents: %s,%s\n", id, passwd);
 
-    Common::_register_agent(id, passwd);
+    if(!Common::_register_agent(id, passwd)){
+        return 1;
+    }
 
     return 0;
 }
 
 /* Retrieves the tasking information from agent with ID `agent_id` */
-char *Common::get_agent_tasking(const char *agent_id){
+char *Common::get_agent_tasking(const char *agent_id) {
     char file[2048];
     char cwd_buf[BUFSIZ];
     char *mem_dump = NULL;
@@ -471,33 +435,20 @@ char *Common::get_agent_tasking(const char *agent_id){
     sprintf(file, "%s/agents/%s/agent.mfst", getcwd(cwd_buf, sizeof(cwd_buf)),agent_id);
 
     // open it
-    fd = fopen(file, "rb");
-    if(fd == NULL) return NULL;
-
-    // get the file's size
-    fseek(fd, 0L, SEEK_END);
-    size = ftell(fd);
-    rewind(fd);
-
-    // allocate heap memory for the data and read it
-    mem_dump = (char *)malloc(size+1);
-    memset(mem_dump, 0, size+1);
-    fread(mem_dump, 1, size, fd);
-
-    // close the file
-    fclose(fd);
-    //write_format(file);
+    size = Common::get_file(file, &mem_dump);
+    
+    // write_format(file);
     return mem_dump;
 }
 
 /* Generates a new username and password set */
 ppasswd_t Common::gen_agent_creds(){
     // allocate heap memory and zero fields
-    struct ret *buf = (struct ret *) malloc(sizeof(struct ret));
-    memset(buf, 0, sizeof(struct ret));
+    ppasswd_t buf = (ppasswd_t) malloc(sizeof(struct ret));
     char *usr = (char *)malloc(13);
-    memset(usr, 0, 13);
     char *pwd = (char *)malloc(13);
+    memset(buf, 0, sizeof(ppasswd_t));
+    memset(usr, 0, 13);
     memset(usr, 0, 13);
 
     // assign structure values to allocated chunks
@@ -519,26 +470,23 @@ ppasswd_t Common::gen_agent_creds(){
 }
 
 /* Adds `operation` to `agent` tasking queue with `opt`*/
-int Common::task_agent(const int operation,
-                                  const char *agent,
-                                  const char *opt){
+int Common::task_agent(const int operation, const char *agent, const char *opt) {
     FILE *file = NULL;
     char buffer[BUFSIZ];
     char tmpbuff[BUFSIZ];
 
     // get path to agent's manifest
     memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "%s/agents/%s/agent.mfst",
-            getcwd(tmpbuff, sizeof(tmpbuff)), agent);
+    sprintf(buffer, "%s/agents/%s/agent.mfst", getcwd(tmpbuff, sizeof(tmpbuff)), agent);
 
     // open file
     file = fopen(buffer, "a");
-    if(!file){
+    if(!file) {
         perror("Server failed to read agent tasking file");
         return 1;
     }
 
-    printf("Server: Tasking %s with operation %d\n", agent, operation);
+    //printf("Server: Tasking %s with operation %d\n", agent, operation);
 
     // format, write, and close
     fprintf(file, "%d|%s\n", operation, opt);
@@ -548,8 +496,7 @@ int Common::task_agent(const int operation,
 }
 
 /* Writes received agent beacon data to agent's info.txt*/
-int Common::write_agent_beacon(const char *id,
-                                          const char *beacon){
+int Common::write_agent_beacon(const char *id, const char *beacon) {
     FILE *fd = NULL;
     char buff[2048];
     char cwd[BUFSIZ];
@@ -561,8 +508,7 @@ int Common::write_agent_beacon(const char *id,
     sprintf(buff, "%s/agents/%s/info.txt", getcwd(cwd, sizeof(cwd)), id);
 
     fd = fopen(buff, "w");
-    if (fd == NULL)
-    {
+    if (fd == NULL) {
         perror("");
         return 1;
     }
@@ -575,12 +521,11 @@ int Common::write_agent_beacon(const char *id,
 }
 
 /* Writes the default manifest of the agent*/
-int Common::write_default_agent_manifest(char *path){
+int Common::write_default_agent_manifest(char *path) {
     FILE *fd;
 
     fd = fopen(path, "w");
-    if (!fd)
-    {
+    if (!fd) {
         perror("");
         return 1;
     }
@@ -600,8 +545,7 @@ char* Common::digest(const char* input){
     ret[SHA512_DIGEST_LENGTH*2] = '\0';
 
     // format for use
-    for(int i = 0; i < SHA512_DIGEST_LENGTH; i++)
-        sprintf(&ret[i*2], "%02x", (unsigned int)digest[i]);
+    for(int i = 0; i < SHA512_DIGEST_LENGTH; i++) sprintf(&ret[i*2], "%02x", (unsigned int)digest[i]);
 
     return ret;
 }
