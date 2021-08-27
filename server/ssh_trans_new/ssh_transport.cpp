@@ -69,7 +69,7 @@ api_return SshTransport::listen() {
 
     ssh_options_set(session, SSH_OPTIONS_FD, &sock);
 
-    ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, KEYS_FOLDER "ssh_host_dsa_key");
+    //ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, KEYS_FOLDER "ssh_host_dsa_key");
     ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, KEYS_FOLDER "ssh_host_rsa_key");
     //printf("Binding to portno %d...\n", tmp->portno);
     ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT, &(portno));

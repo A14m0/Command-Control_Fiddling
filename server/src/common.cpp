@@ -327,12 +327,12 @@ const char *CONST_NA = "NA";
 /* Initializes an agent's working directory */
 int Common::init_agent(const char *agent_id) {
     // initialize and zero needed variables and buffers
-    FILE *manifest = NULL;
+    // FILE *manifest = NULL;
     char parent_dir[2048];
     char tmp_buff[BUFSIZ];
     char *tmp = NULL;
     char *buff = NULL;
-    int rc = 0;
+    // int rc = 0;
 
     memset(parent_dir, 0, sizeof(parent_dir));
     memset(tmp_buff, 0, sizeof(tmp_buff));
@@ -364,7 +364,7 @@ int Common::init_agent(const char *agent_id) {
 
     // open and write default agent manifest
     strcat(buff, "/agent.mfst");
-    Common:write_default_agent_manifest(buff);
+    Common::write_default_agent_manifest(buff);
     
     // write default agent information to its new info file
     Common::write_agent_beacon(agent_id, "NA\nNA\nNA\nNA\nNA\n");
@@ -427,7 +427,7 @@ char *Common::get_agent_tasking(const char *agent_id) {
     char cwd_buf[BUFSIZ];
     char *mem_dump = NULL;
     int size = 0;
-    FILE *fd = NULL;
+    //FILE *fd = NULL;
 
     // get target agent's manifest
     memset(cwd_buf, 0, sizeof(cwd_buf));
@@ -444,10 +444,10 @@ char *Common::get_agent_tasking(const char *agent_id) {
 /* Generates a new username and password set */
 ppasswd_t Common::gen_agent_creds(){
     // allocate heap memory and zero fields
-    ppasswd_t buf = (ppasswd_t) malloc(sizeof(struct ret));
+    ppasswd_t buf = (ppasswd_t) malloc(sizeof(passwd_t));
     char *usr = (char *)malloc(13);
     char *pwd = (char *)malloc(13);
-    memset(buf, 0, sizeof(ppasswd_t));
+    memset(buf, 0, sizeof(passwd_t));
     memset(usr, 0, 13);
     memset(usr, 0, 13);
 

@@ -366,9 +366,9 @@ int Server::DoLog(plog_t log_ent){
     }
 
     // print log
-    printf(concode);
-    printf(log_buffer);
-    printf(reset);
+    printf("%s",concode);
+    printf("%s",log_buffer);
+    printf("%s",reset);
     
     // write log here
 

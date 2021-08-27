@@ -58,3 +58,4 @@ dkms.conf
 # auto-generated folders
 out/
 tmpbuild/
+build/
