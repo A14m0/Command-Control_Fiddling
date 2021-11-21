@@ -79,6 +79,7 @@ ssh_session connect_ssh(const char *host, const char *user){
 	/*Connect to server*/
     ssh_session session;
     int auth=0;
+	printf("Attempting to connect to %s (%s)\n", host, PORT);
 
 	// initialize ssh session structure
     session=ssh_new();

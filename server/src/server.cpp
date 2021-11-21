@@ -465,7 +465,7 @@ int Server::HandleTask(ptask_t task){
         break;
     
     // write beacon data for agent
-    case TASK_WRITE_BEACON:
+    case TASK_PUSH_BEACON:
         log(LOG_INFO, "Caught beacon write request (UNIMPLEMENTED)");
         break;
 

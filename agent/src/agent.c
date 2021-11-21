@@ -265,6 +265,8 @@ int func_loop(ssh_session session)
 	}
 
 	printf("Waiting for read...\n");
+
+	// TODO: Make this a loop until AGENT_TERM is reached
 	nbytes = ssh_channel_read(channel, tasking, sizeof(tasking), 0);
 	printf("read %d bytes from channel\n", nbytes);
 	if (nbytes < 0){
@@ -499,6 +501,8 @@ int download_file(ssh_channel chan, char *filename){
 }
 
 int parse_tasking(char *tasking, ssh_channel chan){
+
+	// TODO: UPDATE THIS TO NEW TASKING APPROACH
 	/* Parses and handles the tasking input from the server*/
 
 	// checks if there is no tasking

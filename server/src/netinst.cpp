@@ -25,13 +25,22 @@ void NetInst::MainLoop(){
         UNIMPLEMENTED
     */
 
-   log(LOG_INFO, "Beginning instance listen");
+    log(LOG_INFO, "Beginning instance listen");
 
-   if(!api_check(tspt->listen())){
-       return;
-   }
+    if(!api_check(tspt->listen())){
+        return;
+    }
+
+    if(!api_check(tspt->get_aname())) {
+        return;
+    }
+    // first thing we do is request from the server the manifest of the agent
+    //ptask_t test = CreateTasking(0, TASK_PUSH_BEACON, strlen((char*)(this->t_dat)), this->t_dat);
+    //PushTasking(test);
+
 
     while(1){
+        printf("Within main thread loop\n");
         // handle tasks
         while(!task_dispatch->empty()){
             pthread_mutex_lock(&int_task_lock);
@@ -41,13 +50,10 @@ void NetInst::MainLoop(){
             pthread_mutex_unlock(&int_task_lock);
         }
         
-        log(LOG_INFO, "This is the thread! WOO");
-        log(LOG_INFO, "Here's my second log!");
+        //log(LOG_INFO, "This is the thread! WOO");
+        //log(LOG_INFO, "Here's my second log!");
 
-        ptask_t test = CreateTasking(id, TASK_AUTH, 0, nullptr);
-        printf("Thread task ptr: %p\n", test);
-        PushTasking(test);
-
+        
         std::this_thread::sleep_for(std::chrono::seconds(5));
         
     }
@@ -58,11 +64,14 @@ void NetInst::MainLoop(){
 // handles a given task
 int NetInst::HandleTask(ptask_t task){
     printf("Task received:\n");
-    printf("\tTO: %d\n", task->to);
-    printf("\tFROM: %d\n", task->from);
-    printf("\tTYPE: %d\n", task->type);
-    printf("\tLENGTH: %lu\n", task->length);
-    printf("\tDATA ADDRESS: %p\n", task->data);
+    printf("  TO: %d\n", task->to);
+    printf("  FROM: %d\n", task->from);
+    printf("  TYPE: %d\n", task->type);
+    printf("  LENGTH: %lu\n", task->length);
+    printf("  DATA ADDRESS: %p\n", task->data);
+
+
+    // switch depending on the type of operation
 
 
     // free the task at the end
@@ -137,7 +146,7 @@ int NetInst::ReceiveTasking(ptask_t task){
 // awaits a particular tasking type and returns it when found
 ptask_t NetInst::AwaitTask(int type){
     while(1){
-        // loop over each item in the queue and see if its of the type we wwant
+        // loop over each item in the queue and see if its of the type we want
         for(ptask_t task : *task_dispatch){
             if(task->type == type){
                 return task;

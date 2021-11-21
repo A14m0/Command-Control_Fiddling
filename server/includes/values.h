@@ -14,7 +14,7 @@
 // defines error codes that can be returned by transport functions
 #define API_OK 0          // No problems encountered
 #define API_ERR_GENERIC 1 // Generic problem encountered
-#define API_ERR_WRITE 2   // Failed to write somethign
+#define API_ERR_WRITE 2   // Failed to write something
 #define API_ERR_READ 3    // Failed to read something
 #define API_ERR_LISTEN 4  // Failed to listen on a network port
 #define API_ERR_BIND 5    // Failed to bind to a network port
@@ -28,7 +28,7 @@
 #define TASK_NULL 0             // NOP tasking
 #define TASK_AUTH 1             // Request to authenticate credentials
 #define TASK_NEW_NETINST 2      // Request to create new NetInst
-#define TASK_WRITE_BEACON 3     // Request to write beacon data
+#define TASK_PUSH_BEACON 3   // Request to get beacon data for an agent
 
 
 // defines task type responses

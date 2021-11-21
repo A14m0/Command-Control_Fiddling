@@ -165,7 +165,7 @@ int SshTransport::Authenticate(){
                         }
                         // not authenticated, send default message
                     case SSH_AUTH_METHOD_NONE:
-                        printf("lol wtf (Line 160 ssh_transport)\n");
+                        printf("lol wtf (Line 168 ssh_transport)\n");
 
                     default:
                         ssh_message_auth_set_methods(message,SSH_AUTH_METHOD_PASSWORD);
@@ -185,6 +185,7 @@ int SshTransport::Authenticate(){
         ssh_disconnect(session);
         return 0;
     } else {
+        this->DetermineHandler();
         return 1;
     }
     return 0;
@@ -247,48 +248,37 @@ int SshTransport::DetermineHandler(){
             return MANAG_TYPE;
 
         } else {
-            // Check if ID exists
-
-
-
-
-            /* NOTE: THIS NEEDS TO MOVE */
-////////////////////////////////////////////////////////////////////////////////
-            memset(buf, 0, sizeof(buf));
-            strcat(buf, "agents/");
-            int exists = Common::directory_exists(strcat(buf, agent_name));
-
-            if(!exists){
-                Common::init_agent(agent_name);
-                printf("Client %s: Initialized agent\n", agent_name);
-            }
+            // Send OK
             rc = ssh_channel_write(channel, "ok", 3);
             if(rc == SSH_ERROR){
                 printf("Client %s: caught ssh error: %s", agent_name, ssh_get_error(session));
                 api_return{API_ERR_GENERIC, (void*)ssh_get_error(session)};
             }
-
+            
+            // read the beacon
             rc = ssh_channel_read(channel, beacon, sizeof(beacon), 0);
             if(rc == SSH_ERROR){
                 printf("Client %s: caught ssh error: %s", agent_name, ssh_get_error(session));
                 api_return{API_ERR_GENERIC, (void *) ssh_get_error(session)};
             }
-            Common::write_agent_beacon(agent_name, beacon);
 
-            tasking = Common::get_agent_tasking(agent_name);
-            if(!tasking){
-                printf("Client %s: caught ssh error: %s", agent_name, ssh_get_error(session));
-                perror("Reason");
-                api_return{API_ERR_GENERIC, (void *) ssh_get_error(session)};
-            }
+            printf("%s", beacon);
+            
+            // push the beacon data for the server to handle and write
+            ptask_t send = p_ref->CreateTasking(0, TASK_PUSH_BEACON, sizeof(beacon), beacon);
+            p_ref->PushTasking(send);
+            p_ref->AwaitTask(TASK_PUSH_BEACON);
 
-            // Write tasking
-            rc = ssh_channel_write(channel, tasking, strlen(tasking));
-            if(rc == SSH_ERROR){
-                printf("Client %s: Failed to write to channel: %s", agent_name, ssh_get_error(session));
-                api_return{API_ERR_READ, (void *) ssh_get_error(session)};
-
-            }
+            /* NOTE: THIS NEEDS TO MOVE */
+////////////////////////////////////////////////////////////////////////////////
+            //memset(buf, 0, sizeof(buf));
+            //strcat(buf, "agents/");
+            //int exists = Common::directory_exists(strcat(buf, agent_name));
+//
+            //if(!exists){
+            //    Common::init_agent(agent_name);
+            //    printf("Client %s: Initialized agent\n", agent_name);
+            //}
 ////////////////////////////////////////////////////////////////////////////////
 
             // Pass to handler
@@ -304,6 +294,8 @@ int SshTransport::DetermineHandler(){
     p_ref->log(LOG_INFO, "Transport: Closing channels...\n");
     ssh_message_free(message);
     ssh_finalize();
+
+
 
     return 0;
 
