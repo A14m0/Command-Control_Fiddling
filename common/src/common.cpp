@@ -426,7 +426,6 @@ char *Common::get_agent_tasking(const char *agent_id) {
     char file[2048];
     char cwd_buf[BUFSIZ];
     char *mem_dump = NULL;
-    int size = 0;
     //FILE *fd = NULL;
 
     // get target agent's manifest
@@ -435,7 +434,7 @@ char *Common::get_agent_tasking(const char *agent_id) {
     sprintf(file, "%s/agents/%s/agent.mfst", getcwd(cwd_buf, sizeof(cwd_buf)),agent_id);
 
     // open it
-    size = Common::get_file(file, &mem_dump);
+    Common::get_file(file, &mem_dump);
     
     // write_format(file);
     return mem_dump;

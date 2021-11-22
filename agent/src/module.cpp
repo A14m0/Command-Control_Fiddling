@@ -1,6 +1,6 @@
 // Agent in-memory execution definitions
-#include "misc.h"
-#include "b64.h"
+#include "common.h"
+#include <libssh/libssh.h>
 #ifdef _WIN32
 #define strncasecmp _strnicmp
 int exec_module(ssh_session session, char *module){
@@ -159,12 +159,12 @@ int exec_module(ssh_channel channel, char *module){
 	// read file from channel and decode
 	rc = ssh_channel_read(channel, buff, size, 0);
 	
-	finSize = b64_decoded_size(buff);
+	finSize = B64::dec_size(buff);
 	ptrFin = (char*)malloc(finSize+1);
 	memset(ptrFin, 0, finSize+1);
 
 	
-	if(!b64_decode(buff, (unsigned char *)ptrFin, finSize)){
+	if(!B64::decode(buff, (unsigned char *)ptrFin, finSize)){
 		printf("Decode failure\n");
 		return SSH_ERROR;
 	}

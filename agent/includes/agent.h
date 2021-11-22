@@ -1,18 +1,12 @@
 #pragma once
 
 #include <errno.h>
-
-#include "misc.h"
-#include "examples_common.h"
+#include <libssh/libssh.h>
+#include "common.h"
 #include "shell.h"
-#include "tasks.h"
+#include "tasking.h"
+#include "beacon.h"
 
-#define AGENT_DOWN_FILE 10
-#define AGENT_UP_FILE 11 
-#define AGENT_REV_SHELL 12
-#define AGENT_EXEC_SC 13
-#define AGENT_EXEC_MODULE 14
-#define AGENT_EXIT 0
 
 // define our agent class
 class Agent

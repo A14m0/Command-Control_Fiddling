@@ -1,10 +1,9 @@
 #include "shell.h"
-#include "b64.h"
 
 int shell_unix(ssh_channel chan){
     int rc = 0;
     printf("Starting shell init\n");
-    char *args[] = {"/bin/bash", "-i", NULL};
+    const char *args[] = {"/bin/bash", "-i", NULL};
     char input[150];
     int sockfd = ssh_get_fd(ssh_channel_get_session(chan));
 
@@ -37,6 +36,7 @@ int shell_unix(ssh_channel chan){
         // Close the slave side of the PTY
         close(fds);
 
+        char *inp_buff = (char*)malloc(BUFSIZ);
         while (1)
         {
             // Wait for data from standard input and master side of PTY
@@ -46,9 +46,7 @@ int shell_unix(ssh_channel chan){
 
             rc = select(fdm + 1, &fd_in, NULL, NULL, NULL);
             int sz = 0;
-            char inp_buff[BUFSIZ];
-            char *tmp;
-            memset(inp_buff, 0, sizeof(inp_buff));
+            memset(inp_buff, 0, BUFSIZ);
             switch(rc)
             {
                 case -1 : fprintf(stderr, "Error %d on select()\n", errno);
@@ -66,8 +64,8 @@ int shell_unix(ssh_channel chan){
                         {
                             // Send data on the master side of PTY
                             //write(sock, input, rc);
-                            sz = b64_decoded_size(input);
-                            rc = b64_decode(input, (unsigned char*)inp_buff, sz);
+                            sz = B64::dec_size(input);
+                            rc = B64::decode(input, (unsigned char*)inp_buff, sz);
                             if(rc != 0){
                                 write(fdm, inp_buff, sz);
                             }
@@ -90,11 +88,9 @@ int shell_unix(ssh_channel chan){
                         rc = read(fdm, input, sizeof(input));
                         if (rc > 0)
                         {
-                            sz = b64_encoded_size(rc);
-                            tmp = b64_encode((unsigned char*)input, strlen(input));
-                            if(rc != 0){
-                                ssh_channel_write(chan, tmp, sz);
-                            }
+                            sz = B64::enc_size(rc);
+                            B64::encode((unsigned char*)input, sz, &inp_buff);
+                            ssh_channel_write(chan, inp_buff, sz);
                             // Send data on standard output
                             
                         }
@@ -110,6 +106,7 @@ int shell_unix(ssh_channel chan){
                 }
             } // End switch
         } // End while
+        free(inp_buff);
     }
     else
     {
@@ -151,7 +148,7 @@ int shell_unix(ssh_channel chan){
 
         // Execution of the program
         {
-            rc = execve("/bin/bash", args, NULL);
+            rc = execve("/bin/bash", (char * const *)args, NULL);
         }
 
         // if Error...

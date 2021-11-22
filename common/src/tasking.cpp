@@ -39,6 +39,11 @@ void *AgentJob::get_data() {
     return this->data;  
 }
 
+// helper function to set the data of the job
+void AgentJob::set_data(void *data) {
+    this->data = data;
+} 
+
 // helper function that generates a header long for the agent job
 unsigned long AgentJob::encode_header(){
     unsigned long t = (unsigned long)(this->type);
