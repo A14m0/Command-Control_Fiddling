@@ -55,7 +55,5 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# auto-generated folders
-out/
-tmpbuild/
+# development folders
 build/
