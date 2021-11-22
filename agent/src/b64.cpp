@@ -56,7 +56,7 @@ char *b64_encode(const unsigned char *in, size_t len)
 		return NULL;
 
 	elen = b64_encoded_size(len);
-	out  = malloc(elen+1);
+	out  = (char*)malloc(elen+1);
 	out[elen] = '\0';
 
 	for (i=0, j=0; i<len; i+=3, j+=4) {

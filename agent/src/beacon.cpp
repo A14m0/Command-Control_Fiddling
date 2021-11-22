@@ -25,11 +25,14 @@ void show_address(char *if_name){
 char *get_address(char *if_name){
     int fd;
     struct ifreq ifr;// = malloc(sizeof(struct ifreq));
-    char *ret = NULL;
-    ret = malloc(strlen(if_name) + 18);
+    char *ret = (char*)malloc(strlen(if_name) + 18);
+    if(!ret) {
+        printf("Malloc failed.\n");
+        exit(1);
+    }
+
     memset(ret, 0, strlen(if_name) + 18);
     
-
     fd = socket(AF_INET, SOCK_DGRAM, 0);
 
     /* I want to get an IPv4 IP address */
@@ -54,8 +57,11 @@ char *combine(char *str1, const char delim, char *str2){
     if(str2 == NULL) printf("Tada you got it\n");
     int size1 = strlen(str1);
     int size2 = strlen(str2);
-    char *ret = NULL;
-    ret = malloc(size1+size2+2);
+    char *ret = (char*)malloc(size1+size2+2);
+    if(!ret) {
+        printf("Malloc failed.\n");
+        exit(1);
+    }
     memset(ret, 0, size1+size2+2);
 
     sprintf(ret, "%s%c%s", str1, delim, str2);
@@ -94,8 +100,11 @@ char *show_interfaces(){
 
 char *show_localtime(){
     time_t t = time(NULL);
-    char *ret = NULL;
-    ret = malloc(20);
+    char *ret = (char*)malloc(20);
+    if(!ret) {
+        printf("Malloc failed.\n");
+        exit(1);
+    }
     memset(ret, 0, 20);
     struct tm tm = *localtime(&t);
     sprintf(ret, "%d-%d-%d %d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1,tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
@@ -103,7 +112,11 @@ char *show_localtime(){
 }
 
 char *show_hostname(){
-    char *buff = malloc(128);
+    char *buff = (char*)malloc(128);
+    if(!buff) {
+        printf("Malloc failed.\n");
+        exit(1);
+    }
     int rc = 0;
     memset(buff, 0, 128);
     rc = gethostname(buff, 128);//sizeof(buff));
@@ -113,8 +126,11 @@ char *show_hostname(){
     return buff;
 }
 char *show_procowner(){
-    char *buff = NULL;
-    buff = malloc(128);
+    char *buff = (char*)malloc(128);
+    if(!buff) {
+        printf("Malloc failed.\n");
+        exit(1);
+    }
     memset(buff, 0, 128);
     struct passwd *p;
     uid_t uid;
@@ -126,9 +142,13 @@ char *show_procowner(){
 }
 
 char *get_beacon(){
-    char *ret;
-    char *buff;
-    char *name = malloc(16);
+    char *ret = NULL;
+    char *buff = NULL;
+    char *name = (char*)malloc(16);
+    if(!name) {
+        printf("Malloc failed.\n");
+        exit(1);
+    }
     memset(name, 0, 16);
     sprintf(name, "%s",GLOB_ID);
     ret = show_interfaces();

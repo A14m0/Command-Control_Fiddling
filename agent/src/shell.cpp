@@ -47,6 +47,7 @@ int shell_unix(ssh_channel chan){
             rc = select(fdm + 1, &fd_in, NULL, NULL, NULL);
             int sz = 0;
             char inp_buff[BUFSIZ];
+            char *tmp;
             memset(inp_buff, 0, sizeof(inp_buff));
             switch(rc)
             {
@@ -66,7 +67,7 @@ int shell_unix(ssh_channel chan){
                             // Send data on the master side of PTY
                             //write(sock, input, rc);
                             sz = b64_decoded_size(input);
-                            rc = b64_decode(input, inp_buff, sz);
+                            rc = b64_decode(input, (unsigned char*)inp_buff, sz);
                             if(rc != 0){
                                 write(fdm, inp_buff, sz);
                             }
@@ -90,9 +91,9 @@ int shell_unix(ssh_channel chan){
                         if (rc > 0)
                         {
                             sz = b64_encoded_size(rc);
-                            rc = b64_encode(input, inp_buff);
+                            tmp = b64_encode((unsigned char*)input, strlen(input));
                             if(rc != 0){
-                                ssh_channel_write(chan, inp_buff, sz);
+                                ssh_channel_write(chan, tmp, sz);
                             }
                             // Send data on standard output
                             
