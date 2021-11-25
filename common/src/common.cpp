@@ -495,16 +495,40 @@ int Common::task_agent(const int operation, const char *agent, const char *opt) 
 }
 
 /* Writes received agent beacon data to agent's info.txt*/
-int Common::write_agent_beacon(const char *id, const char *beacon) {
+int Common::write_agent_beacon(void *data) {
+    // get the agent's ID
+    // NOTE TO SELF: DATA IS NULL RN...
+    printf("data: %s\n", (char*)data);
+    int idx = Common::index_of((char*)data, '\n', 0);
+    printf("idx: %d\n", idx);
+    char *id = (char*)malloc(idx);
+    if (id == NULL) {
+        printf("Well theres ur issue");
+        exit(1);
+    }
+    printf("index: %d", idx);
+    strncpy(id, (char*)data, idx);
+
+    return Common::write_agent_beacon(id, (char*)data);
+}
+
+// Writes received agent beacon data to agent's info.txt
+int Common::write_agent_beacon(const char* id, const char* data) {
     FILE *fd = NULL;
     char buff[2048];
     char cwd[BUFSIZ];
 
     memset(buff, 0, sizeof(buff));
     memset(cwd, 0, sizeof(cwd));
+    printf("In write beacon\n");
 
     // get path to agent's info
-    sprintf(buff, "%s/agents/%s/info.txt", getcwd(cwd, sizeof(cwd)), id);
+    sprintf(buff, "%s/agents/%s", getcwd(cwd, sizeof(cwd)), id);
+    printf("Saved buffer\n");
+    if (!Common::directory_exists(buff)) {
+        mkdir(buff, 0755);
+    }
+    sprintf(buff, "%s/info.txt", buff);
 
     fd = fopen(buff, "w");
     if (fd == NULL) {
@@ -513,7 +537,7 @@ int Common::write_agent_beacon(const char *id, const char *beacon) {
     }
 
     // write, close, return
-    fwrite(beacon, 1,strlen(beacon), fd);
+    fwrite((char*)data, 1,strlen((char*)data), fd);
     fclose(fd);
 
     return 0;

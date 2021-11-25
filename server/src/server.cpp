@@ -466,7 +466,9 @@ int Server::HandleTask(ptask_t task){
     
     // write beacon data for agent
     case TASK_PUSH_BEACON:
-        log(LOG_INFO, "Caught beacon write request (UNIMPLEMENTED)");
+        log(LOG_INFO, "Caught beacon write request");
+        printf("Caught beacon..\n");
+        Common::write_agent_beacon(task->data);
         break;
 
     // unknown/NOP request
@@ -543,7 +545,7 @@ int Server::Authenticate(pauth_t auth){
                 if(!strcmp(auth_pass, *(subtokens+1))){
                     free(auth_pass);
                     // success and free
-                    log(LOG_INFO, "ID %s successfully authenticated\n", auth->uname);
+                    log(LOG_INFO, "ID %s successfully authenticated", auth->uname);
                     for (int i = 0; *(tokens + i); i++)
                     {
                         free(*(tokens + i));
