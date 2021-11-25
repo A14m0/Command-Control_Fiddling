@@ -51,6 +51,9 @@ public:
     void *get_data();
     void set_data(void *data);
     unsigned long encode_header();
+    static char *long_to_bytes(unsigned long v);
+    static unsigned long bytes_to_long(char *t);
+    void *pack();
 };
 
 

