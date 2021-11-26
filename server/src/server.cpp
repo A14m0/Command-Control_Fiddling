@@ -639,7 +639,6 @@ int Server::MainLoop(){
     PushTask(tmp);
 
     while(1){
-        printf("[SERVER] MAIN LOOP EXECUTION\n");
         // print all accumulated logs
         WriteLogs();
 

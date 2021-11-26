@@ -59,15 +59,23 @@ int SshTransport::write(char *buffer, int len) {
 }
 
 // PRIVATE: checked read from channel
+//int SshTransport::read(char** buffer, int len) {
 char *SshTransport::read(int len) {
-	char *buffer = (char*)malloc(len); 
+    char *b = (char*)this->p_ref->Malloc(len);
 	// sanity check buffer
-	if(buffer == nullptr) {
-		printf("Malloc failed...\n");
-		exit(1);
-	}
+	if(b == nullptr) {
+        //b = realloc(b, len);
+        //if(b == nullptr) {
+        //    printf("Malloc failed...\n");
+		//    exit(1);
+        //}
+        printf("B ADDR: %p\n", b);
+        exit(1);
+	} else {
+        printf("B is not null?\n%p\n", b);
+    }
 	// read data
-	int nbytes = ssh_channel_read(this->channel, buffer, len, 0);
+	int nbytes = ssh_channel_read(this->channel, b, len, 0);
 	printf("read %d bytes from channel\n", nbytes);
 	if (nbytes < 0){
 		printf("Caught read error from server: %s\n", ssh_get_error(ssh_channel_get_session(this->channel)));
@@ -75,18 +83,22 @@ char *SshTransport::read(int len) {
 	}
 	
 	// all good
-	return buffer;
+	return b;
 }
 
 
 // fetches tasking from the remote agent
 api_return SshTransport::fetch_tasking() {
     // read the header
-    char *header = this->read(8); 
-	if(header == nullptr) return api_return{API_ERR_READ, nullptr};
-	unsigned long h_val = AgentJob::bytes_to_long(header);
-	free(header);
+    char header[8] = {0};
+    //int rc = this->read((char**)&header, 8); 
+	char *hdr = this->read(8); 
+    printf("hdr: %x%x%x%x%x%x%x%x\n", hdr[0], hdr[1], hdr[2], hdr[3], hdr[4], hdr[5], hdr[6], hdr[7]);
+    if(hdr == nullptr) return api_return{API_ERR_READ, nullptr};
+	free(hdr);
+    unsigned long h_val = AgentJob::bytes_to_long(hdr);
 	AgentJob *job = new AgentJob(h_val, nullptr);
+    printf("Tasking values: %x, %lu\n", job->get_type(), job->get_len());
 
 	// now that we know the length, fetch the payload
 	char *data = this->read(job->get_len()); 

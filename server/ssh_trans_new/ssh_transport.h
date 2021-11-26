@@ -38,6 +38,7 @@ private:
     int Authenticate();
     int DetermineHandler();
     int write(char *buffer, int len);
+    //int read(char **buffer, int len);
     char *read(int len);
 
 public:

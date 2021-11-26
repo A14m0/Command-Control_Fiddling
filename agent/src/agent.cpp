@@ -433,7 +433,10 @@ int Agent::run()
 				{
 					printf("Got send beacon request\n");
 					char *beacon = get_beacon();
-					if(this->write(beacon, strlen(beacon)) == SSH_ERROR) return SSH_ERROR;
+					AgentJob *beacon_job = new AgentJob(AGENT_SEND_BEACON, strlen(beacon), beacon);
+					int len = beacon_job->get_len()+8;
+					printf("Length: %lu\n", len);
+					if(this->write((char*)beacon_job->pack(), len) == SSH_ERROR) return SSH_ERROR;
 					break;
 				}
 			default:
