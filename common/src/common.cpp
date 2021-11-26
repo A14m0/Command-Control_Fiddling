@@ -533,14 +533,14 @@ int Common::write_agent_beacon(const char* id, const char* data) {
     fd = fopen(buff, "w");
     if (fd == NULL) {
         perror("");
-        return 1;
+        return RESP_FAIL;
     }
 
     // write, close, return
     fwrite((char*)data, 1,strlen((char*)data), fd);
     fclose(fd);
 
-    return 0;
+    return RESP_OK;
 }
 
 /* Writes the default manifest of the agent*/

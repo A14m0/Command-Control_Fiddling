@@ -1,5 +1,5 @@
 #pragma once
-
+#include "types.h"
 /* Agent Job structure
  * 
  * To ensure that we keep a generally low footprint on the network, we aim to 
@@ -45,6 +45,7 @@ private:
 public: 
     AgentJob(unsigned char type, unsigned long len, void *data);
     AgentJob(unsigned long combined, void *data);
+    AgentJob(ptask_t task);
     ~AgentJob();
     unsigned char get_type();
     unsigned long get_len();

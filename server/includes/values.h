@@ -30,8 +30,3 @@
 #define TASK_NEW_NETINST 2      // Request to create new NetInst
 #define TASK_PUSH_BEACON 3      // Request to get beacon data for an agent
 
-
-// defines task type responses
-#define RESP_NULL 0             // NOP response
-#define RESP_AUTH_OK 1          // Successfully authenticated agent
-#define RESP_AUTH_FAIL 2        // Failed to authenticate agent

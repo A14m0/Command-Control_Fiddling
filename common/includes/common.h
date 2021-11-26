@@ -22,6 +22,10 @@
 #include "types.h"
 
 
+// defines task type responses
+#define RESP_NULL 0             // NOP response
+#define RESP_OK 1          // Successfully authenticated agent
+#define RESP_FAIL 2        // Failed to authenticate agent
 
 // common class
 class Common

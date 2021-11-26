@@ -4,6 +4,7 @@
 #include "common.h"
 #include "server.h"
 #include "api.h"
+#include "tasking.h"
 
 class NetInst : Common
 {

@@ -25,6 +25,12 @@ AgentJob::AgentJob(unsigned long combined, void* data) {
     this->data = data;
 }
 
+AgentJob::AgentJob(ptask_t task) {
+    this->type = task->type;
+    this->len = task->length;
+    this->data = task->data;
+}
+
 AgentJob::~AgentJob(){
     if(this->data != nullptr) {
         free(data);

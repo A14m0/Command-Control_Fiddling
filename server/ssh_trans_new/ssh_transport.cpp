@@ -48,13 +48,69 @@ SshTransport::~SshTransport() {
     ssh_finalize();
 }
 
+// PRIVATE: checked write to channel
+int SshTransport::write(char *buffer, int len) {
+	// writes data to channel
+    int rc = ssh_channel_write(this->channel, buffer, len);
+    if(rc == SSH_ERROR){
+        printf("Failed to write data to channel: %s\n", ssh_get_error(ssh_channel_get_session(this->channel)));
+    }
+	return rc;
+}
+
+// PRIVATE: checked read from channel
+char *SshTransport::read(int len) {
+	char *buffer = (char*)malloc(len); 
+	// sanity check buffer
+	if(buffer == nullptr) {
+		printf("Malloc failed...\n");
+		exit(1);
+	}
+	// read data
+	int nbytes = ssh_channel_read(this->channel, buffer, len, 0);
+	printf("read %d bytes from channel\n", nbytes);
+	if (nbytes < 0){
+		printf("Caught read error from server: %s\n", ssh_get_error(ssh_channel_get_session(this->channel)));
+    	return nullptr;
+	}
+	
+	// all good
+	return buffer;
+}
+
+
 // fetches tasking from the remote agent
 api_return SshTransport::fetch_tasking() {
-    return api_return{API_OK, nullptr};
+    // read the header
+    char *header = this->read(8); 
+	if(header == nullptr) return api_return{API_ERR_READ, nullptr};
+	unsigned long h_val = AgentJob::bytes_to_long(header);
+	free(header);
+	AgentJob *job = new AgentJob(h_val, nullptr);
+
+	// now that we know the length, fetch the payload
+	char *data = this->read(job->get_len()); 
+	if(data == nullptr) {
+		// free stuff if the read fails
+		delete job;
+		return api_return{API_ERR_READ, nullptr};
+	}
+
+	// set payload and return
+	job->set_data(data);
+    return api_return{API_OK, job};
 }
 
 // pushes tasking to the remote agent
 api_return SshTransport::push_tasking(ptask_t task){
+    // first we pack the task
+    AgentJob *job = new AgentJob(task);
+    int packed_size = job->get_len()+8;
+    void *packed = job->pack();
+
+    // now we send it
+    if(this->write((char*)packed, packed_size) == SSH_ERROR) return api_return{API_ERR_WRITE, (void*)ssh_get_error(ssh_channel_get_session(this->channel))};
+
     return api_return{API_OK, nullptr};
 }
 
@@ -150,7 +206,7 @@ int SshTransport::Authenticate(){
                             ptask_t auth_success = p_ref->AwaitTask(TASK_AUTH);
 
                             // if we succeed, set the correct values and send OK
-                            if(auth_success->type == RESP_AUTH_OK){
+                            if(auth_success->type == RESP_OK){
                                 auth=1;
 
                                 memset(agent_name, 0, 128);//strlen(ssh_message_auth_user(message)));

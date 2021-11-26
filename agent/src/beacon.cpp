@@ -27,7 +27,7 @@ char *get_address(char *if_name){
     struct ifreq ifr;// = malloc(sizeof(struct ifreq));
     char *ret = (char*)malloc(strlen(if_name) + 18);
     if(!ret) {
-        printf("Malloc failed.\n");
+        printf("[ERROR] Malloc failed.\n");
         exit(1);
     }
 
@@ -59,7 +59,7 @@ char *combine(char *str1, const char delim, char *str2){
     int size2 = strlen(str2);
     char *ret = (char*)malloc(size1+size2+2);
     if(!ret) {
-        printf("Malloc failed.\n");
+        printf("[ERROR] Malloc failed.\n");
         exit(1);
     }
     memset(ret, 0, size1+size2+2);
@@ -80,9 +80,9 @@ char *show_interfaces(){
     {
         if(tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_PACKET){
             ret = get_address(tmp->ifa_name);
-            printf("Generated information: %s\n", ret);
+            //printf("Generated information: %s\n", ret);
             buff = combine(buff,',',ret);
-            printf("Current buffer: %s\n", buff);
+            //printf("Current buffer: %s\n", buff);
             /*ret = malloc(sizeof(temp) + sizeof buff);
             memset(ret, 0, sizeof(ret));
             sprintf(ret, "%s,%s", temp, buff);
@@ -146,7 +146,7 @@ char *get_beacon(){
     char *buff = NULL;
     char *name = (char*)malloc(16);
     if(!name) {
-        printf("Malloc failed.\n");
+        printf("[ERROR] Malloc failed.\n");
         exit(1);
     }
     memset(name, 0, 16);
@@ -159,5 +159,6 @@ char *get_beacon(){
     buff = combine(buff, '\n', ret);
     ret = show_procowner();
     buff = combine(buff, '\n', ret);
+    printf("\n\nBeacon frame information:\n%s\n", buff);
     return buff;
 }
