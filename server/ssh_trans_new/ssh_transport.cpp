@@ -1,4 +1,5 @@
 #include "ssh_transport.h"
+#include <signal.h>
 
 // server required defines
 int type = TRANSPORT; // type TRANSPORT
@@ -39,6 +40,9 @@ SshTransport::SshTransport(NetInst *parent) {
     name = t_name;
     p_ref = parent;
     agent_name = (char*)malloc(128);
+    if(agent_name == nullptr) {
+        printf("SSHTRANSPORT NULLPTR !!!!!!!!!!!!!!!!!!!!!\n");
+    }
 }
 
 // frees instance data and variables
@@ -61,7 +65,8 @@ int SshTransport::write(char *buffer, int len) {
 // PRIVATE: checked read from channel
 //int SshTransport::read(char** buffer, int len) {
 char *SshTransport::read(int len) {
-    char *b = (char*)this->p_ref->Malloc(len);
+    raise(SIGINT);
+    char *b = (char*)malloc(len);
 	// sanity check buffer
 	if(b == nullptr) {
         //b = realloc(b, len);
@@ -70,6 +75,7 @@ char *SshTransport::read(int len) {
 		//    exit(1);
         //}
         printf("B ADDR: %p\n", b);
+        perror("");
         exit(1);
 	} else {
         printf("B is not null?\n%p\n", b);

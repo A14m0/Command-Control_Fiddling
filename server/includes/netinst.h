@@ -32,8 +32,6 @@ public:
     int ReceiveTasking(ptask_t task);
     void SetTransport(TransportAPI *transport);
     ptask_t AwaitTask(int type); 
-    void *Malloc(int size);
-
     int GetID();
 
     ~NetInst();

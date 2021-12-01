@@ -286,6 +286,15 @@ bool NetInst::api_check(api_return api){
     return false;
 }
 
+// sets the transport of the structure
+void NetInst::SetTransport(TransportAPI *transport){
+    this->tspt = transport;
+}
+
+
+
+////////////////// THREAD TRAMPOLINE //////////////////////////
+
 // trampoline p2
 void NetInst::Trampoline(void *self){
     ((NetInst *)(self))->MainLoop();
@@ -295,13 +304,4 @@ void NetInst::Trampoline(void *self){
 std::thread *NetInst::StartThread(){
     std::thread *thread_obj = new std::thread(NetInst::Trampoline, this);
     return thread_obj;
-}
-// sets the transport of the structure
-void NetInst::SetTransport(TransportAPI *transport){
-    this->tspt = transport;
-}
-
-// Malloc wrapper for transport libraries
-void *NetInst::Malloc(int size) {
-    return malloc(size);
 }
