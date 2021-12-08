@@ -53,7 +53,7 @@ SshTransport::~SshTransport() {
 }
 
 // PRIVATE: checked write to channel
-int SshTransport::write(char *buffer, int len) {
+int SshTransport::write(char *buffer, unsigned long len) {
 	// writes data to channel
     int rc = ssh_channel_write(this->channel, buffer, len);
     if(rc == SSH_ERROR){
@@ -64,29 +64,61 @@ int SshTransport::write(char *buffer, int len) {
 
 // PRIVATE: checked read from channel
 //int SshTransport::read(char** buffer, int len) {
-char *SshTransport::read(int len) {
-    raise(SIGINT);
-    char *b = (char*)malloc(len);
+unsigned char *SshTransport::read(unsigned long len) {
+    //raise(SIGINT);
+
+    // make sure we arent allocating bogus memory sizes
+    if(len < 1) {
+        printf("TRANSPORT: Caught illicit read length: %lu\n", len);
+        return nullptr;
+    }
+    printf("Received length: %lu\n", len);
+
+    unsigned char *b = (unsigned char*)malloc(len);
 	// sanity check buffer
 	if(b == nullptr) {
-        //b = realloc(b, len);
-        //if(b == nullptr) {
-        //    printf("Malloc failed...\n");
-		//    exit(1);
-        //}
         printf("B ADDR: %p\n", b);
         perror("");
         exit(1);
 	} else {
         printf("B is not null?\n%p\n", b);
     }
-	// read data
-	int nbytes = ssh_channel_read(this->channel, b, len, 0);
-	printf("read %d bytes from channel\n", nbytes);
-	if (nbytes < 0){
-		printf("Caught read error from server: %s\n", ssh_get_error(ssh_channel_get_session(this->channel)));
-    	return nullptr;
-	}
+
+    if(len > UINT32_MAX ) {
+        // if we get a number thats bigger than `ssh_channel_read` can handle, 
+        // we do a special looping read until we are done
+        
+        unsigned long ctr = 0;
+        while(ctr < len){
+            // read data
+            int readlen = 0;
+            if(len > UINT32_MAX){
+                readlen = UINT32_MAX;
+            } else {
+                readlen = len-ctr;
+            }
+
+	        int nbytes = ssh_channel_read(this->channel, b, readlen, 0);
+	        printf("read %d bytes from channel\n", nbytes);
+	        if (nbytes < 0){
+	        	printf("Caught read error from server: %s\n", ssh_get_error(ssh_channel_get_session(this->channel)));
+            	free(b);
+                return nullptr;
+	        }
+            ctr += nbytes;
+        }
+            
+	
+    } else {
+        // read data
+	    int nbytes = ssh_channel_read(this->channel, b, len, 0);
+	    printf("read %d bytes from channel\n", nbytes);
+	    if (nbytes < 0){
+	    	printf("Caught read error from server: %s\n", ssh_get_error(ssh_channel_get_session(this->channel)));
+        	return nullptr;
+	    }
+	
+    }
 	
 	// all good
 	return b;
@@ -98,16 +130,22 @@ api_return SshTransport::fetch_tasking() {
     // read the header
     char header[8] = {0};
     //int rc = this->read((char**)&header, 8); 
-	char *hdr = this->read(8); 
-    printf("hdr: %x%x%x%x%x%x%x%x\n", hdr[0], hdr[1], hdr[2], hdr[3], hdr[4], hdr[5], hdr[6], hdr[7]);
+    printf("TSPT: READING...\n");
+	unsigned char *hdr = this->read(8);
+    printf("hdr: "); 
+    for(int i = 0; i < 8; i++) {
+        printf("%x ", hdr[i]);
+    }
+    printf("\n"); 
+    
     if(hdr == nullptr) return api_return{API_ERR_READ, nullptr};
-	free(hdr);
-    unsigned long h_val = AgentJob::bytes_to_long(hdr);
+	unsigned long h_val = AgentJob::bytes_to_long(hdr);
+    free(hdr);
 	AgentJob *job = new AgentJob(h_val, nullptr);
     printf("Tasking values: %x, %lu\n", job->get_type(), job->get_len());
 
 	// now that we know the length, fetch the payload
-	char *data = this->read(job->get_len()); 
+	unsigned char *data = this->read(job->get_len()); 
 	if(data == nullptr) {
 		// free stuff if the read fails
 		delete job;

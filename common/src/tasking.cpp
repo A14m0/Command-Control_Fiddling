@@ -66,22 +66,22 @@ unsigned long AgentJob::encode_header(){
 }
 
 // converts an unsigned long integer to bytes
-char *AgentJob::long_to_bytes(unsigned long v) {
-    char *buffer = (char*)malloc(8);
+unsigned char *AgentJob::long_to_bytes(unsigned long v) {
+    unsigned char *buffer = (unsigned char*)malloc(8);
     unsigned long mask = 0xfflu << 56;
     
     // fetch the bits we need from the long
     for(int i = 7; i >= 0; i--){
-        buffer[i] = (char) ((v & mask) >> (8*i)) & 0xff;
+        buffer[i] = (unsigned char) ((v & mask) >> (8*i)) & 0xff;
         mask = mask >> 8;
     }
     return buffer;
 }
 
 
-// converts 8 bytes to an unsigned long integer
-unsigned long AgentJob::bytes_to_long(char *t) {
-    unsigned long p1 = t[0] + (t[1] << 8) + (t[2] << 16) + (t[3] << 24); 
+// converts 7 bytes to an unsigned long integer
+unsigned long AgentJob::bytes_to_long(unsigned char *t) {
+    unsigned long p1 = t[0]+/*skip t[0], as it is opcode*/ (t[1] << 8) + (t[2] << 16) + (t[3] << 24); 
     unsigned long p2 = (t[4] + (t[5] << 8) + (t[6] << 16) + (t[7] << 24)); // shift 32?
     p2 = p2 << 32;
     
@@ -95,7 +95,7 @@ void *AgentJob::pack() {
     memset(packet, 0, packet_len);
 
     // get the header
-    char *header_bytes = AgentJob::long_to_bytes(this->encode_header());
+    unsigned char *header_bytes = AgentJob::long_to_bytes(this->encode_header());
     memcpy(packet, header_bytes, 8);
     free(header_bytes);
 

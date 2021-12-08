@@ -160,8 +160,8 @@ int Agent::write(char *buffer, int len) {
 }
 
 // PRIVATE: checked read from channel
-char *Agent::read(int len) {
-	char *buffer = (char*)malloc(len); 
+unsigned char *Agent::read(int len) {
+	unsigned char *buffer = (unsigned char*)malloc(len); 
 	// sanity check buffer
 	if(buffer == nullptr) {
 		printf("Malloc failed...\n");
@@ -182,14 +182,14 @@ char *Agent::read(int len) {
 // PRIVATE: receives a tasking operation from the server
 AgentJob *Agent::read_tasking(){
 	// read and convert the header to usable thing
-	char *header = this->read(8); 
+	unsigned char *header = this->read(8); 
 	if(header == nullptr) return nullptr;
 	unsigned long h_val = AgentJob::bytes_to_long(header);
 	free(header);
 	AgentJob *job = new AgentJob(h_val, nullptr);
 
 	// now that we know the length, fetch the payload
-	char *data = this->read(job->get_len()); 
+	unsigned char *data = this->read(job->get_len()); 
 	if(data == nullptr) {
 		// free stuff if the read fails
 		delete job;
@@ -296,7 +296,7 @@ int Agent::upload_file(void *path) {
         
     // writes file size
     if(this->write(tmpbuffer, sizeof(tmpbuffer)) == SSH_ERROR) return 1;
-	char *buffer = this->read(size); 
+	unsigned char *buffer = this->read(size); 
     if(buffer == nullptr) return 1;
 
 	// encode the data
@@ -310,7 +310,7 @@ int Agent::upload_file(void *path) {
     free(enc_data);
 	free(buffer);
 
-	char *t = this->read(8); 
+	unsigned char *t = this->read(8); 
 	if(t == nullptr) return 1;
     
 	free(t);
@@ -329,7 +329,7 @@ int Agent::download_file(void *filename){
 	memset(buff, 0, sizeof(buff));
 	
 	// TODO: Add check OK function here too to make sure no errors actually show up on the server's end
-	char *size_dat = this->read(8); 
+	unsigned char *size_dat = this->read(8); 
 	if(size_dat == nullptr) return 1;
     
     size = AgentJob::bytes_to_long(size_dat);
@@ -338,7 +338,7 @@ int Agent::download_file(void *filename){
             
     // writes file size
 	if(this->write("ok", 3) == SSH_ERROR) return 1;
-    char *data = this->read(size); 
+    unsigned char *data = this->read(size); 
 	if(data == nullptr) {
 		free(data_ptr);
 		return 1;

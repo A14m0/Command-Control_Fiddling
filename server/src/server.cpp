@@ -298,6 +298,7 @@ int Server::AddModule(void *handle){
     void (*entrypoint)();
     Module *module;
 
+
     // handle the different module types 
     switch(type){
         case TRANSPORT:
@@ -617,9 +618,7 @@ int Server::Authenticate(pauth_t auth){
 
 // the main logical loop of the server
 int Server::MainLoop(){
-
-
-    printf("test\n");
+    printf("Malloc address: %p\n", malloc);
     if (this->modules == nullptr) {
         printf("rip\n");
         exit(1);

@@ -37,9 +37,9 @@ private:
 
     int Authenticate();
     int DetermineHandler();
-    int write(char *buffer, int len);
+    int write(char *buffer, unsigned long len);
     //int read(char **buffer, int len);
-    char *read(int len);
+    unsigned char *read(unsigned long len);
 
 public:
     SshTransport(NetInst *parent_ref);
