@@ -1,4 +1,4 @@
-# Install script for directory: /home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling
+# Install script for directory: /home/bingus/src/Command-Control_Fiddling
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -29,7 +29,7 @@ endif()
 
 # Install shared libraries without execute permission?
 if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
-  set(CMAKE_INSTALL_SO_NO_EXE "0")
+  set(CMAKE_INSTALL_SO_NO_EXE "1")
 endif()
 
 # Is this installation the result of a crosscompile?
@@ -37,16 +37,11 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
 endif()
 
-# Set default install directory permissions.
-if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/usr/bin/objdump")
-endif()
-
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/cmake_install.cmake")
-  include("/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/agent/cmake_install.cmake")
-  include("/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/server/ssh_trans_new/cmake_install.cmake")
+  include("/home/bingus/src/Command-Control_Fiddling/build/server/cmake_install.cmake")
+  include("/home/bingus/src/Command-Control_Fiddling/build/agent/cmake_install.cmake")
+  include("/home/bingus/src/Command-Control_Fiddling/build/server/ssh_trans_new/cmake_install.cmake")
 
 endif()
 
@@ -58,5 +53,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/wave/Desktop/Coding_Projects/C/Command-Control_Fiddling/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/bingus/src/Command-Control_Fiddling/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
