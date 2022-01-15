@@ -430,6 +430,7 @@ int Agent::run()
 				//exec_module((char*)(job->get_data()));
 				break;
 			case AGENT_SEND_BEACON:
+			case AGENT_HEARTBEAT:
 				{
 					printf("Got send beacon request\n");
 					char *beacon = get_beacon();

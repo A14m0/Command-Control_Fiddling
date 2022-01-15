@@ -48,11 +48,12 @@ void NetInst::MainLoop(){
             task_dispatch->pop_front();
             pthread_mutex_unlock(&int_task_lock);
         }
-        
-        //log(LOG_INFO, "This is the thread! WOO");
-        //log(LOG_INFO, "Here's my second log!");
 
-        
+
+        // generate a heartbeat task
+        ptask_t test = CreateTasking(id, AGENT_HEARTBEAT, strlen((char*)(this->t_dat)), this->t_dat);
+        PushTasking(test);
+
         std::this_thread::sleep_for(std::chrono::seconds(5));
         
     }
@@ -95,7 +96,8 @@ int NetInst::HandleTask(ptask_t task){
         printf("NETINST: Caught execute shell command\n");
         break;
     case AGENT_SEND_BEACON:
-        printf("NETINST: Caught beacon request\n");
+    case AGENT_HEARTBEAT:
+        printf("NETINST: Caught beacon/heartbeat request\n");
         {
             // push request to agent and read data back
             if(!api_check(tspt->push_tasking(task))) {
@@ -174,11 +176,11 @@ ptask_t NetInst::CreateTasking(int to, unsigned char type, unsigned long length,
 
     // sanity check to make sure the data is actually on the heap
     // if it is not, then we allocate for it and copy everything 
-    uintptr_t test1 = ((uintptr_t)ret)&0xffff00000000;
-    uintptr_t test2 = ((uintptr_t)data)&0xffff00000000;
+    //uintptr_t test1 = ((uintptr_t)ret)&0xffff00000000;
+    //uintptr_t test2 = ((uintptr_t)data)&0xffff00000000;
     //printf("%" PRIxPTR "\n", test1);
     //printf("%" PRIxPTR "\n", test2);
-    if (test1 == test2) {
+    /*if (test1 == test2) {
         log(LOG_ERROR, "Task data outside heap, moving to heap...");
         void *dat = malloc(length);
         memcpy(dat, data, length);
@@ -186,13 +188,14 @@ ptask_t NetInst::CreateTasking(int to, unsigned char type, unsigned long length,
         if (test1 != test3) {
             printf("Failed the thing....\n");
             printf("%p %p %p\n", ret, data, dat);
+            perror("Reason for failure");
             exit(1);
         } else {
             ret->data = dat;
         }
-    } else {
+    } else {*/
         ret->data = data;
-    }
+    //}
     
     return ret;
 }

