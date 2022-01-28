@@ -82,7 +82,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Server Port (defualt 22)</string>
+    <string>Server Port (default 22)</string>
    </property>
   </widget>
  </widget>

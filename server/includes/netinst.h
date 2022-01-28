@@ -6,6 +6,9 @@
 #include "api.h"
 #include "tasking.h"
 
+// define the Netinstance termination type
+#define NETINST_TERMINATE 0xffffffff
+
 class NetInst : Common
 {
 private:

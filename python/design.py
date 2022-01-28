@@ -418,7 +418,7 @@ class Ui_ManagerServerConnect(object):
         self.Connect.setText(_translate("ManagerServerConnect", "Connect"))
         self.Title.setText(_translate("ManagerServerConnect", "Server Connection Dialogue"))
         self.IPLabel.setText(_translate("ManagerServerConnect", "Server IP Address"))
-        self.PortLabel.setText(_translate("ManagerServerConnect", "Server Port (defualt 22)"))
+        self.PortLabel.setText(_translate("ManagerServerConnect", "Server Port (default 22)"))
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file './python/ui/server_backend_dialogue.ui'

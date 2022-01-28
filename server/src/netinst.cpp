@@ -20,15 +20,18 @@ NetInst::~NetInst(){
 
 // main loop of the class
 void NetInst::MainLoop(){
-    log(LOG_INFO, "Beginning instance listen");
+    // log(LOG_INFO, "Beginning instance listen");
+    int rc = 0, exit_code = 0;
 
     // listen on the transport
     if(!api_check(tspt->listen())){
-        printf("Failed");
         log(LOG_FATAL, "API CHECK FAILED ON TRANSPORT LISTEN!");
+        log(LOG_INFO, "Terminating network instance...\n");
+        ptask_t die = CreateTasking(id, NETINST_TERMINATE, 0, nullptr);
+        PushTasking(die);
         return;
     }
-    printf("Awaiting get_aname...\n");
+    
     if(!api_check(tspt->get_aname())) {
         return;
     }
@@ -38,24 +41,30 @@ void NetInst::MainLoop(){
 
 
     while(1){
-        printf("[NETINST] Within main thread loop\n");
         // handle tasks
         while(!task_dispatch->empty()){
-            printf("Dequeueing...\n");
             pthread_mutex_lock(&int_task_lock);
             ptask_t task = task_dispatch->front();
-            HandleTask(task);
+            rc = HandleTask(task);
+            if(rc == 2) {
+                exit_code = 1;
+                break;
+            }
             task_dispatch->pop_front();
             pthread_mutex_unlock(&int_task_lock);
         }
 
+        // check to see if we died during the execution
+        if(!exit_code) {
+            // generate a heartbeat task
+            ptask_t test = CreateTasking(id, AGENT_HEARTBEAT, strlen((char*)(this->t_dat)), this->t_dat);
+            PushTasking(test);
 
-        // generate a heartbeat task
-        ptask_t test = CreateTasking(id, AGENT_HEARTBEAT, strlen((char*)(this->t_dat)), this->t_dat);
-        PushTasking(test);
-
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+        } else {
+            log(LOG_INFO, "Terminating network instance...\n");
+            ptask_t die = CreateTasking(id, NETINST_TERMINATE, 0, nullptr);
+        }
     }
     
     return;
@@ -79,6 +88,18 @@ int NetInst::HandleTask(ptask_t task){
     {
     case AGENT_DIE:
         printf("NETINST: Caught die\n");
+        {
+            // push the die, and suicide the connection
+            if(!api_check(tspt->push_tasking(task))) {
+                log(LOG_ERROR, "NETINST AGENT_DIE: Failed API check push tasking\n");
+                rc = 1;
+                break;
+            }
+
+            delete tspt;
+            rc = 2; 
+            break;
+        }
         break;
     case AGENT_SLEEP:
         printf("NETINST: Caught sleep\n");
