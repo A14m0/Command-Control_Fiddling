@@ -1,55 +1,54 @@
-What currently works/is good?
-1. Modularity
-    a. API for backends to implement/keeping connections generic enough for easy changing of that
-2. Multithreading
-3. Rough structure of a controlling server that handles each thread in a separate child class
+Tasks to work on
 
+HIGH PRIORITY
+* Shells and shell management
+* Server/NetInstance:
+    ** AGENT_DIE functionality
+    ** AGENT_SLEEP functionality
+    ** AGENT_DOWNLOAD_FILE functionality
+    ** AGENT_UPLOAD_FILE functionality
+    ** AGENT_REVERSE_SHELL functionality
+    ** AGENT_EXECUTE_SHELLSCRIPT functionality
+* Server/Server:
+    ** TASK_NEW_NETINST functionality
+* Increase application fault tollerance
+
+MEDIUM PRIORITY
+* Implement testing framework/harness
+* Upgrade authentication system (database?)
+* Integrate SSH keys into SSH agent and transport 
+
+LOW PRIORITY
+* Proper versioning for the server/manager applications
+* General use function audit -> reduce redundant/defunct code
+* Add CLI manager interface
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////// Structure notes /////////////////////////////
 
 What doesn't work
-1. Inter-session communication is very difficult
-2. Generate inefficiency in backends when doing network sync logic over server and not backends
-    -> Lower scope of what the server does vs. what the backends do?
-    -> generally reduce usage of primitive API functions in server when possible
-3. Communication structure is lacking/complicated/not adaptive
-    -> Need a way to keep simplicity, while still allowing:
-        a. ease of expansion
-        b. light weight on net-traffic
-        c. some complex operations (within reason)
-    -> Reduce the # of manager-specific commands, its become kind of bloated
-4. For the SSH transport, security is not really good when using passwords
-    -> Transfer over to using keys
-5. Logic for ConnectionInstance is bloated/faulty, so need reworking
-6. Keep classes lean/mean/chad
-7. File structure for project is pretty atrocious
-8. Python GUI is cool, but is it useful?
-    -> Would a CLI-based UI be more efficient?
-        * Unknown as of now. Both have advantages. TBD later. For now, keep it
-9. Misc defunked/unused functionality in server
-    -> General use audit might be good
-10. Too hard to manually Test
-    -> Make it in such a way that components dont need to necessarily know eachother
-    -> Components need to be standalone enough to run tests against
-11. Authentication can probably be handled better than a file
-    -> Look into database solutions?
-12. Compartmentalize functionality better
-    -> ex. Manager handler shouldnt be in the same file as the agent handler
-    -> could make a generic handler that takes in a data structure that maps opcodes to functions
-        * would require making API generic, which wont be good
-13. Keep everything C++ style
-    -> ex. misc.cpp isnt C++, its C
-14. Keep code ordering organized/easy to navigate
 15. WTF are we gonna do about shells?
     -> How to handle asynchronous netcomms over synchronous connection?
         * could use switch w/ file descriptors
         * maybe make backends use FDs to communicate?
-16. (SOLVED) Move to easier make system/compiler? --> CMake
 
 
-Problems solved with new outline:
-1,2,3,5,6,10,12,13,15(kind of)
-
-Unsolved/Misc Problems:
-4,7,8,9,11,14
 
 
 
