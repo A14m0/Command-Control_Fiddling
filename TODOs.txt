@@ -4,13 +4,13 @@ HIGH PRIORITY
 * Shells and shell management
 * Server/NetInstance:
     ** AGENT_DIE functionality                              Status: Untested
-    ** AGENT_SLEEP functionality
-    ** AGENT_DOWNLOAD_FILE functionality
+    ** AGENT_SLEEP functionality                            
+    ** AGENT_DOWNLOAD_FILE functionality                    Status: Untested
     ** AGENT_UPLOAD_FILE functionality
     ** AGENT_REVERSE_SHELL functionality                    
     ** AGENT_EXECUTE_SHELLSCRIPT functionality
 * Server/Server:
-    ** TASK_NEW_NETINST functionality
+    ** TASK_NEW_NETINST functionality                       Status: Untested
     ** NETINST_TERMINATE functionality
     ** Restart first NetInst on 0 active listener threads
 * Increase application fault tollerance
@@ -30,15 +30,6 @@ LOW PRIORITY
 * Proper versioning for the server/manager applications
 * General use function audit -> reduce redundant/defunct code
 * Add CLI manager interface
-
-
-
-
-
-
-
-
-
 
 
 
