@@ -3,15 +3,23 @@ Tasks to work on
 HIGH PRIORITY
 * Shells and shell management
 * Server/NetInstance:
-    ** AGENT_DIE functionality
+    ** AGENT_DIE functionality                              Status: Untested
     ** AGENT_SLEEP functionality
     ** AGENT_DOWNLOAD_FILE functionality
     ** AGENT_UPLOAD_FILE functionality
-    ** AGENT_REVERSE_SHELL functionality
+    ** AGENT_REVERSE_SHELL functionality                    
     ** AGENT_EXECUTE_SHELLSCRIPT functionality
 * Server/Server:
     ** TASK_NEW_NETINST functionality
+    ** NETINST_TERMINATE functionality
+    ** Restart first NetInst on 0 active listener threads
 * Increase application fault tollerance
+* Manager:
+    ** Backend Rework
+* Bugcheck in SshTransport::fetch_tasking() on remote termination
+    ** nullptr deref after SshTransport::read() and printf
+    ** likely unchecked null read
+
 
 MEDIUM PRIORITY
 * Implement testing framework/harness
