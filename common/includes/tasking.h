@@ -62,11 +62,3 @@ public:
 // define some helper functions involved in the parsing and handling of the data
 
 
-
-// define our networked file data structure
-typedef struct _net_file {
-    long fsize;         // the length of the file
-    unsigned int psize; // the length of the path string
-    char *path;         // path to save the file to (can be null for in-memory)
-    void *data;         // raw data of the file
-} net_file, *pnet_file;

@@ -187,6 +187,48 @@ char** Common::str_split(char* a_str, const char a_delim)
     return result;
 }
 
+/* Converts a packet's raw data into a handle-able net_file */
+pnet_file Common::parse_networked_file(void* data, unsigned long length) {
+    pnet_file file = (pnet_file) malloc(sizeof(pnet_file));
+    file->fsize = (unsigned long) data[0];
+    file->psize = (unsigned int) data[sizeof(unsigned long)];
+    file->path = (char*) malloc(file->psize);
+    memcpy_s(file->path, file->psize, data[sizeof(unsigned long) + sizeof(unsigned int)], file->psize);
+    file->data = malloc(file->fsize);
+    memcpy_s(file->data, file->fsize, data[sizeof(unsigned long) + sizeof(unsigned int) + file->psize], file->fsize);
+
+    return file;
+}
+
+/* writes the output of a networked file to disk */
+int Common::write_networked_file(pnet_file file, char* path) {
+    FILE *f = fopen(path, "wb");
+
+    int rc = fwrite(file->data, 1, file->fsize, f);
+    if(rc != file->fsize) {
+        printf("Failed to write all of the data!\n");
+        perror("");
+        return RESP_FAIL;
+    }
+
+    fclose(f);
+
+    return RESP_OK;
+}
+
+void Common::free_networked_file(*pnet_file file) {
+    free(*file->path);
+    free(*file->data);
+    free(*file);
+    file = nullptr;
+}
+
+
+
+
+
+
+
 
 
 /* returns the size of the buffer

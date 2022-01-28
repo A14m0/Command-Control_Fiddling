@@ -256,6 +256,16 @@ int NetInst::GetID(){
     return id;
 }
 
+// returns the agent's identifier
+char* NetInst::GetAgentName() {
+    if(!api_check(tspt->get_aname()){
+        log(LOG_ERROR, "Failed to get agent's name");
+        return nullptr;
+    } else {
+        return t_dat;
+    }
+}
+
 
 
 // Handles response from API calls 

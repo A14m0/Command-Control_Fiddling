@@ -11,7 +11,7 @@ typedef struct _task {
 
 
 // authentication credentials helper structure
-typedef struct ret
+typedef struct _passwd_t
 {
     char *usr;
     char *passwd;
@@ -38,3 +38,12 @@ typedef struct _auth {
     char uname[128];
     char passwd[64];
 } auth_t, *pauth_t;
+
+
+// define our networked file data structure
+typedef struct _net_file {
+    unsigned long fsize;    // the length of the file
+    unsigned int psize;     // the length of the path string
+    char *path;             // path to save the file to (can be null for in-memory)
+    void *data;             // raw data of the file
+} net_file, *pnet_file;

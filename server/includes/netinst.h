@@ -36,6 +36,7 @@ public:
     void SetTransport(TransportAPI *transport);
     ptask_t AwaitTask(int type); 
     int GetID();
+    char *GetAgentName();
 
     ~NetInst();
 };

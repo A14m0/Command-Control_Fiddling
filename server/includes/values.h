@@ -28,5 +28,5 @@
 #define TASK_NULL 0             // NOP tasking
 #define TASK_AUTH 1             // Request to authenticate credentials
 #define TASK_NEW_NETINST 2      // Request to create new NetInst
-#define TASK_PUSH_BEACON 3      // Request to get beacon data for an agent
-
+#define TASK_PUSH_BEACON 3      // Request to write beacon data for an agent
+#define TASK_SAVE_FILE 4        // Request to save a file from an agent
