@@ -35,7 +35,7 @@ int Common::index_of(const char* str, const char find, int rev){
         int ctr = 0;
 
         // loop over each character
-        while(end - ctr > 0){
+        while(end - ctr >= 0){
             // found it so write index
             if(str[end-ctr] == find) return end - ctr;
             ctr++;
