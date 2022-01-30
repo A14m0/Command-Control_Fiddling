@@ -28,6 +28,7 @@ private:
 public:
     int log(int type, const char *frmt, ...);// override;
     NetInst(Server *server, int id, TransportAPI *transport); 
+    NetInst(Server *server, int id, Module *module);
 
     std::thread *StartThread();
     ptask_t CreateTasking(int to, unsigned char type, unsigned long length, void *data);
@@ -37,6 +38,7 @@ public:
     ptask_t AwaitTask(int type); 
     int GetID();
     char *GetAgentName();
+    int SetTransportPort(int port);
 
     ~NetInst();
 };

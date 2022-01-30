@@ -33,10 +33,10 @@ int main(int argc, char **argv){
     // handle the arguments parsing 
     struct arguments args;
     args.retcode = 0;
-    argp_parse(&argp, argc, argv, 0,0, &args);
-
+    
     // start the server
     Server *srv = new Server();
+    argp_parse(&argp, argc, argv, 0,0, &args);
     srv->MainLoop();
 
     // exit

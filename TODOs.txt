@@ -19,12 +19,16 @@ HIGH PRIORITY
 * Bugcheck in SshTransport::fetch_tasking() on remote termination
     ** nullptr deref after SshTransport::read() and printf
     ** likely unchecked null read
+* Bug: data corruption on task transmission
+    ** Beacon data sent from agent stable (length/data looks good)
+    ** Data parsed by server mostly ok, but length is wrong often.
 
 
 MEDIUM PRIORITY
 * Implement testing framework/harness
 * Upgrade authentication system (database?)
 * Integrate SSH keys into SSH agent and transport 
+* Move Create/FreeTask into Common class
 
 LOW PRIORITY
 * Proper versioning for the server/manager applications

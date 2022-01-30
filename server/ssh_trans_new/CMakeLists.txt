@@ -15,11 +15,15 @@ include_directories(${COMMON_INCLUDES_DIR} ${SERVER_INCLUDES_DIR} ${SSHT_INCLUDE
 #add_library(crypto SHARED IMPORTED)
 #add_library(ssh SHARED IMPORTED)
 
+#set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+#set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+#find_package(Threads REQUIRED)
+
+
 
 add_library(ssh_transport SHARED ${COMMON_SOURCE_DIR}/common.cpp 
     ${COMMON_SOURCE_DIR}/tasking.cpp ${SSHT_SOURCE_DIR}/ssh_transport.cpp 
-    ${SERVER_SOURCE_DIR}/netinst.cpp ${SERVER_SOURCE_DIR}/server.cpp 
     ${SERVER_SOURCE_DIR}/module.cpp)
 
-target_link_libraries(ssh_transport OpenSSL::Crypto ssh)
+target_link_libraries( ssh_transport OpenSSL::Crypto ssh ) #Threads::Threads )
 

@@ -4,8 +4,6 @@
 #include "common.h"
 #include "api.h"
 
-class NetInst;
-
 // Module class
 class Module
 {
@@ -13,15 +11,14 @@ private:
     const char *name; // name of the module
     int id; // ID of the module
     int type; // Type of the module (either transport or standalone)
-    pthread_t thread; // thread refernce
     void *handle; // module handle
-    void *(*generator)(NetInst *); // pointer to transport (null if standalone type)
+    void *(*generator)(); // pointer to transport (null if standalone type)
     void (*entrypoint)(); // pointer to entrypoint (null if transport type)
     
 public:
     Module(const char *name, const int id, 
                  const int type, void *handle, 
-                 void (*entrypoint)(), void *(*generator)(NetInst *));
+                 void (*entrypoint)(), void *(*generator)());
     ~Module();
 
     // gets module name
@@ -33,7 +30,7 @@ public:
     // gets module entrypoint
     void *GetEntrypoint();
     // gets modue api
-    TransportAPI *NewTransport(NetInst *);
+    TransportAPI *NewTransport();
     // closes dlsym handle
     void CloseHandle();
 

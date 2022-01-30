@@ -5,6 +5,22 @@
 Common::Common(){}
 Common::~Common(){}
 
+const char *CONST_NA = "NA";
+
+/* Creates a SHA512 hash of `input`*/
+char* Common::sha_digest(const char* input){
+    unsigned char digest[SHA512_DIGEST_LENGTH];
+
+    // get hash of `input`
+    SHA512((unsigned char*)input, strlen(input), (unsigned char*)&digest);
+    char* ret = (char*)malloc(SHA512_DIGEST_LENGTH*2+1);
+    ret[SHA512_DIGEST_LENGTH*2] = '\0';
+
+    // format for use
+    for(int i = 0; i < SHA512_DIGEST_LENGTH; i++) sprintf(&ret[i*2], "%02x", (unsigned int)digest[i]);
+
+    return ret;
+}
 
 /* Gets the index of `find` in `str`. Goes backwards if `rev` is !0*/
 int Common::index_of(const char* str, const char find, int rev){
@@ -37,6 +53,7 @@ int Common::index_of(const char* str, const char find, int rev){
     // Failed to find character
     return -1;
 }
+
 
 /* Checks if directory at `path` exists*/
 int Common::directory_exists( const char* pzPath ){
@@ -190,12 +207,12 @@ char** Common::str_split(char* a_str, const char a_delim)
 /* Converts a packet's raw data into a handle-able net_file */
 pnet_file Common::parse_networked_file(void* data, unsigned long length) {
     pnet_file file = (pnet_file) malloc(sizeof(pnet_file));
-    file->fsize = (unsigned long) data[0];
-    file->psize = (unsigned int) data[sizeof(unsigned long)];
+    file->fsize = (unsigned long) ((unsigned char*)data)[0];
+    file->psize = (unsigned int) ((unsigned char*)data)[sizeof(unsigned long)];
     file->path = (char*) malloc(file->psize);
-    memcpy_s(file->path, file->psize, data[sizeof(unsigned long) + sizeof(unsigned int)], file->psize);
+    memcpy(file->path, (data + sizeof(unsigned long) + sizeof(unsigned int)), file->psize);
     file->data = malloc(file->fsize);
-    memcpy_s(file->data, file->fsize, data[sizeof(unsigned long) + sizeof(unsigned int) + file->psize], file->fsize);
+    memcpy(file->data, (data + sizeof(unsigned long) + sizeof(unsigned int) + file->psize), file->fsize);
 
     return file;
 }
@@ -216,12 +233,347 @@ int Common::write_networked_file(pnet_file file, char* path) {
     return RESP_OK;
 }
 
-void Common::free_networked_file(*pnet_file file) {
-    free(*file->path);
-    free(*file->data);
+void Common::free_networked_file(pnet_file *file) {
+    free((*file)->path);
+    free((*file)->data);
     free(*file);
     file = nullptr;
 }
+
+
+/* Initializes an agent's working directory */
+int Common::init_agent(const char *agent_id) {
+    // initialize and zero needed variables and buffers
+    // FILE *manifest = NULL;
+    char parent_dir[2048];
+    char tmp_buff[BUFSIZ];
+    char *tmp = NULL;
+    char *buff = NULL;
+    // int rc = 0;
+
+    memset(parent_dir, 0, sizeof(parent_dir));
+    memset(tmp_buff, 0, sizeof(tmp_buff));
+
+    // find correct agent directory
+    sprintf(parent_dir, "%s/agents/%s", getcwd(tmp_buff, sizeof(tmp_buff)), agent_id);
+
+    // duplicate parent directory into multiple buffers for use
+    buff = strdup(parent_dir);
+    tmp = strdup(parent_dir);
+
+    // create dir with correct perms
+    if(mkdir(parent_dir, 0755)) {
+        perror("Failed to create agent's directory");
+        return 1;
+    }
+
+    // create the loot directory
+    if(mkdir(strcat(parent_dir, "/loot"), 0755)) {
+        perror("Failed to create loot directory");
+        return 1;
+    }
+
+    // create the tasking directory
+    if(mkdir(strcat(tmp, "/tasking"), 0755)) {
+        perror("Failed to create tasking directory");
+        return 1;
+    }
+
+    // open and write default agent manifest
+    strcat(buff, "/agent.mfst");
+    Common::write_default_agent_manifest(buff);
+    
+    // write default agent information to its new info file
+    Common::write_agent_beacon(agent_id, "NA\nNA\nNA\nNA\nNA\n");
+
+    return 0;
+}
+
+/* Registers a new set of credentials with the server*/
+int Common::_register_agent(const char *username, const char *password) {
+    FILE *file;
+
+    // open credential store
+    file = fopen("agents/agents.dat", "a");
+    if (!file) {
+        file = fopen("agents/agents.dat", "w");
+        if(!file) {
+            printf("Failed to open file\n");
+            perror("");
+            return 1;
+        }
+    }
+
+    // go to the end and write data
+    fseek(file, 0L, SEEK_END);
+    fprintf(file, "%s:%s\n", username, Common::sha_digest(password));
+
+    // close and return
+    fclose(file);
+    return 0;
+}
+
+/* Registers agent using single line format */
+int Common::register_agent(char *line) {
+    char *id;
+    char *passwd;
+
+    // find the delimeter character ':'
+    int delim = Common::index_of(line, ':', 0);
+    if(delim == -1) {
+        printf("Failed to register agent: Malformed input\n");
+        return 1;
+    }
+
+    // the password is everything after the delim
+    passwd = line + delim + 1;
+
+    // zero the delimeter so we can terminate the id string
+    line[delim] = '\0';
+    id = line;
+
+    // register the agent
+    printf("Registering agents: %s,%s\n", id, passwd);
+
+    if(!Common::_register_agent(id, passwd)){
+        return 1;
+    }
+
+    return 0;
+}
+
+/* Retrieves the tasking information from agent with ID `agent_id` */
+char *Common::get_agent_tasking(const char *agent_id) {
+    char file[2048];
+    char cwd_buf[BUFSIZ];
+    char *mem_dump = NULL;
+    //FILE *fd = NULL;
+
+    // get target agent's manifest
+    memset(cwd_buf, 0, sizeof(cwd_buf));
+    memset(file, 0, sizeof(file));
+    sprintf(file, "%s/agents/%s/agent.mfst", getcwd(cwd_buf, sizeof(cwd_buf)),agent_id);
+
+    // open it
+    Common::get_file(file, &mem_dump);
+    
+    // write_format(file);
+    return mem_dump;
+}
+
+/* Generates a new username and password set */
+ppasswd_t Common::gen_agent_creds(){
+    // allocate heap memory and zero fields
+    ppasswd_t buf = (ppasswd_t) malloc(sizeof(passwd_t));
+    char *usr = (char *)malloc(13);
+    char *pwd = (char *)malloc(13);
+    memset(buf, 0, sizeof(passwd_t));
+    memset(usr, 0, 13);
+    memset(usr, 0, 13);
+
+    // assign structure values to allocated chunks
+    buf->usr = usr;
+    buf->passwd = pwd;
+
+    // generate a 12 character random username
+    for(int i = 0; i < 12; i++){
+        usr[i] = 'A' + (random() % 26);
+    }
+
+    // generate a 12 character random password
+    // Note: should probably increase this at some point
+    for(int i = 0; i < 12; i++){
+        pwd[i] = 'A' + (random() % 26);
+    }
+
+    return buf;
+}
+
+/* Adds `operation` to `agent` tasking queue with `opt`*/
+int Common::task_agent(const int operation, const char *agent, const char *opt) {
+    FILE *file = NULL;
+    char buffer[BUFSIZ];
+    char tmpbuff[BUFSIZ];
+
+    // get path to agent's manifest
+    memset(buffer, 0, sizeof(buffer));
+    sprintf(buffer, "%s/agents/%s/agent.mfst", getcwd(tmpbuff, sizeof(tmpbuff)), agent);
+
+    // open file
+    file = fopen(buffer, "a");
+    if(!file) {
+        perror("Server failed to read agent tasking file");
+        return 1;
+    }
+
+    //printf("Server: Tasking %s with operation %d\n", agent, operation);
+
+    // format, write, and close
+    fprintf(file, "%d|%s\n", operation, opt);
+    fclose(file);
+
+    return 0;
+}
+
+/* Writes received agent beacon data to agent's info.txt*/
+int Common::write_agent_beacon(void *data) {
+    // get the agent's ID
+    // NOTE TO SELF: DATA IS NULL RN...
+    printf("data: \n'%s'\n", (char*)data);
+    int idx = Common::index_of((char*)data, '\n', 0);
+    //printf("idx: %d\n", idx);
+    char *id = (char*)malloc(idx);
+    if (id == NULL) {
+        printf("Common::write_agent_beacon: Failed to malloc memory.");
+        perror("");
+        exit(1);
+    }
+    strncpy(id, (char*)data, idx);
+
+    return Common::write_agent_beacon(id, (char*)data);
+}
+
+// Writes received agent beacon data to agent's info.txt
+int Common::write_agent_beacon(const char* id, const char* data) {
+    FILE *fd = NULL;
+    char buff[2048];
+    char cwd[BUFSIZ];
+
+    memset(buff, 0, sizeof(buff));
+    memset(cwd, 0, sizeof(cwd));
+    printf("In write beacon\n");
+
+    // get path to agent's info
+    sprintf(buff, "%s/agents/%s", getcwd(cwd, sizeof(cwd)), id);
+    printf("Saved buffer\n");
+    if (!Common::directory_exists(buff)) {
+        mkdir(buff, 0755);
+    }
+    sprintf(buff, "%s/info.txt", buff);
+
+    fd = fopen(buff, "w");
+    if (fd == NULL) {
+        perror("");
+        return RESP_FAIL;
+    }
+
+    // write, close, return
+    fwrite((char*)data, 1,strlen((char*)data), fd);
+    fclose(fd);
+
+    return RESP_OK;
+}
+
+/* Writes the default manifest of the agent*/
+int Common::write_default_agent_manifest(char *path) {
+    FILE *fd;
+
+    fd = fopen(path, "w");
+    if (!fd) {
+        perror("");
+        return 1;
+    }
+
+    fwrite("NULL :)\n", 1, sizeof("NULL :)"), fd);
+    fclose(fd);
+    return 0;
+}
+
+// checks an agents credentials
+int Common::authenticate(pauth_t auth){
+    // initialize variables
+    char** tokens = NULL;
+    char** subtokens = NULL;
+    char *buff;
+    int size = 0;
+    
+    // read in data into buffer
+    size = Common::get_file("agents/agents.dat", &buff);
+    
+    if(size == 0){
+        //log(LOG_ERROR, "Found default agent file. Register agents by compiling them with this install");
+        return RESP_FAIL;
+    }
+
+    tokens = Common::str_split(buff, '\n');
+
+    // begin going through usernames and hashes to attemtp to authenticate
+    if(tokens){
+        int j;
+
+        // loop over each line in file
+        for (j = 0; *(tokens + j); j++)
+        {
+            // Split at `:` (to get username and hash separeately)
+            subtokens = Common::str_split(*(tokens + j), ':');
+
+            // check if `usr` is the current line's username
+            if(!strcmp(auth->uname, *(subtokens))){
+                // check if the digest of `pass` is the same as the hash
+                char *auth_pass = sha_digest(auth->passwd);
+                if(!strcmp(auth_pass, *(subtokens+1))){
+                    free(auth_pass);
+                    // success and free
+                    //log(LOG_INFO, "ID %s successfully authenticated", auth->uname);
+                    for (int i = 0; *(tokens + i); i++)
+                    {
+                        free(*(tokens + i));
+                    }
+                    for (int i = 0; *(subtokens+i); i++)
+                    {
+                        free(*(subtokens+i));
+                    }
+                    free(subtokens);
+                    free(tokens);
+                    return RESP_OK;
+                }
+                else {
+                    free(auth_pass);
+                    // note here that we do not break the loop, 
+                    //t o prevent brute forcing of IDs through response time correlation
+                    //log(LOG_WARN, "ID %s failed to pass password authentication\n", auth->uname);
+                    return RESP_FAIL;
+                }
+            }
+        }
+        // unknown username
+        //log(LOG_WARN, "ID %s unknown to this server\n", auth->uname);
+    }
+
+    // free tokens
+    for (int i = 0; *(tokens + i); i++)
+    {
+        free(*(tokens + i));
+    }
+    for (int i = 0; *(subtokens+i); i++)
+    {
+        free(*(subtokens+i));
+    }
+    free(subtokens);
+    free(tokens);
+
+    return RESP_FAIL;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -362,255 +714,3 @@ const int B64::b64invs[] = { 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58,
 	21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28,
 	29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
 	43, 44, 45, 46, 47, 48, 49, 50, 51 };
-
-
-const char *CONST_NA = "NA";
-
-/* Initializes an agent's working directory */
-int Common::init_agent(const char *agent_id) {
-    // initialize and zero needed variables and buffers
-    // FILE *manifest = NULL;
-    char parent_dir[2048];
-    char tmp_buff[BUFSIZ];
-    char *tmp = NULL;
-    char *buff = NULL;
-    // int rc = 0;
-
-    memset(parent_dir, 0, sizeof(parent_dir));
-    memset(tmp_buff, 0, sizeof(tmp_buff));
-
-    // find correct agent directory
-    sprintf(parent_dir, "%s/agents/%s", getcwd(tmp_buff, sizeof(tmp_buff)), agent_id);
-
-    // duplicate parent directory into multiple buffers for use
-    buff = strdup(parent_dir);
-    tmp = strdup(parent_dir);
-
-    // create dir with correct perms
-    if(mkdir(parent_dir, 0755)) {
-        perror("Failed to create agent's directory");
-        return 1;
-    }
-
-    // create the loot directory
-    if(mkdir(strcat(parent_dir, "/loot"), 0755)) {
-        perror("Failed to create loot directory");
-        return 1;
-    }
-
-    // create the tasking directory
-    if(mkdir(strcat(tmp, "/tasking"), 0755)) {
-        perror("Failed to create tasking directory");
-        return 1;
-    }
-
-    // open and write default agent manifest
-    strcat(buff, "/agent.mfst");
-    Common::write_default_agent_manifest(buff);
-    
-    // write default agent information to its new info file
-    Common::write_agent_beacon(agent_id, "NA\nNA\nNA\nNA\nNA\n");
-
-    return 0;
-}
-
-/* Registers a new set of credentials with the server*/
-int Common::_register_agent(const char *username, const char *password) {
-    FILE *file;
-
-    // open credential store
-    file = fopen("agents/agents.dat", "a");
-    if (!file) {
-        printf("Failed to open file\n");
-        return 1;
-    }
-
-    // go to the end and write data
-    fseek(file, 0L, SEEK_END);
-    fprintf(file, "%s:%s\n", username, Common::digest(password));
-
-    // close and return
-    fclose(file);
-    return 0;
-}
-
-/* Registers agent using single line format */
-int Common::register_agent(char *line) {
-    char *id;
-    char *passwd;
-
-    // find the delimeter character ':'
-    int delim = Common::index_of(line, ':', 0);
-    if(delim == -1) {
-        printf("Failed to register agent: Malformed input\n");
-        return 1;
-    }
-
-    // the password is everything after the delim
-    passwd = line + delim + 1;
-
-    // zero the delimeter so we can terminate the id string
-    line[delim] = '\0';
-    id = line;
-
-    // register the agent
-    printf("Registering agents: %s,%s\n", id, passwd);
-
-    if(!Common::_register_agent(id, passwd)){
-        return 1;
-    }
-
-    return 0;
-}
-
-/* Retrieves the tasking information from agent with ID `agent_id` */
-char *Common::get_agent_tasking(const char *agent_id) {
-    char file[2048];
-    char cwd_buf[BUFSIZ];
-    char *mem_dump = NULL;
-    //FILE *fd = NULL;
-
-    // get target agent's manifest
-    memset(cwd_buf, 0, sizeof(cwd_buf));
-    memset(file, 0, sizeof(file));
-    sprintf(file, "%s/agents/%s/agent.mfst", getcwd(cwd_buf, sizeof(cwd_buf)),agent_id);
-
-    // open it
-    Common::get_file(file, &mem_dump);
-    
-    // write_format(file);
-    return mem_dump;
-}
-
-/* Generates a new username and password set */
-ppasswd_t Common::gen_agent_creds(){
-    // allocate heap memory and zero fields
-    ppasswd_t buf = (ppasswd_t) malloc(sizeof(passwd_t));
-    char *usr = (char *)malloc(13);
-    char *pwd = (char *)malloc(13);
-    memset(buf, 0, sizeof(passwd_t));
-    memset(usr, 0, 13);
-    memset(usr, 0, 13);
-
-    // assign structure values to allocated chunks
-    buf->usr = usr;
-    buf->passwd = pwd;
-
-    // generate a 12 character random username
-    for(int i = 0; i < 12; i++){
-        usr[i] = 'A' + (random() % 26);
-    }
-
-    // generate a 12 character random password
-    // Note: should probably increase this at some point
-    for(int i = 0; i < 12; i++){
-        pwd[i] = 'A' + (random() % 26);
-    }
-
-    return buf;
-}
-
-/* Adds `operation` to `agent` tasking queue with `opt`*/
-int Common::task_agent(const int operation, const char *agent, const char *opt) {
-    FILE *file = NULL;
-    char buffer[BUFSIZ];
-    char tmpbuff[BUFSIZ];
-
-    // get path to agent's manifest
-    memset(buffer, 0, sizeof(buffer));
-    sprintf(buffer, "%s/agents/%s/agent.mfst", getcwd(tmpbuff, sizeof(tmpbuff)), agent);
-
-    // open file
-    file = fopen(buffer, "a");
-    if(!file) {
-        perror("Server failed to read agent tasking file");
-        return 1;
-    }
-
-    //printf("Server: Tasking %s with operation %d\n", agent, operation);
-
-    // format, write, and close
-    fprintf(file, "%d|%s\n", operation, opt);
-    fclose(file);
-
-    return 0;
-}
-
-/* Writes received agent beacon data to agent's info.txt*/
-int Common::write_agent_beacon(void *data) {
-    // get the agent's ID
-    // NOTE TO SELF: DATA IS NULL RN...
-    printf("data: %s\n", (char*)data);
-    int idx = Common::index_of((char*)data, '\n', 0);
-    printf("idx: %d\n", idx);
-    char *id = (char*)malloc(idx);
-    if (id == NULL) {
-        printf("Well theres ur issue");
-        exit(1);
-    }
-    printf("index: %d", idx);
-    strncpy(id, (char*)data, idx);
-
-    return Common::write_agent_beacon(id, (char*)data);
-}
-
-// Writes received agent beacon data to agent's info.txt
-int Common::write_agent_beacon(const char* id, const char* data) {
-    FILE *fd = NULL;
-    char buff[2048];
-    char cwd[BUFSIZ];
-
-    memset(buff, 0, sizeof(buff));
-    memset(cwd, 0, sizeof(cwd));
-    printf("In write beacon\n");
-
-    // get path to agent's info
-    sprintf(buff, "%s/agents/%s", getcwd(cwd, sizeof(cwd)), id);
-    printf("Saved buffer\n");
-    if (!Common::directory_exists(buff)) {
-        mkdir(buff, 0755);
-    }
-    sprintf(buff, "%s/info.txt", buff);
-
-    fd = fopen(buff, "w");
-    if (fd == NULL) {
-        perror("");
-        return RESP_FAIL;
-    }
-
-    // write, close, return
-    fwrite((char*)data, 1,strlen((char*)data), fd);
-    fclose(fd);
-
-    return RESP_OK;
-}
-
-/* Writes the default manifest of the agent*/
-int Common::write_default_agent_manifest(char *path) {
-    FILE *fd;
-
-    fd = fopen(path, "w");
-    if (!fd) {
-        perror("");
-        return 1;
-    }
-
-    fwrite("NULL :)\n", 1, sizeof("NULL :)"), fd);
-    fclose(fd);
-    return 0;
-}
-
-/* Creates a SHA512 hash of `input`*/
-char* Common::digest(const char* input){
-    unsigned char digest[SHA512_DIGEST_LENGTH];
-
-    // get hash of `input`
-    SHA512((unsigned char*)input, strlen(input), (unsigned char*)&digest);
-    char* ret = (char*)malloc(SHA512_DIGEST_LENGTH*2+1);
-    ret[SHA512_DIGEST_LENGTH*2] = '\0';
-
-    // format for use
-    for(int i = 0; i < SHA512_DIGEST_LENGTH; i++) sprintf(&ret[i*2], "%02x", (unsigned int)digest[i]);
-
-    return ret;
-}

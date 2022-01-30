@@ -3,7 +3,6 @@
 
 // include system libraries
 #include <queue>
-#include <thread>
 #include <chrono>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -56,11 +55,12 @@ public:
     static int write_agent_beacon(void *data);
     static int write_agent_beacon(const char *id, const char *beacon);
     static int write_default_agent_manifest(char* path);
-    static char* digest(const char* input);
+    static int authenticate(pauth_t auth);
+    static char* sha_digest(const char* input);
     static int get_file(const char* filename, char **buff);
     static pnet_file parse_networked_file(void* data, unsigned long length);
     static int write_networked_file(pnet_file file, char* agent_id);
-    static void free_networked_file(&pnet_file file);
+    static void free_networked_file(pnet_file *file);
     ~Common();
 };
 

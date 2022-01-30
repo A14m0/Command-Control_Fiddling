@@ -20,8 +20,8 @@ typedef struct _dat_str {
 
 // API struct resolved at runtime, points to all the required functions
 extern "C"{
-    void *generate_class(NetInst *parent){
-        SshTransport *ptr = new SshTransport(parent);
+    void *generate_class(){
+        SshTransport *ptr = new SshTransport();
         return ptr;
     }
 }
@@ -35,10 +35,9 @@ extern "C"{
 
 
 // initializes the instance data
-SshTransport::SshTransport(NetInst *parent) {
+SshTransport::SshTransport() {
     id = t_id;
     name = t_name;
-    p_ref = parent;
     agent_name = (char*)malloc(128);
     if(agent_name == nullptr) {
         printf("SSHTRANSPORT NULLPTR !!!!!!!!!!!!!!!!!!!!!\n");
@@ -80,9 +79,7 @@ unsigned char *SshTransport::read(unsigned long len) {
         printf("B ADDR: %p\n", b);
         perror("");
         exit(1);
-	} else {
-        printf("B is not null?\n%p\n", b);
-    }
+	} 
 
     if(len > UINT32_MAX ) {
         // if we get a number thats bigger than `ssh_channel_read` can handle, 
@@ -99,7 +96,6 @@ unsigned char *SshTransport::read(unsigned long len) {
             }
 
 	        int nbytes = ssh_channel_read(this->channel, b, readlen, 0);
-	        printf("read %d bytes from channel\n", nbytes);
 	        if (nbytes < 0){
 	        	printf("Caught read error from server: %s\n", ssh_get_error(ssh_channel_get_session(this->channel)));
             	free(b);
@@ -130,6 +126,7 @@ api_return SshTransport::fetch_tasking() {
     // read the header
     char header[8] = {0};
     //int rc = this->read((char**)&header, 8); 
+    printf("\n-------------------------------------------------\n");
     printf("TSPT: READING...\n");
 	unsigned char *hdr = this->read(8);
     printf("hdr: "); 
@@ -143,6 +140,7 @@ api_return SshTransport::fetch_tasking() {
     free(hdr);
 	AgentJob *job = new AgentJob(h_val, nullptr);
     printf("Tasking values: %x, %lu\n", job->get_type(), job->get_len());
+    printf("-------------------------------------------------\n\n");
 
 	// now that we know the length, fetch the payload
 	unsigned char *data = this->read(job->get_len()); 
@@ -187,23 +185,19 @@ api_return SshTransport::listen() {
     ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT, &(portno));
 
     if(ssh_bind_listen(sshbind)<0){
-        p_ref->log(LOG_ERROR, "Error listening to socket: %s\n", ssh_get_error(sshbind));
         return api_return{API_ERR_LISTEN, (void*) ssh_get_error(sshbind)};
     }
 
     // bind the listener to the port
     r=ssh_bind_accept(sshbind, session);
     if(r==SSH_ERROR){
-      	p_ref->log(LOG_ERROR, "Error accepting a connection : %s\n",ssh_get_error(sshbind));
-        return api_return{API_ERR_ACCEPT, (void*) ssh_get_error(sshbind)};
+      	return api_return{API_ERR_ACCEPT, (void*) ssh_get_error(sshbind)};
     }
     if (ssh_handle_key_exchange(session)) {
-        p_ref->log(LOG_ERROR, "ssh_handle_key_exchange: %s\n", ssh_get_error(session));
         return api_return{API_ERR_AUTH, (void*) ssh_get_error(sshbind)};
     }
 
     if (!Authenticate()) {
-        p_ref->log(LOG_ERROR, "Transport: Failed to authenticate agent\n");
         return api_return{API_ERR_AUTH, (void*) "Bad authentication"};
     }
 
@@ -217,7 +211,7 @@ const char *SshTransport::get_tname(){
 
 // returns the currently connected agent's name
 api_return SshTransport::get_aname() {
-    return api_return{API_OK, nullptr};
+    return api_return{API_OK, this->agent_name};
 }
 
 // returns the transport's ID
@@ -256,20 +250,14 @@ int SshTransport::Authenticate(){
                             strncpy(auth_struct->passwd, ssh_message_auth_password(message), 64);
 
                             // send tasking to server and await tasking report
-                            ptask_t send = p_ref->CreateTasking(0, TASK_AUTH, sizeof(auth_t), auth_struct);
-                            p_ref->PushTasking(send);
-
-                            ptask_t auth_success = p_ref->AwaitTask(TASK_AUTH);
-
-                            // if we succeed, set the correct values and send OK
-                            if(auth_success->type == RESP_OK){
+                            if(Common::authenticate(auth_struct) == RESP_OK) {
                                 auth=1;
 
                                 memset(agent_name, 0, 128);//strlen(ssh_message_auth_user(message)));
                                 snprintf(agent_name, 128, "%s", ssh_message_auth_user(message));
                                 ssh_message_auth_reply_success(message,0);
                                 break;
-                       	    } else {
+                            } else {
                                 auth = 2;
                                 ssh_message_reply_default(message);
                                 break;
@@ -293,7 +281,6 @@ int SshTransport::Authenticate(){
 
     // Check if the client authenticated successfully
 	if(auth != 1){
-        p_ref->log(LOG_WARN, "Transport terminating connection (failed auth)\n");
         ssh_disconnect(session);
         return 0;
     } else {
@@ -333,7 +320,6 @@ int SshTransport::DetermineHandler(){
     } while(message && !channel);
 
 	if(!channel){
-        p_ref->log(LOG_ERROR, "Transport: Channel error : %s\n", ssh_get_error(session));
         ssh_finalize();
         return 0;
     }
@@ -386,10 +372,11 @@ int SshTransport::DetermineHandler(){
 
         break;
     default:
-        p_ref->log(LOG_ERROR, "Client %s: got unknown message type: %d\n", agent_name, msgType);
+        break;
+        //p_ref->log(LOG_ERROR, "Client %s: got unknown message type: %d\n", agent_name, msgType);
     }
 
-    p_ref->log(LOG_INFO, "Transport: Closing channels...\n");
+    // p_ref->log(LOG_INFO, "Transport: Closing channels...\n");
     ssh_message_free(message);
     ssh_finalize();
 

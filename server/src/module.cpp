@@ -5,7 +5,7 @@
 
 Module::Module(const char *name, const int id, 
                            const int type, void *handle, 
-                           void (*entrypoint)(), void *(*generator)(NetInst *))
+                           void (*entrypoint)(), void *(*generator)())
 {
     this->name = name;
     this->id = id;
@@ -39,9 +39,9 @@ void *Module::GetEntrypoint(){
     return this->entrypoint;
 }
 
-TransportAPI *Module::NewTransport(NetInst *parent){
+TransportAPI *Module::NewTransport(){
     if(type == TRANSPORT){
-        return (TransportAPI *)generator(parent);
+        return (TransportAPI *)generator();
     }
     return nullptr;    
 }

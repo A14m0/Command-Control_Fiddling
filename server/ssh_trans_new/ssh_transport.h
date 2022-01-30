@@ -1,8 +1,8 @@
 #pragma once
 
 #include "api.h"
+#include "tasking.h"
 #include "common.h"
-#include "netinst.h"
 
 #include <stdlib.h>
 #include <libssh/libssh.h>
@@ -23,7 +23,7 @@
 #define REQ_TASKING 2
 #define REQ_TTY 3
 
-void *generate_transport(NetInst *parent);
+void *generate_transport();
 
 
 class SshTransport : TransportAPI{
@@ -33,8 +33,7 @@ private:
     ssh_bind sshbind;
     ssh_session session;
     ssh_channel channel;
-    NetInst *p_ref;
-
+    
     int Authenticate();
     int DetermineHandler();
     int write(char *buffer, unsigned long len);
@@ -42,7 +41,7 @@ private:
     unsigned char *read(unsigned long len);
 
 public:
-    SshTransport(NetInst *parent_ref);
+    SshTransport();
     ~SshTransport();
 
 

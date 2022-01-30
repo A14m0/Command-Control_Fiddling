@@ -2,8 +2,11 @@
 #pragma once
 
 #include <vector>
+#include <thread>
 #include "common.h"
 #include "module.h"
+//#include "participants.h"
+//#include "netinst.h"
 
 // struct used when creating a new instance
 typedef struct _instance {
@@ -11,6 +14,7 @@ typedef struct _instance {
     std::queue<ptask_t> *dispatch;
 } instance_t, *pinstance_t;
 
+class NetInst;
 
 // server class
 class Server : Common
@@ -34,7 +38,6 @@ private:
     int ReceiveTasking(ptask_t task); // adds a task to internal list
     int HandleTaskings(); // handles all taskings assigned to server
     int HandleTask(ptask_t task); // handles an individual task
-    int Authenticate(pauth_t auth); // checks agent passphrase and username against known agents
     void FreeTask(ptask_t task); // safely deletes a task object
     ptask_t CreateTasking(int to, unsigned char type, unsigned long length, void *data); // generates a tasking given the input
 
