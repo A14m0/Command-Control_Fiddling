@@ -6,7 +6,7 @@
 
 //////////////////////////// TEST CASES ////////////////////////////
 TEST_CASE("`Common` sanity checks") {
-    SECTION("index_of"){
+    SECTION("index_of") {
         REQUIRE(Common::index_of("baaaaa", 'b', 0) == 0);
         REQUIRE(Common::index_of("abaaaa", 'b', 0) == 1);
         REQUIRE(Common::index_of("aabaaa", 'b', 0) == 2);
@@ -23,15 +23,21 @@ TEST_CASE("`Common` sanity checks") {
         REQUIRE(Common::index_of("ababaa", 'b', 1) == 3);
     }
 
-    SECTION("substring"){
+    SECTION("substring") {
     }
-    SECTION("clean_input"){
+    SECTION("clean_input") {
     }
 
-    SECTION("str_split"){
+    SECTION("str_split") {
     }
 
     SECTION("Network Files Structure") {
+    }    
+}
+
+
+TEST_CASE("`Tasking` sanity checks") {
+    SECTION("AgentJob Serialize") {
     }
-    
+    SECTION("AgentJob De-Serialize"){}
 }
