@@ -5,7 +5,8 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/agent/includes",
-                "${workspaceFolder}/common/includes"
+                "${workspaceFolder}/common/includes",
+                "${workspaceFolder}/tests/includes"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
