@@ -202,8 +202,6 @@ int Server::ReloadModules(){
 
 
     char result[4096];
-    unsigned long index;
-    struct stat st = {0};
     
     // seed RNG
     srand(time(NULL));
@@ -267,6 +265,7 @@ int Server::ReloadModules(){
 
     // close handle and return
     closedir (dir);
+    free(buff);
     return 0;
 }
 
@@ -496,7 +495,7 @@ int Server::HandleTask(ptask_t task){
         log(LOG_INFO, "Caught request for new backend (UNIMPLEMENTED)");
         {
             int inst_id = (int) *(int*)(task->data);
-            int portno = (int) *(int*)((task->data) + 4);
+            int portno = (int) *(int*)((char*)(task->data) + 4);
             bool found = false;
             for(Module* m : *modules) {
                 if(m->GetID() == inst_id){
@@ -533,8 +532,9 @@ int Server::HandleTask(ptask_t task){
             log(LOG_INFO, "Saving file from agent");
             pnet_file file = parse_networked_file(task->data, task->length);
             char* fname = Common::sha_digest(file->path);
-            char path[2048];
+            char path[BUFSIZ*2];
             char cwd[BUFSIZ];
+            char *agent_id = nullptr;
 
             memset(path, 0, sizeof(path));
             memset(cwd, 0, sizeof(cwd));
@@ -543,7 +543,7 @@ int Server::HandleTask(ptask_t task){
             for(NetInst* n : *instances) {
                 if(n->GetID() == (task->from)) {
                     found = true;
-                    char* agent_id = n->GetAgentName();
+                    agent_id = n->GetAgentName();
                     if(agent_id == nullptr) {
                         ptask_t remote_task = CreateTasking(task->from, RESP_FAIL, 0, nullptr);
                         PushTask(remote_task);
@@ -553,8 +553,8 @@ int Server::HandleTask(ptask_t task){
                 }
             }
 
-            if(found) {
-                sprintf(path, "%s/agents/%s/loot/%s.bin", getcwd(cwd, sizeof(cwd)), id, fname);
+            if(found && agent_id) {
+                sprintf(path, "%s/agents/%s/loot/%s.bin", getcwd(cwd, sizeof(cwd)), agent_id, fname);
                 int success = Common::write_networked_file(file, path);
                 ptask_t remote_task = CreateTasking(task->from, success, 0, nullptr);
                 PushTask(remote_task);

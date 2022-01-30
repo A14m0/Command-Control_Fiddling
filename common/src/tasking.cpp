@@ -100,7 +100,7 @@ void *AgentJob::pack() {
     free(header_bytes);
 
     // copy the payload
-    memcpy(packet+8, this->data, this->get_len());
+    memcpy(((char*)packet)+8, this->data, this->get_len());
 
     // return the packet 
     return packet;

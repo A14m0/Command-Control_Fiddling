@@ -207,12 +207,12 @@ char** Common::str_split(char* a_str, const char a_delim)
 /* Converts a packet's raw data into a handle-able net_file */
 pnet_file Common::parse_networked_file(void* data, unsigned long length) {
     pnet_file file = (pnet_file) malloc(sizeof(pnet_file));
-    file->fsize = (unsigned long) ((unsigned char*)data)[0];
-    file->psize = (unsigned int) ((unsigned char*)data)[sizeof(unsigned long)];
+    file->fsize = (unsigned long) data;
+    file->psize = (unsigned int) (((uintptr_t)data) + sizeof(unsigned long));
     file->path = (char*) malloc(file->psize);
-    memcpy(file->path, (data + sizeof(unsigned long) + sizeof(unsigned int)), file->psize);
+    memcpy(file->path, (void*)(((uintptr_t)data) + sizeof(unsigned long) + sizeof(unsigned int)), file->psize);
     file->data = malloc(file->fsize);
-    memcpy(file->data, (data + sizeof(unsigned long) + sizeof(unsigned int) + file->psize), file->fsize);
+    memcpy(file->data, (void*)(((uintptr_t)data) + sizeof(unsigned long) + sizeof(unsigned int) + file->psize), file->fsize);
 
     return file;
 }
@@ -221,7 +221,7 @@ pnet_file Common::parse_networked_file(void* data, unsigned long length) {
 int Common::write_networked_file(pnet_file file, char* path) {
     FILE *f = fopen(path, "wb");
 
-    int rc = fwrite(file->data, 1, file->fsize, f);
+    size_t rc = fwrite(file->data, 1, file->fsize, f);
     if(rc != file->fsize) {
         printf("Failed to write all of the data!\n");
         perror("");
@@ -436,9 +436,11 @@ int Common::write_agent_beacon(void *data) {
 // Writes received agent beacon data to agent's info.txt
 int Common::write_agent_beacon(const char* id, const char* data) {
     FILE *fd = NULL;
-    char buff[2048];
+    char info_buffer[2*BUFSIZ+16];
+    char buff[2*BUFSIZ];
     char cwd[BUFSIZ];
 
+    memset(info_buffer, 0, sizeof(info_buffer));
     memset(buff, 0, sizeof(buff));
     memset(cwd, 0, sizeof(cwd));
     printf("In write beacon\n");
@@ -449,7 +451,7 @@ int Common::write_agent_beacon(const char* id, const char* data) {
     if (!Common::directory_exists(buff)) {
         mkdir(buff, 0755);
     }
-    sprintf(buff, "%s/info.txt", buff);
+    sprintf(info_buffer, "%s/info.txt", buff);
 
     fd = fopen(buff, "w");
     if (fd == NULL) {

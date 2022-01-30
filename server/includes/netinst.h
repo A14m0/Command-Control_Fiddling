@@ -7,7 +7,7 @@
 #include "tasking.h"
 
 // define the Netinstance termination type
-#define NETINST_TERMINATE 0xffffffff
+#define NETINST_TERMINATE 0xff
 
 class NetInst : Common
 {

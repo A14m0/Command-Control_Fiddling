@@ -80,6 +80,7 @@ void NetInst::MainLoop(){
         } else {
             log(LOG_INFO, "Terminating network instance...\n");
             ptask_t die = CreateTasking(id, NETINST_TERMINATE, 0, nullptr);
+            PushTasking(die);
         }
     }
     
