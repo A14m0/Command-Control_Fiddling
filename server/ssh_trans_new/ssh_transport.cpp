@@ -129,29 +129,38 @@ api_return SshTransport::fetch_tasking() {
     printf("\n-------------------------------------------------\n");
     printf("TSPT: READING...\n");
 	unsigned char *hdr = this->read(8);
+    if(hdr == nullptr) {
+        printf("-------------------------------------------------\n\n");
+        return api_return{API_ERR_READ, nullptr};
+    }
+	
     printf("hdr: "); 
     for(int i = 0; i < 8; i++) {
         printf("%x ", hdr[i]);
     }
     printf("\n"); 
     
-    if(hdr == nullptr) return api_return{API_ERR_READ, nullptr};
-	unsigned long h_val = AgentJob::bytes_to_long(hdr);
+    unsigned long h_val = AgentJob::bytes_to_long(hdr);
     free(hdr);
 	AgentJob *job = new AgentJob(h_val, nullptr);
     printf("Tasking values: %x, %lu\n", job->get_type(), job->get_len());
     printf("-------------------------------------------------\n\n");
 
 	// now that we know the length, fetch the payload
-	unsigned char *data = this->read(job->get_len()); 
-	if(data == nullptr) {
-		// free stuff if the read fails
-		delete job;
-		return api_return{API_ERR_READ, nullptr};
-	}
+	if (job->get_len() > 0){
+        unsigned char *data = this->read(job->get_len()); 
+	    if(data == nullptr) {
+		    // free stuff if the read fails
+		    delete job;
+		    return api_return{API_ERR_READ, nullptr};
+	    }
 
-	// set payload and return
-	job->set_data(data);
+	    // set payload and return
+	    job->set_data(data);
+    } else {
+        job->set_data(nullptr);
+    }
+    
     return api_return{API_OK, job};
 }
 

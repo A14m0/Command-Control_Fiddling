@@ -12,7 +12,7 @@ RUN apt update\
         libssh-dev \
         cmake \
         python3 \
-        python3-pyqt5
+        python3-pyqt5 
 
 # update the APT sources from our local copy
 #COPY sources.list /etc/apt/sources.list

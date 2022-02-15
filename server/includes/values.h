@@ -30,3 +30,18 @@
 #define TASK_NEW_NETINST 2      // Request to create new NetInst
 #define TASK_PUSH_BEACON 3      // Request to write beacon data for an agent
 #define TASK_SAVE_FILE 4        // Request to save a file from an agent
+#define TASK_TERM_NETINST 5     // Request to terminate the sending NetInst
+
+
+// defines manager operation types
+#define MANAGER_RETRIEVE_AGENT 0xff-1           // Manager wants all beacons
+#define MANAGER_RETRIEVE_LOOT 0xff-2            // Manager wants the loot of an agent
+#define MANAGER_UPLOAD_FILE 0xff-3              // Manager wants to upload a file to an agent
+#define MANAGER_DOWNLOAD_FILE 0xff-4            // Manager wants to download a file from an agent
+#define MANAGER_PUSH_MODULE 0xff-5              // Manager wants to push shellcode to the agent
+#define MANAGER_RUN_COMMAND 0xff-6              // Manager wants to send a command to agent
+#define MANAGER_REQUEST_REVERSESHELL 0xff-7     // Manager wants a reverse shell
+#define MANAGER_REGISTER_AGENT 0xff-8           // Manager wants to register credentials
+#define MANAGER_REVIEW_TRANSPORTS 0xff-0x9      // Manager wants a list of transports
+#define MANAGER_START_TRANSPORT 0xff-0xa        // Manager wants to start a transport
+#define MANAGER_EXIT 0xff-0xb                   // Manager is terminating

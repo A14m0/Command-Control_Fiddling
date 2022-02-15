@@ -526,7 +526,7 @@ int Server::HandleTask(ptask_t task){
             printf("Success status: %d\n", success);
         }
         break;
-
+    // save a file locally
     case TASK_SAVE_FILE:
         {
             log(LOG_INFO, "Saving file from agent");
@@ -562,6 +562,29 @@ int Server::HandleTask(ptask_t task){
 
             free_networked_file(&file);
 
+        }
+        break;
+    // terminate an existing instance on request
+    case TASK_TERM_NETINST:
+        {
+            log(LOG_WARN, "Terminating network instance...");
+            int ctr = 0;
+            for(NetInst *T : *instances) {
+                if(T->GetID() == task->from) {
+                    delete T;
+                    instances->erase(instances->begin() + ctr);
+                    break;
+                }
+                ctr++;
+                
+            }
+
+            // if we have no current instances, restart the first one
+            if (this->instances->empty()) {
+                if(GenerateInstance(modules->front(), 0)) {
+                    log(LOG_ERROR, "Failed to restart default module");
+                }
+            } 
         }
         break;
 
